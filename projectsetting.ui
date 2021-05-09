@@ -23,6 +23,12 @@
    <layout class="QGridLayout" name="gridLayout_2">
     <item row="1" column="0">
      <widget class="QToolButton" name="addFrameToolButton">
+      <property name="mouseTracking">
+       <bool>true</bool>
+      </property>
+      <property name="tabletTracking">
+       <bool>true</bool>
+      </property>
       <property name="text">
        <string>...</string>
       </property>
@@ -38,7 +44,20 @@
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout_6">
           <item>
+           <widget class="QLabel" name="label_4">
+            <property name="text">
+             <string>Framerate:</string>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QComboBox" name="frameRateComboBox">
+            <property name="mouseTracking">
+             <bool>true</bool>
+            </property>
+            <property name="tabletTracking">
+             <bool>true</bool>
+            </property>
             <property name="currentText">
              <string/>
             </property>
@@ -55,6 +74,12 @@
           </item>
           <item>
            <spacer name="horizontalSpacer_4">
+            <property name="mouseTracking">
+             <bool>true</bool>
+            </property>
+            <property name="tabletTracking">
+             <bool>true</bool>
+            </property>
             <property name="orientation">
              <enum>Qt::Horizontal</enum>
             </property>
@@ -68,6 +93,12 @@
           </item>
           <item>
            <widget class="QLabel" name="label_3">
+            <property name="mouseTracking">
+             <bool>true</bool>
+            </property>
+            <property name="tabletTracking">
+             <bool>true</bool>
+            </property>
             <property name="text">
              <string>loop (s)</string>
             </property>
@@ -75,13 +106,26 @@
           </item>
           <item>
            <widget class="QSlider" name="loopSlider">
+            <property name="mouseTracking">
+             <bool>true</bool>
+            </property>
+            <property name="tabletTracking">
+             <bool>true</bool>
+            </property>
             <property name="orientation">
              <enum>Qt::Horizontal</enum>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QSpinBox" name="loopSpinBox"/>
+           <widget class="QSpinBox" name="loopSpinBox">
+            <property name="mouseTracking">
+             <bool>true</bool>
+            </property>
+            <property name="tabletTracking">
+             <bool>true</bool>
+            </property>
+           </widget>
           </item>
          </layout>
         </item>
@@ -89,6 +133,12 @@
          <layout class="QVBoxLayout" name="verticalLayout_3" stretch="0,0">
           <item>
            <widget class="QWidget" name="widget" native="true">
+            <property name="mouseTracking">
+             <bool>true</bool>
+            </property>
+            <property name="tabletTracking">
+             <bool>true</bool>
+            </property>
             <layout class="QGridLayout" name="gridLayout">
              <property name="sizeConstraint">
               <enum>QLayout::SetDefaultConstraint</enum>
@@ -118,6 +168,12 @@
               <width>16777215</width>
               <height>22</height>
              </size>
+            </property>
+            <property name="mouseTracking">
+             <bool>true</bool>
+            </property>
+            <property name="tabletTracking">
+             <bool>true</bool>
             </property>
             <property name="tabPosition">
              <enum>QTabWidget::South</enum>
@@ -161,6 +217,12 @@
          <layout class="QHBoxLayout" name="horizontalLayout_5">
           <item>
            <widget class="QPushButton" name="duplicatePushButton">
+            <property name="mouseTracking">
+             <bool>true</bool>
+            </property>
+            <property name="tabletTracking">
+             <bool>true</bool>
+            </property>
             <property name="text">
              <string>Duplicate</string>
             </property>
@@ -168,6 +230,12 @@
           </item>
           <item>
            <widget class="QPushButton" name="deletePushButton">
+            <property name="mouseTracking">
+             <bool>true</bool>
+            </property>
+            <property name="tabletTracking">
+             <bool>true</bool>
+            </property>
             <property name="text">
              <string>Delete</string>
             </property>
@@ -175,6 +243,12 @@
           </item>
           <item>
            <spacer name="horizontalSpacer">
+            <property name="mouseTracking">
+             <bool>true</bool>
+            </property>
+            <property name="tabletTracking">
+             <bool>true</bool>
+            </property>
             <property name="orientation">
              <enum>Qt::Horizontal</enum>
             </property>
@@ -200,6 +274,12 @@
         </property>
         <item>
          <widget class="QGroupBox" name="groupBox">
+          <property name="mouseTracking">
+           <bool>true</bool>
+          </property>
+          <property name="tabletTracking">
+           <bool>true</bool>
+          </property>
           <property name="title">
            <string>Setting</string>
           </property>
@@ -214,6 +294,12 @@
              </property>
              <item>
               <spacer name="verticalSpacer_3">
+               <property name="mouseTracking">
+                <bool>true</bool>
+               </property>
+               <property name="tabletTracking">
+                <bool>true</bool>
+               </property>
                <property name="orientation">
                 <enum>Qt::Vertical</enum>
                </property>
@@ -232,6 +318,12 @@
                </property>
                <item>
                 <widget class="QLabel" name="label">
+                 <property name="mouseTracking">
+                  <bool>true</bool>
+                 </property>
+                 <property name="tabletTracking">
+                  <bool>true</bool>
+                 </property>
                  <property name="text">
                   <string>Frequency</string>
                  </property>
@@ -255,6 +347,12 @@
                </item>
                <item>
                 <widget class="QSpinBox" name="frequencySpinBox">
+                 <property name="mouseTracking">
+                  <bool>true</bool>
+                 </property>
+                 <property name="tabletTracking">
+                  <bool>true</bool>
+                 </property>
                  <property name="maximum">
                   <number>22000</number>
                  </property>
@@ -264,6 +362,12 @@
              </item>
              <item>
               <spacer name="verticalSpacer_2">
+               <property name="mouseTracking">
+                <bool>true</bool>
+               </property>
+               <property name="tabletTracking">
+                <bool>true</bool>
+               </property>
                <property name="orientation">
                 <enum>Qt::Vertical</enum>
                </property>
@@ -282,6 +386,12 @@
                </property>
                <item>
                 <widget class="QLabel" name="label_2">
+                 <property name="mouseTracking">
+                  <bool>true</bool>
+                 </property>
+                 <property name="tabletTracking">
+                  <bool>true</bool>
+                 </property>
                  <property name="text">
                   <string>Amplitude</string>
                  </property>
@@ -289,6 +399,12 @@
                </item>
                <item>
                 <widget class="QSlider" name="amplitudeSlider">
+                 <property name="mouseTracking">
+                  <bool>true</bool>
+                 </property>
+                 <property name="tabletTracking">
+                  <bool>true</bool>
+                 </property>
                  <property name="maximum">
                   <number>255</number>
                  </property>
@@ -299,6 +415,12 @@
                </item>
                <item>
                 <widget class="QSpinBox" name="amplitudeSpinBox">
+                 <property name="mouseTracking">
+                  <bool>true</bool>
+                 </property>
+                 <property name="tabletTracking">
+                  <bool>true</bool>
+                 </property>
                  <property name="maximum">
                   <number>255</number>
                  </property>
@@ -308,6 +430,12 @@
              </item>
              <item>
               <spacer name="verticalSpacer">
+               <property name="mouseTracking">
+                <bool>true</bool>
+               </property>
+               <property name="tabletTracking">
+                <bool>true</bool>
+               </property>
                <property name="orientation">
                 <enum>Qt::Vertical</enum>
                </property>
@@ -326,6 +454,12 @@
                </property>
                <item>
                 <spacer name="horizontalSpacer_2">
+                 <property name="mouseTracking">
+                  <bool>true</bool>
+                 </property>
+                 <property name="tabletTracking">
+                  <bool>true</bool>
+                 </property>
                  <property name="orientation">
                   <enum>Qt::Horizontal</enum>
                  </property>
@@ -345,6 +479,12 @@
                    <verstretch>0</verstretch>
                   </sizepolicy>
                  </property>
+                 <property name="mouseTracking">
+                  <bool>true</bool>
+                 </property>
+                 <property name="tabletTracking">
+                  <bool>true</bool>
+                 </property>
                  <property name="text">
                   <string>ON</string>
                  </property>
@@ -355,6 +495,12 @@
                </item>
                <item>
                 <widget class="QPushButton" name="offPushButton">
+                 <property name="mouseTracking">
+                  <bool>true</bool>
+                 </property>
+                 <property name="tabletTracking">
+                  <bool>true</bool>
+                 </property>
                  <property name="text">
                   <string>OFF</string>
                  </property>
@@ -374,6 +520,12 @@
                </item>
                <item>
                 <spacer name="horizontalSpacer_3">
+                 <property name="mouseTracking">
+                  <bool>true</bool>
+                 </property>
+                 <property name="tabletTracking">
+                  <bool>true</bool>
+                 </property>
                  <property name="orientation">
                   <enum>Qt::Horizontal</enum>
                  </property>
@@ -389,6 +541,12 @@
              </item>
              <item>
               <spacer name="verticalSpacer_4">
+               <property name="mouseTracking">
+                <bool>true</bool>
+               </property>
+               <property name="tabletTracking">
+                <bool>true</bool>
+               </property>
                <property name="orientation">
                 <enum>Qt::Vertical</enum>
                </property>
@@ -418,6 +576,12 @@
               <verstretch>0</verstretch>
              </sizepolicy>
             </property>
+            <property name="mouseTracking">
+             <bool>true</bool>
+            </property>
+            <property name="tabletTracking">
+             <bool>true</bool>
+            </property>
             <property name="text">
              <string>Previous</string>
             </property>
@@ -431,6 +595,12 @@
               <verstretch>0</verstretch>
              </sizepolicy>
             </property>
+            <property name="mouseTracking">
+             <bool>true</bool>
+            </property>
+            <property name="tabletTracking">
+             <bool>true</bool>
+            </property>
             <property name="text">
              <string>Play</string>
             </property>
@@ -443,6 +613,12 @@
               <horstretch>0</horstretch>
               <verstretch>0</verstretch>
              </sizepolicy>
+            </property>
+            <property name="mouseTracking">
+             <bool>true</bool>
+            </property>
+            <property name="tabletTracking">
+             <bool>true</bool>
             </property>
             <property name="text">
              <string>Next</string>
@@ -463,7 +639,7 @@
      <x>0</x>
      <y>0</y>
      <width>1148</width>
-     <height>21</height>
+     <height>26</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">

@@ -2,6 +2,7 @@
 #include "ui_mainwindow.h"
 #include "animation.h"
 #include <QFileDialog>
+#include <exception>
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -34,9 +35,16 @@ void MainWindow::on_uploadButton_clicked()
     else
     {
         animation = new Animation(fileName);
-        projectsetting *prj = new projectsetting(animation);
-        this->hide();
-        prj->show();
+        if (animation->getError())
+        {
+            qDebug() << "the animation did not work";
+        }
+        else
+        {
+            projectsetting *prj = new projectsetting(animation);
+            this->hide();
+            prj->show();
+        }
     }
-//    Animation * anim = new Animation("C:/TEMP/test123.csv");
+
 }

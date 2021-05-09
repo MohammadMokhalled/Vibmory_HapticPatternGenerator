@@ -1,5 +1,7 @@
 #include "frame.h"
 #include <QRegularExpression>
+#include <QMessageBox>
+
 Frame::Frame(int rows, int columns)
 {
     this->rows = rows;
@@ -31,7 +33,10 @@ Frame::Frame(QString csv, int columns, int rows)
 
     if (r != rows || n != rows * columns)
     {
-        throw("Error in the input parameters");
+        QMessageBox messageBox;
+        messageBox.critical(0,"Error","Frame data is not correct!");
+        setError();
+        throw;
     }
 
     this->rows = rows;
@@ -56,10 +61,24 @@ Frame::Frame(QString csv, int columns, int rows)
     }
 
     QStringList lines = csv.split(QRegularExpression("[\n]"), Qt::SkipEmptyParts);
-
+    if (lines.length() != rows)
+    {
+        QMessageBox messageBox;
+        messageBox.critical(0,"Error","Frame data is not correct!");
+        setError();
+        return;
+    }
     for (int i = 0; i < rows; i++)
     {
         QStringList cells = lines[i].split(',' , Qt::SkipEmptyParts);
+        if (cells.length() != columns+1)
+        {
+            QMessageBox messageBox;
+            messageBox.critical(0,"Error","Frame data is not correct!");
+            setError();
+            return;
+
+        }
         for (int j = 0; j < columns; j++)
         {
             QStringList values = cells[j].split('-' , Qt::SkipEmptyParts);
@@ -121,4 +140,14 @@ QString Frame::toString()
     }
 
     return res;
+}
+
+void Frame::setError()
+{
+    this->creationError = true;
+}
+
+bool Frame::getError()
+{
+    return this->creationError;
 }

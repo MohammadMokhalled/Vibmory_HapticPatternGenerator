@@ -1,6 +1,7 @@
 #include "animation.h"
 #include <QFile>
 #include <QTextStream>
+#include <QMessageBox>
 Animation::Animation(int rows, int columns)
 {
     lock.lock();
@@ -16,26 +17,48 @@ Animation::Animation(QString fileAddress)
     QFile file(fileAddress);
     if (file.open(QIODevice::ReadOnly))
     {
-       QTextStream in(&file);
-       QString setting = in.readLine();
-       QStringList values = setting.split(',' , Qt::SkipEmptyParts);
-       // frames.resize(values[0].toInt() + 1);
-       int frameNumber = values[0].toInt();
-       this->rows    = values[1].toInt();
-       this->columns = values[2].toInt();
+        QTextStream in(&file);
+        QString setting = in.readLine();
+        QStringList values = setting.split(',' , Qt::SkipEmptyParts);
+        if (values.length() < 3)
+        {
+            QMessageBox messageBox;
+            messageBox.critical(0,"Error","Data is corrupted!");
+            setError();
+            return;
+        }
+        // frames.resize(values[0].toInt() + 1);
+        int frameNumber = values[0].toInt();
+        this->rows      = values[1].toInt();
+        this->columns   = values[2].toInt();
 
-       QString frame;
-       for (int i = 0; i < frameNumber; i++)
-       {
-           QString frame = "";
-           for (int j = 0; j < rows; j++)
-           {
-                frame += in.readLine() + "\n";
-           }
+        for (int i = 0; i < frameNumber; i++)
+        {
+            QString frame = "";
+            for (int j = 0; j < rows; j++)
+            {
+                 frame += in.readLine() + "\n";
+            }
+            Frame newFrame = Frame(frame, columns, rows);
 
-           frames.append(Frame(frame, columns, rows));
-       }
-       file.close();
+            if (newFrame.getError())
+            {
+                setError();
+                return;
+            }
+
+            frames.append(newFrame);
+        }
+
+
+        file.close();
+    }
+    else
+    {
+        QMessageBox messageBox;
+        messageBox.critical(0,"Error","Cannot open the file");
+        setError();
+        return;
     }
 }
 
@@ -43,6 +66,13 @@ void Animation::addFrame()
 {
     lock.lock();
     this->frames.append(Frame(this->rows,this->columns));
+    lock.unlock();
+}
+
+void Animation::duplicateCurrentFrame()
+{
+    lock.lock();
+    this->frames.append(Frame(frames[currentFrame]));
     lock.unlock();
 }
 
@@ -161,4 +191,19 @@ void Animation::nextFrame()
 int Animation::getCurrentFrameIndex()
 {
     return currentFrame;
+}
+
+void Animation::setError()
+{
+    this->creationError = true;
+}
+
+bool Animation::getError()
+{
+    return this->creationError;
+}
+
+void Animation::removeCurrentFrame()
+{
+    frames.remove(currentFrame);
 }

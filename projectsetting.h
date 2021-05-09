@@ -21,7 +21,6 @@ class projectsetting : public QMainWindow
 
 public:
     explicit projectsetting(QWidget *parent = nullptr);
-    explicit projectsetting(int rows, int columns, QWidget *parent = nullptr);
     explicit projectsetting(bool test, int rows, int columns, QWidget *parent = nullptr);
     explicit projectsetting(Animation * anim, QWidget *parent = nullptr);
     ~projectsetting();
@@ -37,6 +36,7 @@ public:
 
 public slots:
     void enableGroupBox();
+    void stopPlay();
 
 private slots:
     void addFrame();
@@ -65,6 +65,12 @@ private slots:
 
     void on_saveAction_triggered(bool action);
 
+    void on_importAction_triggered(bool action);
+
+    void on_duplicatePushButton_clicked();
+
+    void on_deletePushButton_clicked();
+
 private:
     Ui::projectsetting *ui;
     uint16_t currentFrame   = 0;
@@ -72,9 +78,15 @@ private:
     uint16_t currentColumn  = 0;
     uint8_t tabChangeTries  = 0;
     bool enableUnselect  = 0;
+    QTimer *timer;
+    QTimer *stopTimer;
 
     void saveToFile();
     void importFromFile();
+    void initializeUI();
+    void initialize(Animation * anim);
+    void startPlay();
+
 };
 
 #endif // PROJECTSETTING_H

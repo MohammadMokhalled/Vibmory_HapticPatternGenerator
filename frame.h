@@ -11,8 +11,10 @@ private:
     QVector<QVector<uint32_t>> frequencies;
     QVector<QVector<uint32_t>> amplitudes;
     QVector<QVector<QColor>> colors;
+    bool creationError = false;
     int rows, columns;
     void setColor(int row, int column);
+    void setError();
 
 public:
     Frame(int columns, int rows);
@@ -23,6 +25,7 @@ public:
     int getAmplitude(int row, int column);
     int getFrequency(int row, int column);
     QString toString();
+    bool getError();
 
 };
 

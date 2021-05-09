@@ -13,14 +13,19 @@ private:
     uint16_t currentColumn  = 0;
     uint16_t rows;
     uint16_t columns;
+    bool creationError = false;
 
     QVector<Frame> frames;
     QMutex lock;
+    void setError();
+
 
 public:
     Animation(int rows, int columns);
     Animation(QString fileAddress);
     void addFrame();
+
+    void duplicateCurrentFrame();
     void selectFrame(int index);
     int  getLen();
     void setPos(int row, int column);
@@ -35,6 +40,8 @@ public:
     QString getFrameString();
     void nextFrame();
     int getCurrentFrameIndex();
+    bool getError();
+    void removeCurrentFrame();
 };
 
 
