@@ -19,7 +19,6 @@ private:
     QMutex lock;
     void setError();
 
-
 public:
     Animation(int rows, int columns);
     Animation(QString fileAddress);
@@ -32,8 +31,8 @@ public:
     void setAmplitude(int row, int column, uint32_t value);
     void setFrequency(int row, int column, uint32_t value);
     QColor getColor(int row, int column);
-    int getAmplitude(int row, int column);
-    int getFrequency(int row, int column);
+    int getAmplitude(int row, int column, int frameIndex = -1);
+    int getFrequency(int row, int column, int frameIndex = -1);
     QString writeInFile(QString address);
     int getRows();
     int getColumns();

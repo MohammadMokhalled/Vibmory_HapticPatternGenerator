@@ -8,6 +8,7 @@
 #include <QFileDialog>
 #include <QTimer>
 #include <QMessageBox>
+#include <animationaudio.h>
 
 QThreadPool *thread_pool = QThreadPool::globalInstance();
 
@@ -24,7 +25,7 @@ projectsetting::projectsetting(bool test, int rows, int columns, QWidget *parent
     ui(new Ui::projectsetting)
 {
     ui->setupUi(this);
-
+    //ui->messageLabel->hide();
     this->rows = rows;
     this->columns = columns;
 
@@ -54,7 +55,7 @@ projectsetting::projectsetting(Animation * anim, QWidget *parent) :
     ui(new Ui::projectsetting)
 {
     ui->setupUi(this);
-
+    //ui->messageLabel->hide();
     initialize(anim);
     stopTimer = new QTimer(this);
     timer = new QTimer(this);
@@ -339,4 +340,25 @@ void projectsetting::on_deletePushButton_clicked()
         ui->tabWidget->removeTab(ui->tabWidget->currentIndex());
         animation->removeCurrentFrame();
     }
+}
+
+void projectsetting::on_onPushButton_clicked()
+{
+
+}
+
+void projectsetting::on_generateSounFileButton_clicked()
+{
+    if (ui->frameRateComboBox->currentIndex() < 0)
+    {
+        QMessageBox messageBox;
+        messageBox.critical(0,"Error","Please select frame rate value.");
+        return;
+    }
+
+    ui->messageLabel->show();
+    while(ui->messageLabel->isHidden());
+    AnimationAudio *audio = new AnimationAudio(animation, ui->frameRateComboBox->currentText().toInt(), ui->loopSpinBox->value());
+    audio->generateFile("file.wav");
+    ui->messageLabel->hide();
 }

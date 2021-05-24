@@ -92,7 +92,7 @@ Frame::Frame(QString csv, int columns, int rows)
 void Frame::setColor(int row, int column)
 {
     int h = frequencies[row][column] * 200 / 22000;
-    int s = (amplitudes[row][column]);
+    int s = (amplitudes[row][column]) * 255 / 32767;
     colors[row][column].setHsv(h,s,255,255);
 }
 

@@ -11,8 +11,6 @@ QMAKE_CXX_FLAGS += /EHa
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
-    actuator.cpp \
-    actuatoraudio.cpp \
     animation.cpp \
     animationaudio.cpp \
     createproject.cpp \
@@ -26,8 +24,6 @@ SOURCES += \
 
 HEADERS += \
     Windows.h \
-    actuator.h \
-    actuatoraudio.h \
     animation.h \
     animationaudio.h \
     createproject.h \

@@ -71,6 +71,10 @@ private slots:
 
     void on_deletePushButton_clicked();
 
+    void on_onPushButton_clicked();
+
+    void on_generateSounFileButton_clicked();
+
 private:
     Ui::projectsetting *ui;
     uint16_t currentFrame   = 0;

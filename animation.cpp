@@ -2,6 +2,7 @@
 #include <QFile>
 #include <QTextStream>
 #include <QMessageBox>
+
 Animation::Animation(int rows, int columns)
 {
     lock.lock();
@@ -118,18 +119,26 @@ QColor Animation::getColor(int row, int column)
     return color;
 }
 
-int Animation::getAmplitude(int row, int column)
+int Animation::getAmplitude(int row, int column, int frameIndex)
 {
+    if (frameIndex == -1)
+    {
+        frameIndex = currentFrame;
+    }
     lock.lock();
-    int amp = frames[currentFrame].getAmplitude(row, column);
+    int amp = frames[frameIndex].getAmplitude(row, column);
     lock.unlock();
     return amp;
 }
 
-int Animation::getFrequency(int row, int column)
+int Animation::getFrequency(int row, int column, int frameIndex)
 {
+    if (frameIndex == -1)
+    {
+        frameIndex = currentFrame;
+    }
     lock.lock();
-    int freq = frames[currentFrame].getFrequency(row, column);
+    int freq = frames[frameIndex].getFrequency(row, column);
     lock.unlock();
     return freq;
 }
