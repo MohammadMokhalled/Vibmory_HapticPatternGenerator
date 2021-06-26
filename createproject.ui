@@ -62,9 +62,17 @@
            <height>30</height>
           </size>
          </property>
+         <property name="currentIndex">
+          <number>0</number>
+         </property>
          <property name="placeholderText">
           <string>Please select a type</string>
          </property>
+         <item>
+          <property name="text">
+           <string>Speakers</string>
+          </property>
+         </item>
         </widget>
        </item>
       </layout>
@@ -155,7 +163,7 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>21</height>
+     <height>26</height>
     </rect>
    </property>
   </widget>
