@@ -41,7 +41,7 @@ void MainWindow::on_uploadButton_clicked()
         }
         else
         {
-            projectsetting *prj = new projectsetting(animation);
+            ProjectSetting *prj = new ProjectSetting(animation);
             this->hide();
             prj->show();
         }

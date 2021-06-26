@@ -3,7 +3,7 @@
 #include <QThreadPool>
 #include <QGraphicsScene>
 
-PlayingAnimation::PlayingAnimation(projectsetting * prj)
+PlayingAnimation::PlayingAnimation(ProjectSetting * prj)
 {
     this->prj = prj;
 }

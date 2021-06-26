@@ -18,7 +18,7 @@ CreateProject::~CreateProject()
 void CreateProject::on_okButton_clicked()
 {
 //    projectsetting *prj = new projectsetting(this->ui->rowsSpinBox->value(), this->ui->columnsSpinBox->value());
-    projectsetting *prj = new projectsetting(true, this->ui->rowsSpinBox->value(), this->ui->columnsSpinBox->value());
+    ProjectSetting *prj = new ProjectSetting(true, this->ui->rowsSpinBox->value(), this->ui->columnsSpinBox->value());
     this->hide();
     prj->show();
 }

@@ -15,7 +15,7 @@
 
 QThreadPool *thread_pool = QThreadPool::globalInstance();
 
-projectsetting::projectsetting(QWidget *parent) :
+ProjectSetting::ProjectSetting(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::projectsetting)
 {
@@ -23,7 +23,7 @@ projectsetting::projectsetting(QWidget *parent) :
 }
 
 
-projectsetting::projectsetting(bool test, int rows, int columns, QWidget *parent) :
+ProjectSetting::ProjectSetting(bool test, int rows, int columns, QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::projectsetting)
 {
@@ -48,12 +48,12 @@ projectsetting::projectsetting(bool test, int rows, int columns, QWidget *parent
     connect(timer, &QTimer::timeout, pw, &PaintingWidget::animate);
     timer->start(15);
 
-    connect(pw, &PaintingWidget::selectedSignal, this, &projectsetting::enableGroupBox);
-    connect(ui->actionSave, &QAction::triggered, this, &projectsetting::on_saveAction_triggered);
-    connect(ui->actionImport, &QAction::triggered, this, &projectsetting::on_importAction_triggered);
+    connect(pw, &PaintingWidget::selectedSignal, this, &ProjectSetting::enableGroupBox);
+    connect(ui->actionSave, &QAction::triggered, this, &ProjectSetting::on_saveAction_triggered);
+    connect(ui->actionImport, &QAction::triggered, this, &ProjectSetting::on_importAction_triggered);
 }
 
-projectsetting::projectsetting(Animation * anim, QWidget *parent) :
+ProjectSetting::ProjectSetting(Animation * anim, QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::projectsetting)
 {
@@ -64,12 +64,12 @@ projectsetting::projectsetting(Animation * anim, QWidget *parent) :
     timer = new QTimer(this);
     connect(timer, &QTimer::timeout, pw, &PaintingWidget::animate);
     timer->start(50);
-    connect(pw, &PaintingWidget::selectedSignal, this, &projectsetting::enableGroupBox);
-    connect(ui->actionSave, &QAction::triggered, this, &projectsetting::on_saveAction_triggered);
-    connect(ui->actionImport, &QAction::triggered, this, &projectsetting::on_importAction_triggered);
+    connect(pw, &PaintingWidget::selectedSignal, this, &ProjectSetting::enableGroupBox);
+    connect(ui->actionSave, &QAction::triggered, this, &ProjectSetting::on_saveAction_triggered);
+    connect(ui->actionImport, &QAction::triggered, this, &ProjectSetting::on_importAction_triggered);
 }
 
-void projectsetting::initializeUI()
+void ProjectSetting::initializeUI()
 {
     this->ui->tabWidget->clear();
     this->ui->tabWidget->insertTab(this->ui->tabWidget->count() - 1,new QLabel(), QString("frame 1"));
@@ -96,7 +96,7 @@ void projectsetting::initializeUI()
 
 }
 
-void projectsetting::initialize(Animation * anim)
+void ProjectSetting::initialize(Animation * anim)
 {
     this->rows = anim->getRows();
     this->columns = anim->getColumns();
@@ -116,7 +116,7 @@ void projectsetting::initialize(Animation * anim)
     this->pw->drawBackground();
 }
 
-void projectsetting::enableGroupBox()
+void ProjectSetting::enableGroupBox()
 {
     this->ui->groupBox->setEnabled(true);
     this->ui->amplitudeSpinBox->setValue
@@ -127,26 +127,26 @@ void projectsetting::enableGroupBox()
              (this->help->getSelectedRow(), this->help->getSelectedColumn()));
 }
 
-void projectsetting::addFrame()
+void ProjectSetting::addFrame()
 {
     this->ui->tabWidget->addTab(nullptr, QString("frame ") + QString::number(this->ui->tabWidget->count() - 1));
 
 }
 
-projectsetting::~projectsetting()
+ProjectSetting::~ProjectSetting()
 {
     delete ui;
 }
 
 
-void projectsetting::on_addFrameToolButton_clicked()
+void ProjectSetting::on_addFrameToolButton_clicked()
 {
     this->ui->tabWidget->insertTab(this->ui->tabWidget->count() - 1,new QLabel(), QString("frame ") + QString::number(this->ui->tabWidget->count()));
 //    this->frames.append(Frame(columns, rows));
     this->animation->addFrame();
 }
 
-void projectsetting::on_playPushButton_clicked()
+void ProjectSetting::on_playPushButton_clicked()
 {
     //qDebug() << "index = " << ui->frameRateComboBox->currentIndex();
 
@@ -177,7 +177,7 @@ void projectsetting::on_playPushButton_clicked()
 
 }
 
-void projectsetting::startPlay()
+void ProjectSetting::startPlay()
 {
 
 
@@ -187,7 +187,7 @@ void projectsetting::startPlay()
     this->timer->start(1000/ui->frameRateComboBox->currentText().toInt());
     this->ui->frameRateComboBox->setDisabled(true);
 
-    connect(stopTimer, &QTimer::timeout, this, &projectsetting::stopPlay);
+    connect(stopTimer, &QTimer::timeout, this, &ProjectSetting::stopPlay);
     stopTimer->start(1000*ui->loopSlider->value());
     this->ui->loopSlider->setDisabled(true);
     this->ui->loopSpinBox->setDisabled(true);
@@ -195,7 +195,7 @@ void projectsetting::startPlay()
 
 }
 
-void projectsetting::stopPlay()
+void ProjectSetting::stopPlay()
 {
     this->ui->playPushButton->setText("Play");
     this->help->stopPlay();
@@ -203,7 +203,7 @@ void projectsetting::stopPlay()
     this->timer->start(50);
 
     this->ui->frameRateComboBox->setEnabled(true);
-    disconnect(stopTimer, &QTimer::timeout, this, &projectsetting::stopPlay);
+    disconnect(stopTimer, &QTimer::timeout, this, &ProjectSetting::stopPlay);
     stopTimer->stop();
     this->ui->loopSlider->setEnabled(true);
     this->ui->loopSpinBox->setEnabled(true);
@@ -212,12 +212,12 @@ void projectsetting::stopPlay()
 
 }
 
-void projectsetting::on_frequencySlider_valueChanged(int value)
+void ProjectSetting::on_frequencySlider_valueChanged(int value)
 {
     this->ui->frequencySpinBox->setValue(value);
 }
 
-void projectsetting::on_frequencySpinBox_valueChanged(int arg1)
+void ProjectSetting::on_frequencySpinBox_valueChanged(int arg1)
 {
     this->ui->frequencySlider->setValue(arg1);
     if (help->isSelected())
@@ -228,12 +228,12 @@ void projectsetting::on_frequencySpinBox_valueChanged(int arg1)
 }
 
 
-void projectsetting::on_amplitudeSlider_valueChanged(int value)
+void ProjectSetting::on_amplitudeSlider_valueChanged(int value)
 {
     this->ui->amplitudeSpinBox->setValue(value);
 }
 
-void projectsetting::on_amplitudeSpinBox_valueChanged(int arg1)
+void ProjectSetting::on_amplitudeSpinBox_valueChanged(int arg1)
 {
     this->ui->amplitudeSlider->setValue(arg1);
     //this->frames[currentFrame].setAmplitude(help->selectedRow, help->selectedColumn, arg1);
@@ -243,18 +243,18 @@ void projectsetting::on_amplitudeSpinBox_valueChanged(int arg1)
     }
 }
 
-void projectsetting::on_loopSlider_valueChanged(int value)
+void ProjectSetting::on_loopSlider_valueChanged(int value)
 {
     this->ui->loopSpinBox->setValue(value);
 }
 
-void projectsetting::on_loopSpinBox_valueChanged(int arg1)
+void ProjectSetting::on_loopSpinBox_valueChanged(int arg1)
 {
     this->ui->loopSlider->setValue(arg1);
 }
 
 
-void projectsetting::on_tabWidget_currentChanged(int index)
+void ProjectSetting::on_tabWidget_currentChanged(int index)
 {
     qDebug() << "len" << this->animation->getLen() << "  " << index << "\n";
 
@@ -278,7 +278,7 @@ void projectsetting::on_tabWidget_currentChanged(int index)
 
 }
 
-void projectsetting::on_previousPushButton_clicked()
+void ProjectSetting::on_previousPushButton_clicked()
 {
     if (ui->tabWidget->currentIndex() > 0)
     {
@@ -287,7 +287,7 @@ void projectsetting::on_previousPushButton_clicked()
 
 }
 
-void projectsetting::on_nextPushButton_clicked()
+void ProjectSetting::on_nextPushButton_clicked()
 {
     if (ui->tabWidget->currentIndex() < ui->tabWidget->count() - 2)
     {
@@ -295,12 +295,12 @@ void projectsetting::on_nextPushButton_clicked()
     }
 }
 
-void projectsetting::on_saveAction_triggered(bool action)
+void ProjectSetting::on_saveAction_triggered(bool action)
 {
     saveToFile();
 }
 
-void projectsetting::saveToFile()
+void ProjectSetting::saveToFile()
 {
     QString fileName = QFileDialog::getSaveFileName(this,
         tr("Save"), "",
@@ -315,12 +315,12 @@ void projectsetting::saveToFile()
     }
 }
 
-void projectsetting::on_importAction_triggered(bool action)
+void ProjectSetting::on_importAction_triggered(bool action)
 {
     importFromFile();
 }
 
-void projectsetting::importFromFile()
+void ProjectSetting::importFromFile()
 {
     QString fileName = QFileDialog::getOpenFileName(this,
         tr("Import"), "",
@@ -338,20 +338,20 @@ void projectsetting::importFromFile()
         }
         else
         {
-           projectsetting * newPS = new projectsetting(newPrj);
+           ProjectSetting * newPS = new ProjectSetting(newPrj);
            newPS->show();
            this->close();
         }
     }
 }
 
-void projectsetting::on_duplicatePushButton_clicked()
+void ProjectSetting::on_duplicatePushButton_clicked()
 {
     this->ui->tabWidget->insertTab(this->ui->tabWidget->count() - 1,new QLabel(), QString("frame ") + QString::number(this->ui->tabWidget->count()));
     animation->duplicateCurrentFrame();
 }
 
-void projectsetting::on_deletePushButton_clicked()
+void ProjectSetting::on_deletePushButton_clicked()
 {
     if (ui->tabWidget->count() > 2)
     {
@@ -361,7 +361,7 @@ void projectsetting::on_deletePushButton_clicked()
 }
 
 
-void projectsetting::on_generateSounFileButton_clicked()
+void ProjectSetting::on_generateSounFileButton_clicked()
 {
     if (ui->frameRateComboBox->currentIndex() < 0)
     {
@@ -377,7 +377,7 @@ void projectsetting::on_generateSounFileButton_clicked()
    // ui->messageLabel->hide();
 }
 
-void projectsetting::on_actionNew_Project_triggered()
+void ProjectSetting::on_actionNew_Project_triggered()
 {
     CreateProject *win = new CreateProject;
     win->show();
@@ -387,26 +387,26 @@ void projectsetting::on_actionNew_Project_triggered()
 
 
 
-void projectsetting::on_maxFrequencyPushButton_clicked()
+void ProjectSetting::on_maxFrequencyPushButton_clicked()
 {
 
     ui->frequencySpinBox->setValue(ui->frequencySpinBox->maximum());
 
 }
 
-void projectsetting::on_maxAmplitudePushButton_clicked()
+void ProjectSetting::on_maxAmplitudePushButton_clicked()
 {
 
     ui->amplitudeSpinBox->setValue(ui->amplitudeSpinBox->maximum());
 }
 
-void projectsetting::on_minFrequencyPushButton_clicked()
+void ProjectSetting::on_minFrequencyPushButton_clicked()
 {
     ui->frequencySpinBox->setValue(ui->frequencySpinBox->minimum());
 }
 
 
-void projectsetting::on_minAmplitudePushButton_clicked()
+void ProjectSetting::on_minAmplitudePushButton_clicked()
 {
     ui->amplitudeSpinBox->setValue(ui->amplitudeSpinBox->minimum());
 }

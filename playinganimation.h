@@ -10,11 +10,11 @@ class PlayingAnimation : public QThread
 {
 
 public:
-    explicit PlayingAnimation(projectsetting * prj = nullptr);
+    explicit PlayingAnimation(ProjectSetting * prj = nullptr);
     void run() override;
 
 private:
-    projectsetting * prj;
+    ProjectSetting * prj;
 
 };
 

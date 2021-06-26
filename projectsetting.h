@@ -17,15 +17,15 @@ namespace Ui {
 class projectsetting;
 }
 
-class projectsetting : public QMainWindow
+class ProjectSetting : public QMainWindow
 {
     Q_OBJECT
 
 public:
-    explicit projectsetting(QWidget *parent = nullptr);
-    explicit projectsetting(bool test, int rows, int columns, QWidget *parent = nullptr);
-    explicit projectsetting(Animation * anim, QWidget *parent = nullptr);
-    ~projectsetting();
+    explicit ProjectSetting(QWidget *parent = nullptr);
+    explicit ProjectSetting(bool test, int rows, int columns, QWidget *parent = nullptr);
+    explicit ProjectSetting(Animation * anim, QWidget *parent = nullptr);
+    ~ProjectSetting();
 
     int rows;
     int columns;
