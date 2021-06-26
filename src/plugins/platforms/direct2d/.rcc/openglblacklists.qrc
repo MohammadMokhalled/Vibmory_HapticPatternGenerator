@@ -1,0 +1,6 @@
+<RCC>
+  <qresource prefix="/qt-project.org/windows/openglblacklists">
+    <file alias="default.json">C:/Qt/6.0.3/Src/qtbase/src/plugins/platforms/direct2d/../windows/openglblacklists/default.json</file>
+  </qresource>
+</RCC>
+

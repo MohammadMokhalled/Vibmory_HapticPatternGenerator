@@ -1,0 +1,3 @@
+C:/Users/mmokh/OneDrive/Documents/haptic-sensor-qt/config.tests/x86_simd_shani/CMakeFiles/SimdTestshani.dir
+C:/Users/mmokh/OneDrive/Documents/haptic-sensor-qt/config.tests/x86_simd_shani/CMakeFiles/edit_cache.dir
+C:/Users/mmokh/OneDrive/Documents/haptic-sensor-qt/config.tests/x86_simd_shani/CMakeFiles/rebuild_cache.dir

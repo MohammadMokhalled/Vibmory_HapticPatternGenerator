@@ -1,8 +1,10 @@
 QT       += core gui
-
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+QT += multimedia
 
-CONFIG += c++11
+CONFIG += c++17 static
+
+LIBS += -Lportaudio.dll
 
 QMAKE_CXX_FLAGS += /EHa
 
@@ -32,6 +34,7 @@ HEADERS += \
     mainwindow.h \
     paintingwidget.h \
     playinganimation.h \
+    portaudio.h \
     projectsetting.h
 
 FORMS += \
@@ -43,6 +46,5 @@ TRANSLATIONS += \
     Sensors_CPP_en_001.ts
 
 # Default rules for deployment.
-qnx: target.path = /tmp/$${TARGET}/bin
-else: unix:!android: target.path = /opt/$${TARGET}/bin
+target.path = $$[PWD]
 !isEmpty(target.path): INSTALLS += target

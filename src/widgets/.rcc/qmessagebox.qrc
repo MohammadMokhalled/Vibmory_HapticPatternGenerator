@@ -1,0 +1,6 @@
+<RCC>
+  <qresource prefix="/qt-project.org/qmessagebox">
+    <file alias="images/qtlogo-64.png">C:/Qt/6.0.3/Src/qtbase/src/widgets/dialogs/images/qtlogo-64.png</file>
+  </qresource>
+</RCC>
+

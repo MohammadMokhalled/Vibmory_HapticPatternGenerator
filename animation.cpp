@@ -73,7 +73,7 @@ void Animation::addFrame()
 void Animation::duplicateCurrentFrame()
 {
     lock.lock();
-    this->frames.append(Frame(frames[currentFrame]));
+    this->frames.insert(currentFrame + 1,Frame(frames[currentFrame]));
     lock.unlock();
 }
 

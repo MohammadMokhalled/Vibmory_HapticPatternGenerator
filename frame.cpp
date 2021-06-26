@@ -31,7 +31,7 @@ Frame::Frame(QString csv, int columns, int rows)
     int r = csv.count('\n');
     int n = csv.count(',');
 
-    if (r != rows || n != rows * columns)
+    if (r != rows || n != rows * columns * 2)
     {
         QMessageBox messageBox;
         messageBox.critical(0,"Error","Frame data is not correct!");
@@ -68,10 +68,11 @@ Frame::Frame(QString csv, int columns, int rows)
         setError();
         return;
     }
+
     for (int i = 0; i < rows; i++)
     {
-        QStringList cells = lines[i].split(',' , Qt::SkipEmptyParts);
-        if (cells.length() != columns+1)
+        QStringList cells = lines[i].split(", " , Qt::SkipEmptyParts);
+        if (cells.length() != (columns*2))
         {
             QMessageBox messageBox;
             messageBox.critical(0,"Error","Frame data is not correct!");
@@ -79,12 +80,12 @@ Frame::Frame(QString csv, int columns, int rows)
             return;
 
         }
-        for (int j = 0; j < columns; j++)
+        for (int j = 0; j < (columns * 2); j+=2)
         {
-            QStringList values = cells[j].split('-' , Qt::SkipEmptyParts);
+            //QStringList values = cells[j].split('-' , Qt::SkipEmptyParts);
 
-            frequencies[i][j] = values[0].toInt();
-            setAmplitude(i,j,values[1].toInt());
+            frequencies[i][j/2] = cells[j].toInt();
+            setAmplitude(i,j/2,cells[j+1].toInt());
         }
     }
 }
@@ -133,7 +134,7 @@ QString Frame::toString()
         for (int j = 0; j < columns; j++)
         {
             res += QString::number(frequencies[i][j])
-                    + "-" + QString::number(amplitudes[i][j]) + ", ";
+                    + ", " + QString::number(amplitudes[i][j]) + ", ";
 
         }
         res += "\n";

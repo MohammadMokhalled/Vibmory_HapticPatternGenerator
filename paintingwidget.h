@@ -1,8 +1,12 @@
 #ifndef PAINTINGWIDGET_H
 #define PAINTINGWIDGET_H
 
+
 #include <QWidget>
 #include <QMouseEvent>
+
+
+
 //! [0]
 class Helper;
 

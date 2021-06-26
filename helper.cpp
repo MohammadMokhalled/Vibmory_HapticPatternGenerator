@@ -53,7 +53,7 @@
 #include <QPainter>
 #include <QPaintEvent>
 #include <QWidget>
-
+#include <QDebug>
 
 //! [0]
 Helper::Helper(Animation * anim, int rows, int columns)
@@ -117,24 +117,56 @@ void Helper::drawColors(QPainter *painter)
     }
 }
 
+void Helper::playAudio()
+{
+    sourceFile.setFileName("file.wav"); //C:/Users/mmokh/OneDrive/Documents/build-Sensors_CPP-Desktop_Qt_6_0_3_MSVC2019_64bit-Debug/
+    sourceFile.open(QIODevice::ReadOnly);
+
+    QAudioFormat format;
+    // Set up the format, eg.
+    format.setSampleRate(48000);
+    format.setChannelCount(animation->getColumns() * animation->getRows());
+    format.setSampleSize(16);
+    format.setCodec("audio/pcm");
+    format.setByteOrder(QAudioFormat::LittleEndian);
+    format.setSampleType(QAudioFormat::SignedInt);
+
+    QAudioDeviceInfo info(QAudioDeviceInfo::defaultOutputDevice());
+    if (!info.isFormatSupported(format)) {
+        qWarning() << "Raw audio format not supported by backend, cannot play audio.";
+    }
+
+    audio = new QAudioOutput(format);
+    audio->start(&sourceFile);
+    //audio->start();
+}
+
 void Helper::startPlay()
 {
     tabIndexBeforePlay = animation->getCurrentFrameIndex();
     animation->selectFrame(0);
     play = true;
+    firstFramePlay = true;
 }
 
 void Helper::stopPlay()
 {
     play = false;
     animation->selectFrame(tabIndexBeforePlay);
+    audio->stop();
+    sourceFile.close();
 }
 
 
 void Helper::paint(QPainter *painter, QPaintEvent *event)
 {
     lock.lock();
-     drawBackground(painter);
+    if (firstFramePlay)
+    {
+        playAudio();
+        firstFramePlay = false;
+    }
+    drawBackground(painter);
 
     drawColors(painter);
 
@@ -149,36 +181,8 @@ void Helper::paint(QPainter *painter, QPaintEvent *event)
         animation->nextFrame();
     }
 
-lock.unlock();
-
-//    painter->translate(painter->device()->width()/2, painter->device()->height()/2);
-//! [1]
-
-//! [2]
-//    painter->save();
-//    painter->setBrush(circleBrush);
-//    painter->setPen(circlePen);
-//    painter->rotate(elapsed * 0.030);
-
-//    qreal r = elapsed / 1000.0;
-//    int n = 30;
-//    for (int i = 0; i < n; ++i) {
-//        painter->rotate(30);
-//        qreal factor = (i + r) / n;
-//        qreal radius = 0 + 120.0 * factor;
-//        qreal circleRadius = 1 + factor * 20;
-//        painter->drawEllipse(QRectF(radius, -circleRadius,
-//                                    circleRadius * 2, circleRadius * 2));
-//    }
-//    painter->restore();
-////! [2]
-
-////! [3]
-//    painter->setPen(textPen);
-//    painter->setFont(textFont);
-//    painter->drawText(QRect(-50, -50, 100, 100), Qt::AlignCenter, QStringLiteral("Qt"));
+    lock.unlock();
 }
-//! [3]
 
 bool Helper::setPaintingState(int state)
 {

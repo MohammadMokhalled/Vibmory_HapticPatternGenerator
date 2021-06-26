@@ -9,7 +9,7 @@ PaintingWidget::PaintingWidget(Helper *helper, QWidget *parent)
     : QWidget(parent), helper(helper)
 {
     elapsed = 0;
-    qDebug() << "started";
+    //qDebug() << QString("started");
 setMouseTracking(true);
     //setFixedSize(200, 200);
 }

@@ -58,6 +58,8 @@
 #include <frame.h>
 #include <animation.h>
 #include <QMutex>
+#include <QAudioOutput>
+#include <QFile>
 
 //! [0]
 class Helper
@@ -76,6 +78,7 @@ public:
     int getSelectedColumn();
     void startPlay();
     void stopPlay();
+    void playAudio();
 
 
 private:
@@ -105,6 +108,11 @@ private:
 
     bool play = false;
     int tabIndexBeforePlay = 0;
+
+    QFile sourceFile;
+    QAudioOutput* audio;
+
+    bool firstFramePlay = false;
 };
 //! [0]
 

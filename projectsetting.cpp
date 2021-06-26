@@ -9,6 +9,9 @@
 #include <QTimer>
 #include <QMessageBox>
 #include <animationaudio.h>
+#include <createproject.h>
+#include <QAudioOutput>
+#include <QFileInfo>
 
 QThreadPool *thread_pool = QThreadPool::globalInstance();
 
@@ -78,12 +81,16 @@ void projectsetting::initializeUI()
     this->ui->tabWidget->tabBar()->setTabButton(this->ui->tabWidget->count() - 1, QTabBar::LeftSide, tb);
 
     this->ui->frameRateComboBox->clear();
+    this->ui->frameRateComboBox->addItem(QString("1"));
+    this->ui->frameRateComboBox->addItem(QString("2"));
+    this->ui->frameRateComboBox->addItem(QString("5"));
     this->ui->frameRateComboBox->addItem(QString("10"));
-    this->ui->frameRateComboBox->addItem(QString("15"));
+//    this->ui->frameRateComboBox->addItem(QString("15"));
     this->ui->frameRateComboBox->addItem(QString("20"));
     this->ui->frameRateComboBox->addItem(QString("25"));
-    this->ui->frameRateComboBox->addItem(QString("30"));
-    this->ui->frameRateComboBox->addItem(QString("35"));
+    this->ui->frameRateComboBox->addItem(QString("40"));
+    this->ui->frameRateComboBox->addItem(QString("50"));
+//    this->ui->frameRateComboBox->addItem(QString("35"));
 
     this->ui->tabWidget->setCurrentIndex(0);
 
@@ -141,9 +148,18 @@ void projectsetting::on_addFrameToolButton_clicked()
 
 void projectsetting::on_playPushButton_clicked()
 {
-    qDebug() << "index = " << ui->frameRateComboBox->currentIndex();
+    //qDebug() << "index = " << ui->frameRateComboBox->currentIndex();
+
+    if (!QFileInfo::exists("file.wav") && !QFileInfo("file.wav").isFile())
+    {
+        QMessageBox messageBox;
+        messageBox.warning(0,"Error","please generate an audio file first.");
+        return;
+    }
+
     if (ui->frameRateComboBox->currentIndex() >= 0)
     {
+
         if (this->ui->playPushButton->text() != QString("Stop"))
         {
             startPlay();
@@ -163,6 +179,8 @@ void projectsetting::on_playPushButton_clicked()
 
 void projectsetting::startPlay()
 {
+
+
     this->ui->playPushButton->setText("Stop");
 
     this->timer->stop();
@@ -174,6 +192,7 @@ void projectsetting::startPlay()
     this->ui->loopSlider->setDisabled(true);
     this->ui->loopSpinBox->setDisabled(true);
     this->help->startPlay();
+
 }
 
 void projectsetting::stopPlay()
@@ -188,6 +207,8 @@ void projectsetting::stopPlay()
     stopTimer->stop();
     this->ui->loopSlider->setEnabled(true);
     this->ui->loopSpinBox->setEnabled(true);
+
+//    player->stop();
 
 }
 
@@ -310,20 +331,17 @@ void projectsetting::importFromFile()
     }
     else
     {
-            Animation * newPrj = new Animation(fileName);
-            if (newPrj->getError())
-            {
-                qDebug() << "the animation did not work";
-            }
-            else
-            {
-               projectsetting * newPS = new projectsetting(newPrj);
-               newPS->show();
-               this->close();
-            }
-
-
-
+        Animation * newPrj = new Animation(fileName);
+        if (newPrj->getError())
+        {
+            qDebug() << "the animation did not work";
+        }
+        else
+        {
+           projectsetting * newPS = new projectsetting(newPrj);
+           newPS->show();
+           this->close();
+        }
     }
 }
 
@@ -342,10 +360,6 @@ void projectsetting::on_deletePushButton_clicked()
     }
 }
 
-void projectsetting::on_onPushButton_clicked()
-{
-
-}
 
 void projectsetting::on_generateSounFileButton_clicked()
 {
@@ -356,9 +370,43 @@ void projectsetting::on_generateSounFileButton_clicked()
         return;
     }
 
-    ui->messageLabel->show();
-    while(ui->messageLabel->isHidden());
+    //ui->messageLabel->show();
+    //while(ui->messageLabel->isHidden());
     AnimationAudio *audio = new AnimationAudio(animation, ui->frameRateComboBox->currentText().toInt(), ui->loopSpinBox->value());
     audio->generateFile("file.wav");
-    ui->messageLabel->hide();
+   // ui->messageLabel->hide();
+}
+
+void projectsetting::on_actionNew_Project_triggered()
+{
+    CreateProject *win = new CreateProject;
+    win->show();
+    this->close();
+
+}
+
+
+
+void projectsetting::on_maxFrequencyPushButton_clicked()
+{
+
+    ui->frequencySpinBox->setValue(ui->frequencySpinBox->maximum());
+
+}
+
+void projectsetting::on_maxAmplitudePushButton_clicked()
+{
+
+    ui->amplitudeSpinBox->setValue(ui->amplitudeSpinBox->maximum());
+}
+
+void projectsetting::on_minFrequencyPushButton_clicked()
+{
+    ui->frequencySpinBox->setValue(ui->frequencySpinBox->minimum());
+}
+
+
+void projectsetting::on_minAmplitudePushButton_clicked()
+{
+    ui->amplitudeSpinBox->setValue(ui->amplitudeSpinBox->minimum());
 }

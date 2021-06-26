@@ -10,6 +10,8 @@
 #include <QVector>
 #include <frame.h>
 #include <animation.h>
+#include <QMediaPlayer>
+#include <QAudioOutput>
 
 namespace Ui {
 class projectsetting;
@@ -29,8 +31,8 @@ public:
     int columns;
     QGraphicsView *graphicViews;
 
-    Helper * help;
-    PaintingWidget * pw;
+    Helper *help;
+    PaintingWidget *pw;
 
     Animation * animation;
 
@@ -71,9 +73,17 @@ private slots:
 
     void on_deletePushButton_clicked();
 
-    void on_onPushButton_clicked();
-
     void on_generateSounFileButton_clicked();
+
+    void on_actionNew_Project_triggered();
+
+    void on_maxFrequencyPushButton_clicked();
+
+    void on_maxAmplitudePushButton_clicked();
+
+    void on_minFrequencyPushButton_clicked();
+
+    void on_minAmplitudePushButton_clicked();
 
 private:
     Ui::projectsetting *ui;
@@ -84,6 +94,10 @@ private:
     bool enableUnselect  = 0;
     QTimer *timer;
     QTimer *stopTimer;
+    QMediaPlayer *player = new QMediaPlayer;
+
+    QFile sourceFile;
+    QAudioOutput* audio;
 
     void saveToFile();
     void importFromFile();

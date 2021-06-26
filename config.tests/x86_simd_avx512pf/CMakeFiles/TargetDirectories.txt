@@ -1,0 +1,3 @@
+C:/Users/mmokh/OneDrive/Documents/haptic-sensor-qt/config.tests/x86_simd_avx512pf/CMakeFiles/SimdTestavx512pf.dir
+C:/Users/mmokh/OneDrive/Documents/haptic-sensor-qt/config.tests/x86_simd_avx512pf/CMakeFiles/edit_cache.dir
+C:/Users/mmokh/OneDrive/Documents/haptic-sensor-qt/config.tests/x86_simd_avx512pf/CMakeFiles/rebuild_cache.dir

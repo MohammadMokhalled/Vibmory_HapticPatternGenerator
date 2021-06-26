@@ -15,14 +15,14 @@ AnimationAudio::AnimationAudio(Animation *anim, int frameRate, int len)
 bool AnimationAudio::writeHeader(QDataStream *stream)
 {
 
-    *stream << 'R' << 'I' << 'F' << 'F';
+    *stream << (uint8_t)'R' << (uint8_t)'I' << (uint8_t)'F' << (uint8_t)'F';
 
     uint32_t fileSize = animation->getRows() * animation->getColumns() * length * sampleRate * 2 + 44;
     *stream << fileSize;
 
-    *stream << 'W' << 'A' << 'V' << 'E';
+    *stream << (uint8_t)'W' << (uint8_t)'A' << (uint8_t)'V' << (uint8_t)'E';
 
-    *stream << 'f' << 'm' << 't' << ' ';
+    *stream << (uint8_t)'f' << (uint8_t)'m' << (uint8_t)'t' << (uint8_t)' ';
 
     uint32_t formatdata = 16;
     *stream << formatdata;
@@ -90,7 +90,7 @@ bool AnimationAudio::generateFile(QString fileName)
        QDataStream stream(&file);
        stream.setByteOrder(QDataStream::LittleEndian);
 
-       writeHeader(&stream);
+       //writeHeader(&stream);
        writeData(&stream);
 
     }
