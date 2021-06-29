@@ -2,14 +2,17 @@
 #include <QFile>
 #include <QTextStream>
 #include <QMessageBox>
+#include <QDebug>
 
 Animation::Animation(int rows, int columns)
 {
     lock.lock();
+    qDebug() << frames.length();
     this->rows    = rows;
     this->columns = columns;
 
-    this->frames.append(Frame(rows,columns));
+//    this->frames.append(Frame(rows,columns));
+    qDebug() << frames.length();
     lock.unlock();
 }
 
@@ -191,7 +194,7 @@ int Animation::getColumns()
 void Animation::nextFrame()
 {
     currentFrame++;
-    if (currentFrame > frames.length() -2)
+    if (currentFrame > frames.length() -1)
     {
         currentFrame = 0;
     }

@@ -90,7 +90,6 @@ bool AnimationAudio::generateFile(QString fileName)
        QDataStream stream(&file);
        stream.setByteOrder(QDataStream::LittleEndian);
 
-       //writeHeader(&stream);
        writeData(&stream);
 
     }

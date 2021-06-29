@@ -4,7 +4,7 @@
 #include "qtabbar.h"
 #include <QThreadPool>
 #include <QGraphicsScene>
-#include "playinganimation.h"
+
 #include <QFileDialog>
 #include <QTimer>
 #include <QMessageBox>
@@ -28,7 +28,6 @@ ProjectSetting::ProjectSetting(bool test, int rows, int columns, QWidget *parent
     ui(new Ui::projectsetting)
 {
     ui->setupUi(this);
-    //ui->messageLabel->hide();
     this->rows = rows;
     this->columns = columns;
 
@@ -58,7 +57,6 @@ ProjectSetting::ProjectSetting(Animation * anim, QWidget *parent) :
     ui(new Ui::projectsetting)
 {
     ui->setupUi(this);
-    //ui->messageLabel->hide();
     initialize(anim);
     stopTimer = new QTimer(this);
     timer = new QTimer(this);
@@ -263,7 +261,7 @@ void ProjectSetting::on_tabWidget_currentChanged(int index)
         //help->setCurrentFrame(&frames[index]);
         currentFrame = index;
         this->animation->selectFrame(index);
-        qDebug() << "current " << index << "\n";
+        //qDebug() << "current " << index << "\n";
         tabChangeTries++;
         if (tabChangeTries > 2)
             enableUnselect = true;
@@ -396,7 +394,7 @@ void ProjectSetting::on_maxFrequencyPushButton_clicked()
 
 void ProjectSetting::on_maxAmplitudePushButton_clicked()
 {
-
+qDebug() << "len" << this->animation->getLen() << "\n";
     ui->amplitudeSpinBox->setValue(ui->amplitudeSpinBox->maximum());
 }
 
