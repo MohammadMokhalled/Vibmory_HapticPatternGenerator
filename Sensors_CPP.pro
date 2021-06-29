@@ -21,11 +21,9 @@ SOURCES += \
     main.cpp \
     mainwindow.cpp \
     paintingwidget.cpp \
-    playinganimation.cpp \
     projectsetting.cpp
 
 HEADERS += \
-    Windows.h \
     animation.h \
     animationaudio.h \
     createproject.h \
@@ -33,8 +31,6 @@ HEADERS += \
     helper.h \
     mainwindow.h \
     paintingwidget.h \
-    playinganimation.h \
-    portaudio.h \
     projectsetting.h
 
 FORMS += \
