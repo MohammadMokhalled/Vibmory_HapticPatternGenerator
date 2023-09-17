@@ -140,9 +140,9 @@ int Animation::getFrequency(int row, int column, int frameIndex)
     return freq;
 }
 
-QString Animation::writeInFile(const QString& fileAddress)
+bool Animation::writeInFile(const QString& fileAddress)
 {
-    QString message = "";
+    bool ret = false;
     QFile file(fileAddress);
     if(file.open(QIODevice::WriteOnly | QIODevice::Text))
     {
@@ -159,15 +159,11 @@ QString Animation::writeInFile(const QString& fileAddress)
        }
        file.close();
 
-       message = "File is exported sucessfully";
+       ret = true;
 
     }
-    else
-    {
-        message = "Cannot open or create the file.";
-    }
 
-    return message;
+    return ret;
 }
 
 QString Animation::getFrameString()

@@ -24,7 +24,7 @@ public:
     QColor getColor(int row, int column);
     int getAmplitude(int row, int column, int frameIndex = -1);
     int getFrequency(int row, int column, int frameIndex = -1);
-    QString writeInFile(const QString& fileAddress);
+    bool writeInFile(const QString& fileAddress);
     int getRows() const;
     int getColumns() const;
     QString getFrameString();
