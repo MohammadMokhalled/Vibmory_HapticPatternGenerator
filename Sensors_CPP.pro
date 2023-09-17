@@ -34,9 +34,9 @@ HEADERS += \
     projectsettingwindow.h
 
 FORMS += \
-    createproject.ui \
+    createprojectwindow.ui \
     mainwindow.ui \
-    projectsetting.ui
+    projectsettingwindow.ui
 
 TRANSLATIONS += \
     Sensors_CPP_en_001.ts

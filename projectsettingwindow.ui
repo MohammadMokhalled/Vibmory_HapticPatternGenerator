@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>projectsetting</class>
- <widget class="QMainWindow" name="projectsetting">
+ <class>projectsettingwindow</class>
+ <widget class="QMainWindow" name="projectsettingwindow">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -642,7 +642,7 @@
      <x>0</x>
      <y>0</y>
      <width>1148</width>
-     <height>26</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
