@@ -65,7 +65,7 @@
 class Helper
 {
 public:
-    Helper(Animation * anim, int rows, int columns);
+    Helper(Animation* animation, int rows, int columns);
 
     void paint(QPainter *painter, QPaintEvent *event);
     void drawBackground(QPainter *painter);
@@ -82,37 +82,37 @@ public:
 
 
 private:
-    QBrush background;
-    QBrush foreground;
-    QBrush circleBrush;
-    QFont textFont;
-    QPen circlePen;
-    QPen textPen;
-    QPen boldPen;
-    int rows;
-    int columns;
+    QBrush mBackgroundBrush;
+    QBrush mForegroundBrush;
+    QBrush mCircleBrush;
+    QFont mTextFont;
+    QPen mCirclePen;
+    QPen mTextPen;
+    QPen mBoldPen;
+    int mRows;
+    int mColumns;
 
-    int cellWidth;
-    int cellHeight;
+    int mCellWidth;
+    int mCellHeight;
 
-    int paintingState = 0;
+    int mPaintingState = 0;
 
-    bool selectedPosition = false;
+    bool mSelectedPosition = false;
 
-    int selectedRow = -1;
-    int selectedColumn = -1;
+    int mSelectedRow = -1;
+    int mSelectedColumn = -1;
 
-    Animation * animation;
+    Animation* mAnimation;
 
-    QMutex lock;
+    QMutex mLock;
 
-    bool play = false;
-    int tabIndexBeforePlay = 0;
+    bool mPlay = false;
+    int mTabIndexBeforePlay = 0;
 
-    QFile sourceFile;
-    QAudioOutput* audio;
+    QFile mSourceFile;
+    QAudioOutput* mAudio;
 
-    bool firstFramePlay = false;
+    bool mFirstFramePlay = false;
 };
 //! [0]
 

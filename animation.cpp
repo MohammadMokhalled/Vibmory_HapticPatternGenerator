@@ -6,14 +6,14 @@
 
 Animation::Animation(int rows, int columns)
 {
-    lock.lock();
-    qDebug() << frames.length();
-    this->rows    = rows;
-    this->columns = columns;
+    mLock.lock();
+    qDebug() << mFrames.length();
+    this->mRows    = rows;
+    this->mColumns = columns;
 
 //    this->frames.append(Frame(rows,columns));
-    qDebug() << frames.length();
-    lock.unlock();
+    qDebug() << mFrames.length();
+    mLock.unlock();
 }
 
 Animation::Animation(QString fileAddress)
@@ -33,17 +33,17 @@ Animation::Animation(QString fileAddress)
         }
         // frames.resize(values[0].toInt() + 1);
         int frameNumber = values[0].toInt();
-        this->rows      = values[1].toInt();
-        this->columns   = values[2].toInt();
+        this->mRows      = values[1].toInt();
+        this->mColumns   = values[2].toInt();
 
         for (int i = 0; i < frameNumber; i++)
         {
             QString frame = "";
-            for (int j = 0; j < rows; j++)
+            for (int j = 0; j < mRows; j++)
             {
                  frame += in.readLine() + "\n";
             }
-            Frame newFrame = Frame(frame, columns, rows);
+            Frame newFrame = Frame(frame, mColumns, mRows);
 
             if (newFrame.getError())
             {
@@ -51,7 +51,7 @@ Animation::Animation(QString fileAddress)
                 return;
             }
 
-            frames.append(newFrame);
+            mFrames.append(newFrame);
         }
 
 
@@ -68,57 +68,57 @@ Animation::Animation(QString fileAddress)
 
 void Animation::addFrame()
 {
-    lock.lock();
-    this->frames.append(Frame(this->rows,this->columns));
-    lock.unlock();
+    mLock.lock();
+    this->mFrames.append(Frame(this->mRows,this->mColumns));
+    mLock.unlock();
 }
 
 void Animation::duplicateCurrentFrame()
 {
-    lock.lock();
-    this->frames.insert(currentFrame + 1,Frame(frames[currentFrame]));
-    lock.unlock();
+    mLock.lock();
+    this->mFrames.insert(mCurrentFrame + 1,Frame(mFrames[mCurrentFrame]));
+    mLock.unlock();
 }
 
 void Animation::selectFrame(int index)
 {
-    lock.lock();
-    currentFrame = index;
-    lock.unlock();
+    mLock.lock();
+    mCurrentFrame = index;
+    mLock.unlock();
 }
 
 int  Animation::getLen()
 {
-    return frames.length();
+    return mFrames.length();
 }
 
 void Animation::setPos(int row, int column)
 {
-    lock.lock();
-    currentRow     = row;
-    currentColumn  = column;
-    lock.unlock();
+    mLock.lock();
+    mCurrentRow     = row;
+    mCurrentColumn  = column;
+    mLock.unlock();
 }
 
 void Animation::setAmplitude(int row, int column, uint32_t value)
 {
-    lock.lock();
-    frames[currentFrame].setAmplitude(row, column, value);
-    lock.unlock();
+    mLock.lock();
+    mFrames[mCurrentFrame].setAmplitude(row, column, value);
+    mLock.unlock();
 }
 
 void Animation::setFrequency(int row, int column, uint32_t value)
 {
-    lock.lock();
-    frames[currentFrame].setFrequency(row, column, value);
-    lock.unlock();
+    mLock.lock();
+    mFrames[mCurrentFrame].setFrequency(row, column, value);
+    mLock.unlock();
 }
 
 QColor Animation::getColor(int row, int column)
 {
-    lock.lock();
-    QColor color = frames[currentFrame].getColor(row, column);
-    lock.unlock();
+    mLock.lock();
+    QColor color = mFrames[mCurrentFrame].getColor(row, column);
+    mLock.unlock();
     return color;
 }
 
@@ -126,11 +126,11 @@ int Animation::getAmplitude(int row, int column, int frameIndex)
 {
     if (frameIndex == -1)
     {
-        frameIndex = currentFrame;
+        frameIndex = mCurrentFrame;
     }
-    lock.lock();
-    int amp = frames[frameIndex].getAmplitude(row, column);
-    lock.unlock();
+    mLock.lock();
+    int amp = mFrames[frameIndex].getAmplitude(row, column);
+    mLock.unlock();
     return amp;
 }
 
@@ -138,11 +138,11 @@ int Animation::getFrequency(int row, int column, int frameIndex)
 {
     if (frameIndex == -1)
     {
-        frameIndex = currentFrame;
+        frameIndex = mCurrentFrame;
     }
-    lock.lock();
-    int freq = frames[frameIndex].getFrequency(row, column);
-    lock.unlock();
+    mLock.lock();
+    int freq = mFrames[frameIndex].getFrequency(row, column);
+    mLock.unlock();
     return freq;
 }
 
@@ -155,13 +155,13 @@ QString Animation::writeInFile(QString address)
        QTextStream stream(&file);
 
        stream << QString::number(this->getLen()) << ", " <<
-                 QString::number(rows) << ", " <<
-                 QString::number(columns) << ", " <<
+                 QString::number(mRows) << ", " <<
+           QString::number(mColumns) << ", " <<
                  "\n";
 
        for (int i = 0; i < this->getLen(); i++)
        {
-           stream << frames[i].toString();
+            stream << mFrames[i].toString();
        }
        file.close();
 
@@ -178,44 +178,44 @@ QString Animation::writeInFile(QString address)
 
 QString Animation::getFrameString()
 {
-    return frames[currentFrame].toString();
+    return mFrames[mCurrentFrame].toString();
 }
 
 int Animation::getRows()
 {
-    return this->rows;
+    return this->mRows;
 }
 
 int Animation::getColumns()
 {
-    return this->columns;
+    return this->mColumns;
 }
 
 void Animation::nextFrame()
 {
-    currentFrame++;
-    if (currentFrame > frames.length() -1)
+    mCurrentFrame++;
+    if (mCurrentFrame > mFrames.length() -1)
     {
-        currentFrame = 0;
+        mCurrentFrame = 0;
     }
 }
 
 int Animation::getCurrentFrameIndex()
 {
-    return currentFrame;
+    return mCurrentFrame;
 }
 
 void Animation::setError()
 {
-    this->creationError = true;
+    this->mCreationError = true;
 }
 
 bool Animation::getError()
 {
-    return this->creationError;
+    return this->mCreationError;
 }
 
 void Animation::removeCurrentFrame()
 {
-    frames.remove(currentFrame);
+    mFrames.remove(mCurrentFrame);
 }

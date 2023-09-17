@@ -6,9 +6,9 @@
 
 AnimationAudio::AnimationAudio(Animation *anim, int frameRate, int len)
 {
-    animation = anim;
-    this->frameRate = frameRate;
-    length = len;
+    mAnimation = anim;
+    this->mFrameRate = frameRate;
+    mLength = len;
 
 }
 
@@ -16,8 +16,8 @@ bool AnimationAudio::writeHeader(QDataStream *stream)
 {
 
     *stream << (uint8_t)'R' << (uint8_t)'I' << (uint8_t)'F' << (uint8_t)'F';
-
-    uint32_t fileSize = animation->getRows() * animation->getColumns() * length * sampleRate * 2 + 44;
+    
+    uint32_t fileSize = mAnimation->getRows() * mAnimation->getColumns() * mLength * mSampleRate * 2 + 44;
     *stream << fileSize;
 
     *stream << (uint8_t)'W' << (uint8_t)'A' << (uint8_t)'V' << (uint8_t)'E';
@@ -29,13 +29,13 @@ bool AnimationAudio::writeHeader(QDataStream *stream)
 
     uint16_t format = 1;
     *stream << format;
-
-    uint16_t numberOfChannels =  animation->getRows() * animation->getColumns();
+    
+    uint16_t numberOfChannels =  mAnimation->getRows() * mAnimation->getColumns();
     *stream << numberOfChannels;
 
-    *stream << sampleRate;
+    *stream << mSampleRate;
 
-    uint32_t dataRate = (sampleRate * numberOfChannels * 16) / 8;
+    uint32_t dataRate = (mSampleRate * numberOfChannels * 16) / 8;
     *stream << dataRate;
 
     uint16_t blockAllign = (numberOfChannels * 16) / 8;
@@ -55,23 +55,23 @@ bool AnimationAudio::writeHeader(QDataStream *stream)
 
 bool AnimationAudio::writeData(QDataStream *stream)
 {
-    uint32_t maxValue = sampleRate * length;
-    uint32_t frameLen = sampleRate / frameRate;
-    uint32_t numberOfFrames = animation->getLen();
-    uint16_t numberOfActuators = animation->getRows() * animation->getColumns();
+    uint32_t maxValue = mSampleRate * mLength;
+    uint32_t frameLen = mSampleRate / mFrameRate;
+    uint32_t numberOfFrames = mAnimation->getLen();
+    uint16_t numberOfActuators = mAnimation->getRows() * mAnimation->getColumns();
 
 
     for (uint32_t x = 0; x < maxValue; x++)
     {
-        double t = static_cast<double>(x) / sampleRate;
+        double t = static_cast<double>(x) / mSampleRate;
         uint16_t frameIndex = (x / frameLen) % (numberOfFrames -1);
-
-        for (int i = 0; i < animation->getRows(); i++)
+        
+        for (int i = 0; i < mAnimation->getRows(); i++)
         {
-            for (int j = 0; j < animation->getColumns(); j++)
+            for (int j = 0; j < mAnimation->getColumns(); j++)
             {
-                double w = (animation->getFrequency(i,j,frameIndex)  * TWOPI);
-                int16_t amplitude = animation->getAmplitude(i,j,frameIndex);
+                double w = (mAnimation->getFrequency(i,j,frameIndex)  * TWOPI);
+                int16_t amplitude = mAnimation->getAmplitude(i,j,frameIndex);
 
                 int16_t value = amplitude * sin(w * t);
                 *stream << value;

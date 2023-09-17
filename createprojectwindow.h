@@ -8,13 +8,13 @@ namespace Ui {
 class CreateProject;
 }
 
-class CreateProject : public QMainWindow
+class CreateProjectWindow : public QMainWindow
 {
     Q_OBJECT
 
 public:
-    explicit CreateProject(QWidget *parent = nullptr);
-    ~CreateProject();
+    explicit CreateProjectWindow(QWidget *parent = nullptr);
+    ~CreateProjectWindow();
 
 
 private slots:

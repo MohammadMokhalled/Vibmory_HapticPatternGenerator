@@ -5,10 +5,10 @@
 #include <QTimer>
 
 //! [0]
-PaintingWidget::PaintingWidget(Helper *helper, QWidget *parent)
-    : QWidget(parent), helper(helper)
+PaintingWidget::PaintingWidget(Helper* helper, QWidget *parent)
+    : QWidget(parent), mHelper(helper)
 {
-    elapsed = 0;
+    mElapsed = 0;
     //qDebug() << QString("started");
 setMouseTracking(true);
     //setFixedSize(200, 200);
@@ -18,7 +18,7 @@ setMouseTracking(true);
 //! [1]
 void PaintingWidget::animate()
 {
-    elapsed = (elapsed + qobject_cast<QTimer*>(sender())->interval()) % 1000;
+    mElapsed = (mElapsed + qobject_cast<QTimer*>(sender())->interval()) % 1000;
     update();
 }
 //! [1]
@@ -29,7 +29,7 @@ void PaintingWidget::paintEvent(QPaintEvent *event)
     QPainter painter;
     painter.begin(this);
     painter.setRenderHint(QPainter::Antialiasing);
-    helper->paint(&painter, event);
+    mHelper->paint(&painter, event);
     painter.end();
 
 }
@@ -38,7 +38,7 @@ void PaintingWidget::paintEvent(QPaintEvent *event)
 void PaintingWidget::mousePressEvent( QMouseEvent * evt )
 {
     mPoint = evt->pos();
-    helper->selectCell(mPoint.x(), mPoint.y());
+    mHelper->selectCell(mPoint.x(), mPoint.y());
     emit mousePressed( mPoint );
     emit selectedSignal();
 }
@@ -47,9 +47,9 @@ void PaintingWidget::mousePressEvent( QMouseEvent * evt )
 
 void PaintingWidget::drawBackground()
 {
-    const QRect re = QRect(0,0,this->width(), this->height());
+    const QRect re = QRect(0,0,width(), height());
     QPainter painter;
     painter.begin(this);
     painter.setRenderHint(QPainter::Antialiasing);
-    helper->drawBackground(&painter);
+    mHelper->drawBackground(&painter);
 }

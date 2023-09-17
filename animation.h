@@ -7,18 +7,6 @@
 
 class Animation
 {
-private:
-    uint16_t currentFrame   = 0;
-    uint16_t currentRow     = 0;
-    uint16_t currentColumn  = 0;
-    uint16_t rows;
-    uint16_t columns;
-    bool creationError = false;
-
-    QVector<Frame> frames;
-    QMutex lock;
-    void setError();
-
 public:
     Animation(int rows, int columns);
     Animation(QString fileAddress);
@@ -41,6 +29,20 @@ public:
     int getCurrentFrameIndex();
     bool getError();
     void removeCurrentFrame();
+
+private:
+    uint16_t mCurrentFrame   = 0;
+    uint16_t mCurrentRow     = 0;
+    uint16_t mCurrentColumn  = 0;
+    uint16_t mRows;
+    uint16_t mColumns;
+    bool mCreationError = false;
+
+    QVector<Frame> mFrames;
+    QMutex mLock;
+
+    void setError();
+
 };
 
 

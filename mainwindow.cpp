@@ -3,9 +3,12 @@
 #include "animation.h"
 #include <QFileDialog>
 #include <exception>
+#include "createprojectwindow.h"
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
+    , mSecondWindow(nullptr)
 {
     ui->setupUi(this);
 }
@@ -17,9 +20,9 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_newProjectButton_clicked()
 {
-    CreateProject *win = new CreateProject;
-    this->hide();
-    win->show();
+    mSecondWindow = new CreateProjectWindow;
+    close();
+    mSecondWindow->show();
 }
 
 void MainWindow::on_uploadButton_clicked()
@@ -41,9 +44,9 @@ void MainWindow::on_uploadButton_clicked()
         }
         else
         {
-            ProjectSetting *prj = new ProjectSetting(animation);
-            this->hide();
-            prj->show();
+            mSecondWindow = new ProjectSetting(animation, this);
+            hide();
+            mSecondWindow->show();
         }
     }
 

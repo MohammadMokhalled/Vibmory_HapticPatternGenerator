@@ -71,3 +71,9 @@ Thumbs.db
 *.dll
 *.exe
 
+.vs/
+debug/
+release/
+x64/
+Sensors_CPP.qtvscr
+

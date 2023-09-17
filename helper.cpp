@@ -56,24 +56,24 @@
 #include <QDebug>
 
 //! [0]
-Helper::Helper(Animation * anim, int rows, int columns)
+Helper::Helper(Animation* animation, int rows, int columns):
+    mAnimation(animation)
 {
     QLinearGradient gradient(QPointF(50, -20), QPointF(80, 20));
     gradient.setColorAt(0.0, Qt::white);
     gradient.setColorAt(1.0, QColor(0xa6, 0xce, 0x39));
 
-    background = QBrush(QColor(255, 255, 255));
-    circleBrush = QBrush(gradient);
-    circlePen = QPen(Qt::black);
-    circlePen.setWidth(1);
-    boldPen = QPen(Qt::black);
-    boldPen.setWidth(4);
-    textPen = QPen(Qt::white);
-    textFont.setPixelSize(50);
-    this->rows = rows;
-    this->columns = columns;
-    animation = anim;
-    //this->ps = p;
+    mBackgroundBrush = QBrush(QColor(255, 255, 255));
+    mCircleBrush = QBrush(gradient);
+    mCirclePen = QPen(Qt::black);
+    mCirclePen.setWidth(1);
+    mBoldPen = QPen(Qt::black);
+    mBoldPen.setWidth(4);
+    mTextPen = QPen(Qt::white);
+    mTextFont.setPixelSize(50);
+    mRows = rows;
+    mColumns = columns;
+    //ps = p;
 }
 //! [0]
 
@@ -84,34 +84,34 @@ void Helper::drawBackground(QPainter *painter)
     int width = painter->device()->width();
     int height = painter->device()->height();
     const QRect rect = QRect(QPoint(0,0), QPoint(width,height));
-    painter->fillRect(rect, background);
+    painter->fillRect(rect, mBackgroundBrush);
 
-    cellWidth = width / columns;
-    cellHeight = height / rows;
+    mCellWidth = width / mColumns;
+    mCellHeight = height / mRows;
 
-    for (int i = 1; i < columns; i++)
+    for (int i = 1; i < mColumns; i++)
     {
-        painter->drawLine(i*cellWidth,0,i*cellWidth,height);
+        painter->drawLine(i*mCellWidth,0,i*mCellWidth,height);
     }
 
-    for (int i = 1; i < rows; i++)
+    for (int i = 1; i < mRows; i++)
     {
-        painter->drawLine(0,i*cellHeight,width,i*cellHeight);
+        painter->drawLine(0,i*mCellHeight,width,i*mCellHeight);
     }
 
 }
 
 void Helper::drawColors(QPainter *painter)
 {
-    for (int i = 0; i < rows; i++)
+    for (int i = 0; i < mRows; i++)
     {
-        for (int j = 0; j < columns; j++)
+        for (int j = 0; j < mColumns; j++)
         {
-            if (animation->getColor(i,j) != Qt::white)
+            if (mAnimation->getColor(i,j) != Qt::white)
             {
-                foreground = QBrush(animation->getColor(i,j));
-                const QRect rect = QRect(j*cellWidth+2, i*cellHeight+2, cellWidth-4, cellHeight-4);
-                painter->fillRect(rect, foreground);
+                mForegroundBrush = QBrush(mAnimation->getColor(i,j));
+                const QRect rect = QRect(j*mCellWidth+2, i*mCellHeight+2, mCellWidth-4, mCellHeight-4);
+                painter->fillRect(rect, mForegroundBrush);
             }
         }
     }
@@ -119,13 +119,13 @@ void Helper::drawColors(QPainter *painter)
 
 void Helper::playAudio()
 {
-    sourceFile.setFileName("file.wav"); //C:/Users/mmokh/OneDrive/Documents/build-Sensors_CPP-Desktop_Qt_6_0_3_MSVC2019_64bit-Debug/
-    sourceFile.open(QIODevice::ReadOnly);
+    mSourceFile.setFileName("file.wav"); //C:/Users/mmokh/OneDrive/Documents/build-Sensors_CPP-Desktop_Qt_6_0_3_MSVC2019_64bit-Debug/
+    mSourceFile.open(QIODevice::ReadOnly);
 
     QAudioFormat format;
     // Set up the format, eg.
     format.setSampleRate(48000);
-    format.setChannelCount(animation->getColumns() * animation->getRows());
+    format.setChannelCount(mAnimation->getColumns() * mAnimation->getRows());
     format.setSampleSize(16);
     format.setCodec("audio/pcm");
     format.setByteOrder(QAudioFormat::LittleEndian);
@@ -136,89 +136,89 @@ void Helper::playAudio()
         qWarning() << "Raw audio format not supported by backend, cannot play audio.";
     }
 
-    audio = new QAudioOutput(format);
-    audio->start(&sourceFile);
+    mAudio = new QAudioOutput(format);
+    mAudio->start(&mSourceFile);
     //audio->start();
 }
 
 void Helper::startPlay()
 {
-    tabIndexBeforePlay = animation->getCurrentFrameIndex();
-    animation->selectFrame(0);
-    play = true;
-    firstFramePlay = true;
+    mTabIndexBeforePlay = mAnimation->getCurrentFrameIndex();
+    mAnimation->selectFrame(0);
+    mPlay = true;
+    mFirstFramePlay = true;
 }
 
 void Helper::stopPlay()
 {
-    play = false;
-    animation->selectFrame(tabIndexBeforePlay);
-    audio->stop();
-    sourceFile.close();
+    mPlay = false;
+    mAnimation->selectFrame(mTabIndexBeforePlay);
+    mAudio->stop();
+    mSourceFile.close();
 }
 
 
 void Helper::paint(QPainter *painter, QPaintEvent *event)
 {
-    lock.lock();
-    if (firstFramePlay)
+    mLock.lock();
+    if (mFirstFramePlay)
     {
         playAudio();
-        firstFramePlay = false;
+        mFirstFramePlay = false;
     }
     drawBackground(painter);
 
     drawColors(painter);
 
-    if (selectedPosition) //clicked
+    if (mSelectedPosition) //clicked
     {
-        painter->setPen(boldPen);
-        painter->drawRect(selectedColumn * cellWidth, selectedRow * cellHeight, cellWidth, cellHeight);
+        painter->setPen(mBoldPen);
+        painter->drawRect(mSelectedColumn * mCellWidth, mSelectedRow * mCellHeight, mCellWidth, mCellHeight);
     }
 
-    if (play)
+    if (mPlay)
     {
-        animation->nextFrame();
+        mAnimation->nextFrame();
     }
 
-    lock.unlock();
+    mLock.unlock();
 }
 
 bool Helper::setPaintingState(int state)
 {
-  lock.lock();
-  this->paintingState = state;
-  lock.unlock();
+  mLock.lock();
+  mPaintingState = state;
+  mLock.unlock();
   return true;
 }
 
 void Helper::selectCell(int x, int y)
 {
-  lock.lock();
-  selectedPosition = true;
-  selectedColumn = x/cellWidth;
-  selectedRow = y/cellHeight;
-  lock.unlock();
+  mLock.lock();
+  mSelectedPosition = true;
+  mSelectedColumn = x/mCellWidth;
+  mSelectedRow = y/mCellHeight;
+  mLock.unlock();
 }
 
 void Helper::unselectCell()
 {
-    lock.lock();
-    selectedPosition = false;
-    lock.unlock();
+    mLock.lock();
+  mSelectedPosition = false;
+    mLock.unlock();
 }
 
 bool Helper::isSelected()
 {
-    return selectedPosition;
+    return mSelectedPosition;
 }
 
 int Helper::getSelectedRow()
 {
-    return selectedRow;
+    return mSelectedRow;
 }
 
 int Helper::getSelectedColumn()
 {
-    return selectedColumn;
+    return mSelectedColumn;
 }

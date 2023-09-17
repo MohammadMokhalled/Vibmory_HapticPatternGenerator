@@ -13,14 +13,15 @@ class Helper;
 class PaintingWidget : public QWidget
 {
     Q_OBJECT
+
+public:
+    PaintingWidget(Helper* helper, QWidget* parent);
+    void mousePressEvent(QMouseEvent* evt);
+    void drawBackground();
+
 signals:
     void mousePressed( const QPoint& );
     void selectedSignal();
-
-public:
-    PaintingWidget(Helper *helper, QWidget *parent);
-    void mousePressEvent( QMouseEvent * evt );
-    void drawBackground();
 
 public slots:
     void animate();
@@ -30,8 +31,8 @@ protected:
     void paintEvent(QPaintEvent *event) override;
 
 private:
-    Helper *helper;
-    int elapsed;
+    Helper* mHelper;
+    int mElapsed;
     QPoint mPoint;
 };
 //! [0]

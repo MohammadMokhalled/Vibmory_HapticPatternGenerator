@@ -2,9 +2,7 @@
 #define PROJECTSETTING_H
 
 #include <QMainWindow>
-#include "qpushbutton.h"
 #include "qgraphicsview.h"
-#include "qgridlayout.h"
 #include "paintingwidget.h"
 #include "helper.h"
 #include <QVector>
@@ -24,23 +22,16 @@ class ProjectSetting : public QMainWindow
 public:
     explicit ProjectSetting(QWidget *parent = nullptr);
     explicit ProjectSetting(bool test, int rows, int columns, QWidget *parent = nullptr);
-    explicit ProjectSetting(Animation * anim, QWidget *parent = nullptr);
+    explicit ProjectSetting(Animation* animation, QWidget *parent = nullptr);
     ~ProjectSetting();
-
-    int rows;
-    int columns;
-    QGraphicsView *graphicViews;
-
-    Helper *help;
-    PaintingWidget *pw;
-
-    Animation * animation;
 
 public slots:
     void enableGroupBox();
     void stopPlay();
 
 private slots:
+
+
     void addFrame();
 
     void on_addFrameToolButton_clicked();
@@ -87,22 +78,31 @@ private slots:
 
 private:
     Ui::projectsetting *ui;
-    uint16_t currentFrame   = 0;
-    uint16_t currentRow     = 0;
-    uint16_t currentColumn  = 0;
-    uint8_t tabChangeTries  = 0;
-    bool enableUnselect  = 0;
-    QTimer *timer;
-    QTimer *stopTimer;
-    QMediaPlayer *player = new QMediaPlayer;
+    int mRows;
+    int mColumns;
+    QGraphicsView* mGraphicViews;
 
-    QFile sourceFile;
-    QAudioOutput* audio;
+    Helper* mHelp;
+    PaintingWidget* mPaintingWidget;
+
+    Animation* mAnimation;
+
+    uint16_t mCurrentFrame   = 0;
+    uint16_t mCurrentRow     = 0;
+    uint16_t mCurrentColumn  = 0;
+    uint8_t mTabChangeTries  = 0;
+    bool mEnableUnselect  = 0;
+    QTimer* mTimer;
+    QTimer* mStopTimer;
+    QMediaPlayer* mPlayer;
+
+    QFile* mSourceFile;
+    QAudioOutput* mAudio;
 
     void saveToFile();
     void importFromFile();
     void initializeUI();
-    void initialize(Animation * anim);
+    void initialize(Animation* animation);
     void startPlay();
 
 };
