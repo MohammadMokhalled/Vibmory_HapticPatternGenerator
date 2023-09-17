@@ -11,7 +11,7 @@ Animation::Animation(int rows, int columns):
 
 }
 
-Animation::Animation(QString& fileAddress)
+Animation::Animation(const QString& fileAddress)
 {
     QFile file(fileAddress);
     if (file.open(QIODevice::ReadOnly))
@@ -81,8 +81,7 @@ void Animation::selectFrame(int index)
     mCurrentFrame = index;
     mLock.unlock();
 }
-
-int  Animation::getLen()
+int  Animation::getLen() const
 {
     return mFrames.length();
 }
@@ -141,7 +140,7 @@ int Animation::getFrequency(int row, int column, int frameIndex)
     return freq;
 }
 
-QString Animation::writeInFile(QString& fileAddress)
+QString Animation::writeInFile(const QString& fileAddress)
 {
     QString message = "";
     QFile file(fileAddress);
@@ -176,12 +175,12 @@ QString Animation::getFrameString()
     return mFrames[mCurrentFrame].toString();
 }
 
-int Animation::getRows()
+int Animation::getRows() const
 {
     return mRows;
 }
 
-int Animation::getColumns()
+int Animation::getColumns() const
 {
     return mColumns;
 }
@@ -195,7 +194,7 @@ void Animation::nextFrame()
     }
 }
 
-int Animation::getCurrentFrameIndex()
+int Animation::getCurrentFrameIndex() const
 {
     return mCurrentFrame;
 }
@@ -205,7 +204,7 @@ void Animation::setError()
     mCreationError = true;
 }
 
-bool Animation::getError()
+bool Animation::getError() const
 {
     return mCreationError;
 }

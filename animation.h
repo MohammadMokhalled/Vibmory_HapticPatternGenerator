@@ -2,49 +2,49 @@
 #define ANIMATION_H
 
 #include "frame.h"
-#include "QMutex"
-#include "QString"
+#include <QVector>
+#include <QMutex>
+
+class QString;
+class QColor;
 
 class Animation
 {
 public:
-    Animation(int rows, int columns);
-    Animation(QString& fileAddress);
-    void addFrame();
+    explicit Animation(int rows, int columns);
+    explicit Animation(const QString& fileAddress);
 
+    void addFrame();
     void duplicateCurrentFrame();
     void selectFrame(int index);
-    int  getLen();
+    int getLen() const;
     void setPos(int row, int column);
     void setAmplitude(int row, int column, uint32_t value);
     void setFrequency(int row, int column, uint32_t value);
     QColor getColor(int row, int column);
     int getAmplitude(int row, int column, int frameIndex = -1);
     int getFrequency(int row, int column, int frameIndex = -1);
-    QString writeInFile(QString& fileAddress);
-    int getRows();
-    int getColumns();
+    QString writeInFile(const QString& fileAddress);
+    int getRows() const;
+    int getColumns() const;
     QString getFrameString();
     void nextFrame();
-    int getCurrentFrameIndex();
-    bool getError();
+    int getCurrentFrameIndex() const;
+    bool getError() const;
     void removeCurrentFrame();
 
 private:
-    uint16_t mCurrentFrame   = 0;
-    uint16_t mCurrentRow     = 0;
-    uint16_t mCurrentColumn  = 0;
+    uint16_t mCurrentFrame = 0;
+    uint16_t mCurrentRow = 0;
+    uint16_t mCurrentColumn = 0;
     uint16_t mRows;
     uint16_t mColumns;
     bool mCreationError = false;
 
     QVector<Frame> mFrames;
-    QMutex mLock;
+    mutable QMutex mLock;
 
     void setError();
-
 };
-
-
 
 #endif // ANIMATION_H
