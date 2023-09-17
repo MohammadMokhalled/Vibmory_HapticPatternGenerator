@@ -9,7 +9,7 @@ class Animation
 {
 public:
     Animation(int rows, int columns);
-    Animation(QString fileAddress);
+    Animation(QString& fileAddress);
     void addFrame();
 
     void duplicateCurrentFrame();
@@ -21,7 +21,7 @@ public:
     QColor getColor(int row, int column);
     int getAmplitude(int row, int column, int frameIndex = -1);
     int getFrequency(int row, int column, int frameIndex = -1);
-    QString writeInFile(QString address);
+    QString writeInFile(QString& fileAddress);
     int getRows();
     int getColumns();
     QString getFrameString();

@@ -25,7 +25,7 @@ Frame::Frame(int rows, int columns):
     }
 }
 
-Frame::Frame(QString csv, int columns, int rows):
+Frame::Frame(QString& csv, int columns, int rows):
     mRows(rows),
     mColumns(columns)
 {

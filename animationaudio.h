@@ -12,7 +12,7 @@ class AnimationAudio
 
 public:
 	AnimationAudio(Animation* animation, int frameRate, int len);
-	bool generateFile(QString fileName);
+	bool generateFile(QString& fileName);
 
 private:
 	Animation*		mAnimation;

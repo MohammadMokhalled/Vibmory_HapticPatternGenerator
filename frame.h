@@ -20,7 +20,7 @@ private:
 
 public:
     Frame(int columns, int rows);
-    Frame(QString csv, int columns, int rows);
+    Frame(QString& csv, int columns, int rows);
     void setAmplitude(int row, int column, uint32_t value);
     void setFrequency(int row, int column, uint32_t value);
     QColor getColor(int row, int column);

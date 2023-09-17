@@ -81,7 +81,7 @@ bool AnimationAudio::writeData(QDataStream *stream)
     return true;
 }
 
-bool AnimationAudio::generateFile(QString fileName)
+bool AnimationAudio::generateFile(QString& fileName)
 {
     QString message = "";
     QFile file(fileName);

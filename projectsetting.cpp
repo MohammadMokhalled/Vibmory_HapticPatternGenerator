@@ -370,7 +370,8 @@ void ProjectSettingWindow::on_generateSounFileButton_clicked()
     //ui->messageLabel->show();
     //while(ui->messageLabel->isHidden());
     AnimationAudio *audio = new AnimationAudio(mAnimation, ui->frameRateComboBox->currentText().toInt(), ui->loopSpinBox->value());
-    audio->generateFile("file.wav");
+    QString fileName = "file.wav";
+    audio->generateFile(fileName);
    // ui->messageLabel->hide();
 }
 

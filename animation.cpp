@@ -11,7 +11,7 @@ Animation::Animation(int rows, int columns):
 
 }
 
-Animation::Animation(QString fileAddress)
+Animation::Animation(QString& fileAddress)
 {
     QFile file(fileAddress);
     if (file.open(QIODevice::ReadOnly))
@@ -141,10 +141,10 @@ int Animation::getFrequency(int row, int column, int frameIndex)
     return freq;
 }
 
-QString Animation::writeInFile(QString address)
+QString Animation::writeInFile(QString& fileAddress)
 {
     QString message = "";
-    QFile file(address);
+    QFile file(fileAddress);
     if(file.open(QIODevice::WriteOnly | QIODevice::Text))
     {
        QTextStream stream(&file);
