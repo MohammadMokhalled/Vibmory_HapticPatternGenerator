@@ -9,7 +9,6 @@
 
 class AnimationAudio
 {
-
 public:
 	AnimationAudio(Animation* animation, int frameRate, int len);
 	bool generateFile(QString& fileName);
@@ -22,10 +21,8 @@ private:
 	int				mLength;
 	const uint32_t  mSampleRate = 48000;
 
-
 	bool writeHeader(QDataStream* stream);
 	bool writeData(QDataStream* stream);
-
 };
 
 #endif // ANIMATIONAUDIO_H

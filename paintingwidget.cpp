@@ -4,7 +4,6 @@
 #include <QPainter>
 #include <QTimer>
 
-//! [0]
 PaintingWidget::PaintingWidget(Helper* helper, QWidget *parent)
     : QWidget(parent), mHelper(helper)
 {
@@ -12,17 +11,13 @@ PaintingWidget::PaintingWidget(Helper* helper, QWidget *parent)
 
     setMouseTracking(true);
 }
-//! [0]
 
-//! [1]
 void PaintingWidget::animate()
 {
     mElapsed = (mElapsed + qobject_cast<QTimer*>(sender())->interval()) % 1000;
     update();
 }
-//! [1]
 
-//! [2]
 void PaintingWidget::paintEvent(QPaintEvent *event)
 {
     QPainter painter;
@@ -32,8 +27,7 @@ void PaintingWidget::paintEvent(QPaintEvent *event)
     painter.end();
 
 }
-//! [2]
-//!
+
 void PaintingWidget::mousePressEvent( QMouseEvent * evt )
 {
     mPoint = evt->pos();
@@ -41,8 +35,6 @@ void PaintingWidget::mousePressEvent( QMouseEvent * evt )
     emit mousePressed( mPoint );
     emit selectedSignal();
 }
-
-
 
 void PaintingWidget::drawBackground()
 {

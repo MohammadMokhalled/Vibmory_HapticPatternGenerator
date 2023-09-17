@@ -49,5 +49,4 @@ void MainWindow::on_uploadButton_clicked()
             mSecondWindow->show();
         }
     }
-
 }

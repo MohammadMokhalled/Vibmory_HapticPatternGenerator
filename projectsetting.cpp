@@ -22,20 +22,18 @@ ProjectSettingWindow::ProjectSettingWindow(QWidget *parent) :
     ui->setupUi(this);
 }
 
-
 ProjectSettingWindow::ProjectSettingWindow(int rows, int columns, QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::projectsetting),
     mRows(rows),
     mColumns(columns),
     mAnimation(new Animation(rows, columns))
-
 {
     ui->setupUi(this);
 
     initializeUI();
-    mHelp = new Helper(mAnimation, rows, columns);
-    mPaintingWidget = new PaintingWidget(mHelp, this);
+    mHelper = new Helper(mAnimation, rows, columns);
+    mPaintingWidget = new PaintingWidget(mHelper, this);
     mAnimation->addFrame();
 
     ui->gridLayout->addWidget(mPaintingWidget,0,0);
@@ -82,12 +80,10 @@ void ProjectSettingWindow::initializeUI()
     ui->frameRateComboBox->addItem(QString("2"));
     ui->frameRateComboBox->addItem(QString("5"));
     ui->frameRateComboBox->addItem(QString("10"));
-//    ui->frameRateComboBox->addItem(QString("15"));
     ui->frameRateComboBox->addItem(QString("20"));
     ui->frameRateComboBox->addItem(QString("25"));
     ui->frameRateComboBox->addItem(QString("40"));
     ui->frameRateComboBox->addItem(QString("50"));
-//    ui->frameRateComboBox->addItem(QString("35"));
 
     ui->tabWidget->setCurrentIndex(0);
 
@@ -102,8 +98,8 @@ void ProjectSettingWindow::initialize(Animation* animation)
 
     initializeUI();
 
-    mHelp = new Helper(mAnimation, mRows, mColumns);
-    mPaintingWidget = new PaintingWidget(mHelp, this);
+    mHelper = new Helper(mAnimation, mRows, mColumns);
+    mPaintingWidget = new PaintingWidget(mHelper, this);
     for (int i = 0; i < mAnimation->getLen() - 1; i++)
     {
         ui->tabWidget->insertTab(ui->tabWidget->count() - 1,new QLabel(), QString("frame ") + QString::number(ui->tabWidget->count()));
@@ -118,16 +114,15 @@ void ProjectSettingWindow::enableGroupBox()
     ui->groupBox->setEnabled(true);
     ui->amplitudeSpinBox->setValue
         (mAnimation->getAmplitude
-                                         (mHelp->getSelectedRow(), mHelp->getSelectedColumn()));
+                                         (mHelper->getSelectedRow(), mHelper->getSelectedColumn()));
     ui->frequencySpinBox->setValue
         (mAnimation->getFrequency
-                                         (mHelp->getSelectedRow(), mHelp->getSelectedColumn()));
+                                         (mHelper->getSelectedRow(), mHelper->getSelectedColumn()));
 }
 
 void ProjectSettingWindow::addFrame()
 {
     ui->tabWidget->addTab(nullptr, QString("frame ") + QString::number(ui->tabWidget->count() - 1));
-
 }
 
 ProjectSettingWindow::~ProjectSettingWindow()
@@ -135,18 +130,14 @@ ProjectSettingWindow::~ProjectSettingWindow()
     delete ui;
 }
 
-
 void ProjectSettingWindow::on_addFrameToolButton_clicked()
 {
     ui->tabWidget->insertTab(ui->tabWidget->count() - 1,new QLabel(), QString("frame ") + QString::number(ui->tabWidget->count()));
-//    frames.append(Frame(columns, rows));
     mAnimation->addFrame();
 }
 
 void ProjectSettingWindow::on_playPushButton_clicked()
 {
-    //qDebug() << "index = " << ui->frameRateComboBox->currentIndex();
-
     if (!QFileInfo::exists("file.wav") && !QFileInfo("file.wav").isFile())
     {
         QMessageBox messageBox;
@@ -171,13 +162,10 @@ void ProjectSettingWindow::on_playPushButton_clicked()
         QMessageBox messageBox;
         messageBox.warning(0,"Error","please select a correct frame rate");
     }
-
 }
 
 void ProjectSettingWindow::startPlay()
 {
-
-
     ui->playPushButton->setText("Stop");
 
     mTimer->stop();
@@ -188,14 +176,13 @@ void ProjectSettingWindow::startPlay()
     mStopTimer->start(1000*ui->loopSlider->value());
     ui->loopSlider->setDisabled(true);
     ui->loopSpinBox->setDisabled(true);
-    mHelp->startPlay();
-
+    mHelper->startPlay();
 }
 
 void ProjectSettingWindow::stopPlay()
 {
     ui->playPushButton->setText("Play");
-    mHelp->stopPlay();
+    mHelper->stopPlay();
     mTimer->stop();
     mTimer->start(50);
 
@@ -204,9 +191,6 @@ void ProjectSettingWindow::stopPlay()
     mStopTimer->stop();
     ui->loopSlider->setEnabled(true);
     ui->loopSpinBox->setEnabled(true);
-
-//    player->stop();
-
 }
 
 void ProjectSettingWindow::on_frequencySlider_valueChanged(int value)
@@ -217,13 +201,12 @@ void ProjectSettingWindow::on_frequencySlider_valueChanged(int value)
 void ProjectSettingWindow::on_frequencySpinBox_valueChanged(int arg1)
 {
     ui->frequencySlider->setValue(arg1);
-    if (mHelp->isSelected())
+    if (mHelper->isSelected())
     {
-        mAnimation->setFrequency(mHelp->getSelectedRow(), mHelp->getSelectedColumn(), arg1);
+        mAnimation->setFrequency(mHelper->getSelectedRow(), mHelper->getSelectedColumn(), arg1);
     }
 //    frames[currentFrame].setFrequency(help->selectedRow, help->selectedColumn, arg1);
 }
-
 
 void ProjectSettingWindow::on_amplitudeSlider_valueChanged(int value)
 {
@@ -233,10 +216,9 @@ void ProjectSettingWindow::on_amplitudeSlider_valueChanged(int value)
 void ProjectSettingWindow::on_amplitudeSpinBox_valueChanged(int arg1)
 {
     ui->amplitudeSlider->setValue(arg1);
-    //frames[currentFrame].setAmplitude(help->selectedRow, help->selectedColumn, arg1);
-    if (mHelp->isSelected())
+    if (mHelper->isSelected())
     {
-        mAnimation->setAmplitude(mHelp->getSelectedRow(), mHelp->getSelectedColumn(), arg1);
+        mAnimation->setAmplitude(mHelper->getSelectedRow(), mHelper->getSelectedColumn(), arg1);
     }
 }
 
@@ -250,29 +232,26 @@ void ProjectSettingWindow::on_loopSpinBox_valueChanged(int arg1)
     ui->loopSlider->setValue(arg1);
 }
 
-
 void ProjectSettingWindow::on_tabWidget_currentChanged(int index)
 {
     qDebug() << "len" << mAnimation->getLen() << "  " << index << "\n";
 
     if (index < mAnimation->getLen() && index >= 0)
     {
-        //help->setCurrentFrame(&frames[index]);
         mCurrentFrame = index;
         mAnimation->selectFrame(index);
-        //qDebug() << "current " << index << "\n";
         mTabChangeTries++;
         if (mTabChangeTries > 2)
+        {
             mEnableUnselect = true;
+        }
 
         if (mEnableUnselect)
         {
-            mHelp->unselectCell();
+            mHelper->unselectCell();
             ui->groupBox->setDisabled(true);
         }
-
     }
-
 }
 
 void ProjectSettingWindow::on_previousPushButton_clicked()
@@ -357,7 +336,6 @@ void ProjectSettingWindow::on_deletePushButton_clicked()
     }
 }
 
-
 void ProjectSettingWindow::on_generateSounFileButton_clicked()
 {
     if (ui->frameRateComboBox->currentIndex() < 0)
@@ -367,12 +345,9 @@ void ProjectSettingWindow::on_generateSounFileButton_clicked()
         return;
     }
 
-    //ui->messageLabel->show();
-    //while(ui->messageLabel->isHidden());
     AnimationAudio *audio = new AnimationAudio(mAnimation, ui->frameRateComboBox->currentText().toInt(), ui->loopSpinBox->value());
     QString fileName = "file.wav";
     audio->generateFile(fileName);
-   // ui->messageLabel->hide();
 }
 
 void ProjectSettingWindow::on_actionNew_Project_triggered()
@@ -380,16 +355,11 @@ void ProjectSettingWindow::on_actionNew_Project_triggered()
     CreateProjectWindow *win = new CreateProjectWindow;
     win->show();
     close();
-
 }
-
-
 
 void ProjectSettingWindow::on_maxFrequencyPushButton_clicked()
 {
-
     ui->frequencySpinBox->setValue(ui->frequencySpinBox->maximum());
-
 }
 
 void ProjectSettingWindow::on_maxAmplitudePushButton_clicked()
@@ -402,7 +372,6 @@ void ProjectSettingWindow::on_minFrequencyPushButton_clicked()
 {
     ui->frequencySpinBox->setValue(ui->frequencySpinBox->minimum());
 }
-
 
 void ProjectSettingWindow::on_minAmplitudePushButton_clicked()
 {

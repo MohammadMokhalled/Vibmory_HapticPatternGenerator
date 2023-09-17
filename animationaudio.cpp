@@ -58,8 +58,6 @@ bool AnimationAudio::writeData(QDataStream *stream)
     uint32_t maxValue = mSampleRate * mLength;
     uint32_t frameLen = mSampleRate / mFrameRate;
     uint32_t numberOfFrames = mAnimation->getLen();
-    uint16_t numberOfActuators = mAnimation->getRows() * mAnimation->getColumns();
-
 
     for (uint32_t x = 0; x < maxValue; x++)
     {

@@ -61,7 +61,6 @@
 #include <QAudioOutput>
 #include <QFile>
 
-//! [0]
 class Helper
 {
 public:
@@ -114,6 +113,5 @@ private:
 
     bool mFirstFramePlay = false;
 };
-//! [0]
 
 #endif

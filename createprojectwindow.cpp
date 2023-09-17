@@ -13,8 +13,6 @@ CreateProjectWindow::~CreateProjectWindow()
     delete ui;
 }
 
-
-
 void CreateProjectWindow::on_okButton_clicked()
 {
     mSecondWindow  = new ProjectSettingWindow(ui->rowsSpinBox->value(), ui->columnsSpinBox->value());

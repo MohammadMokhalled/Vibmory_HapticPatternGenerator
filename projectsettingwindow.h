@@ -82,7 +82,7 @@ private:
     int mColumns;
     QGraphicsView* mGraphicViews;
 
-    Helper* mHelp;
+    Helper* mHelper;
     PaintingWidget* mPaintingWidget;
 
     Animation* mAnimation;
@@ -104,7 +104,6 @@ private:
     void initializeUI();
     void initialize(Animation* animation);
     void startPlay();
-
 };
 
 #endif // PROJECTSETTING_H

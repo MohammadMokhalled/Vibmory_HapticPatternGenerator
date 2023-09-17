@@ -49,7 +49,6 @@ Animation::Animation(const QString& fileAddress)
             mFrames.append(newFrame);
         }
 
-
         file.close();
     }
     else

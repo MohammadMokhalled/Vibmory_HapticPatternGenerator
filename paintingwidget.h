@@ -1,14 +1,9 @@
 #ifndef PAINTINGWIDGET_H
 #define PAINTINGWIDGET_H
 
-
 #include <QWidget>
 #include <QMouseEvent>
-
-
-
-//! [0]
-class Helper;
+#include "helper.h"
 
 class PaintingWidget : public QWidget
 {
@@ -35,6 +30,5 @@ private:
     int mElapsed;
     QPoint mPoint;
 };
-//! [0]
 
 #endif // PAINTINGWIDGET_H

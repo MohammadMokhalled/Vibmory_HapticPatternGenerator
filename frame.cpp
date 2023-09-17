@@ -122,7 +122,6 @@ int Frame::getFrequency(int row, int column)
     return mFrequencies[row][column];
 }
 
-
 QString Frame::toString()
 {
     QString res = "";

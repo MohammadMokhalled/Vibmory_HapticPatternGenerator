@@ -73,11 +73,7 @@ Helper::Helper(Animation* animation, int rows, int columns):
     mBoldPen.setWidth(4);
     mTextPen = QPen(Qt::white);
     mTextFont.setPixelSize(50);
-    //ps = p;
 }
-//! [0]
-
-//! [1]
 
 void Helper::drawBackground(QPainter *painter)
 {
@@ -98,7 +94,6 @@ void Helper::drawBackground(QPainter *painter)
     {
         painter->drawLine(0,i*mCellHeight,width,i*mCellHeight);
     }
-
 }
 
 void Helper::drawColors(QPainter *painter)
@@ -138,7 +133,6 @@ void Helper::playAudio()
 
     mAudio = new QAudioOutput(format);
     mAudio->start(&mSourceFile);
-    //audio->start();
 }
 
 void Helper::startPlay()
@@ -204,7 +198,7 @@ void Helper::selectCell(int x, int y)
 void Helper::unselectCell()
 {
     mLock.lock();
-  mSelectedPosition = false;
+    mSelectedPosition = false;
     mLock.unlock();
 }
 
