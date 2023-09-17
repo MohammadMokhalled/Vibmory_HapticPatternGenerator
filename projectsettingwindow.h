@@ -12,7 +12,7 @@
 #include <QAudioOutput>
 
 namespace Ui {
-class projectsetting;
+class projectsettingwindow;
 }
 
 class ProjectSettingWindow : public QMainWindow
@@ -77,7 +77,7 @@ private slots:
     void on_minAmplitudePushButton_clicked();
 
 private:
-    Ui::projectsetting *ui;
+    Ui::projectsettingwindow *ui;
     int mRows;
     int mColumns;
     QGraphicsView* mGraphicViews;

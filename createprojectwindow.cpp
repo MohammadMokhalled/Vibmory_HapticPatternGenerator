@@ -3,7 +3,7 @@
 
 CreateProjectWindow::CreateProjectWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::CreateProject)
+    ui(new Ui::CreateProjectWindow)
 {
     ui->setupUi(this);
 }

@@ -5,7 +5,7 @@
 #include "projectsettingwindow.h"
 
 namespace Ui {
-class CreateProject;
+class CreateProjectWindow;
 }
 
 class CreateProjectWindow : public QMainWindow
@@ -21,7 +21,7 @@ private slots:
     void on_okButton_clicked();
 
 private:
-    Ui::CreateProject *ui;
+    Ui::CreateProjectWindow *ui;
     QMainWindow* mSecondWindow;
 };
 

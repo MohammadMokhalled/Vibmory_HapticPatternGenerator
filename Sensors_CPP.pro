@@ -21,7 +21,7 @@ SOURCES += \
     main.cpp \
     mainwindow.cpp \
     paintingwidget.cpp \
-    projectsettingwindow.h
+    projectsettingwindow.cpp
 
 HEADERS += \
     animation.h \

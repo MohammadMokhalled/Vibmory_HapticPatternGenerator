@@ -1,5 +1,5 @@
 #include "projectsettingwindow.h"
-#include "ui_projectsetting.h"
+#include "ui_projectsettingwindow.h"
 #include "qtoolbutton.h"
 #include "qtabbar.h"
 #include <QThreadPool>
@@ -17,14 +17,14 @@ QThreadPool *thread_pool = QThreadPool::globalInstance();
 
 ProjectSettingWindow::ProjectSettingWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::projectsetting)
+    ui(new Ui::projectsettingwindow)
 {
     ui->setupUi(this);
 }
 
 ProjectSettingWindow::ProjectSettingWindow(int rows, int columns, QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::projectsetting),
+    ui(new Ui::projectsettingwindow),
     mRows(rows),
     mColumns(columns),
     mAnimation(new Animation(rows, columns))
@@ -51,7 +51,7 @@ ProjectSettingWindow::ProjectSettingWindow(int rows, int columns, QWidget *paren
 
 ProjectSettingWindow::ProjectSettingWindow(Animation * anim, QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::projectsetting)
+    ui(new Ui::projectsettingwindow)
 {
     ui->setupUi(this);
     initialize(anim);
