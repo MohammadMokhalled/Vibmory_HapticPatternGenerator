@@ -17,7 +17,7 @@ CreateProjectWindow::~CreateProjectWindow()
 
 void CreateProjectWindow::on_okButton_clicked()
 {
-    ProjectSetting *prj = new ProjectSetting(true, this->ui->rowsSpinBox->value(), this->ui->columnsSpinBox->value());
-    hide();
-    prj->show();
+    mSecondWindow  = new ProjectSettingWindow(ui->rowsSpinBox->value(), ui->columnsSpinBox->value());
+    close();
+    mSecondWindow->show();
 }

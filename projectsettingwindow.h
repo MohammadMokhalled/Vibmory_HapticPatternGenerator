@@ -15,15 +15,15 @@ namespace Ui {
 class projectsetting;
 }
 
-class ProjectSetting : public QMainWindow
+class ProjectSettingWindow : public QMainWindow
 {
     Q_OBJECT
 
 public:
-    explicit ProjectSetting(QWidget *parent = nullptr);
-    explicit ProjectSetting(int rows, int columns, QWidget *parent = nullptr);
-    explicit ProjectSetting(Animation* animation, QWidget *parent = nullptr);
-    ~ProjectSetting();
+    explicit ProjectSettingWindow(QWidget *parent = nullptr);
+    explicit ProjectSettingWindow(int rows, int columns, QWidget *parent = nullptr);
+    explicit ProjectSettingWindow(Animation* animation, QWidget *parent = nullptr);
+    ~ProjectSettingWindow();
 
 public slots:
     void enableGroupBox();

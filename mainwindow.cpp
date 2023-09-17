@@ -44,8 +44,8 @@ void MainWindow::on_uploadButton_clicked()
         }
         else
         {
-            mSecondWindow = new ProjectSetting(animation, this);
-            hide();
+            mSecondWindow = new ProjectSettingWindow(animation, this);
+            close();
             mSecondWindow->show();
         }
     }

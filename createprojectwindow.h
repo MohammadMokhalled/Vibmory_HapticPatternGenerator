@@ -2,7 +2,7 @@
 #define CREATEPROJECT_H
 
 #include <QMainWindow>
-#include "projectsetting.h"
+#include "projectsettingwindow.h"
 
 namespace Ui {
 class CreateProject;
@@ -22,6 +22,7 @@ private slots:
 
 private:
     Ui::CreateProject *ui;
+    QMainWindow* mSecondWindow;
 };
 
 #endif // CREATEPROJECT_H
