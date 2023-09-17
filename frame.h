@@ -8,11 +8,13 @@
 class Frame
 {
 private:
-    QVector<QVector<uint32_t>> frequencies;
-    QVector<QVector<uint32_t>> amplitudes;
-    QVector<QVector<QColor>> colors;
-    bool creationError = false;
-    int rows, columns;
+    int mRows;
+    int mColumns;
+    QVector<QVector<uint32_t>> mFrequencies;
+    QVector<QVector<uint32_t>> mAmplitudes;
+    QVector<QVector<QColor>> mColors;
+    bool mCreationError = false;
+
     void setColor(int row, int column);
     void setError();
 

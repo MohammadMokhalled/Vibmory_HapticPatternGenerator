@@ -21,7 +21,7 @@ class ProjectSetting : public QMainWindow
 
 public:
     explicit ProjectSetting(QWidget *parent = nullptr);
-    explicit ProjectSetting(bool test, int rows, int columns, QWidget *parent = nullptr);
+    explicit ProjectSetting(int rows, int columns, QWidget *parent = nullptr);
     explicit ProjectSetting(Animation* animation, QWidget *parent = nullptr);
     ~ProjectSetting();
 

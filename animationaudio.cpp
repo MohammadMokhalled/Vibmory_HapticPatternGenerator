@@ -4,11 +4,11 @@
 #include <QDebug>
 #include <cmath>
 
-AnimationAudio::AnimationAudio(Animation *anim, int frameRate, int len)
+AnimationAudio::AnimationAudio(Animation *animation, int frameRate, int len):
+    mAnimation(animation),
+    mFrameRate(frameRate),
+    mLength(len)
 {
-    mAnimation = anim;
-    this->mFrameRate = frameRate;
-    mLength = len;
 
 }
 

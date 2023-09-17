@@ -23,7 +23,7 @@ ProjectSetting::ProjectSetting(QWidget *parent) :
 }
 
 
-ProjectSetting::ProjectSetting(bool test, int rows, int columns, QWidget *parent) :
+ProjectSetting::ProjectSetting(int rows, int columns, QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::projectsetting),
     mRows(rows),

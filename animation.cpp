@@ -4,16 +4,11 @@
 #include <QMessageBox>
 #include <QDebug>
 
-Animation::Animation(int rows, int columns)
+Animation::Animation(int rows, int columns):
+    mRows(rows),
+    mColumns(columns)
 {
-    mLock.lock();
-    qDebug() << mFrames.length();
-    this->mRows    = rows;
-    this->mColumns = columns;
 
-//    this->frames.append(Frame(rows,columns));
-    qDebug() << mFrames.length();
-    mLock.unlock();
 }
 
 Animation::Animation(QString fileAddress)
@@ -33,8 +28,8 @@ Animation::Animation(QString fileAddress)
         }
         // frames.resize(values[0].toInt() + 1);
         int frameNumber = values[0].toInt();
-        this->mRows      = values[1].toInt();
-        this->mColumns   = values[2].toInt();
+        mRows      = values[1].toInt();
+        mColumns   = values[2].toInt();
 
         for (int i = 0; i < frameNumber; i++)
         {
@@ -69,14 +64,14 @@ Animation::Animation(QString fileAddress)
 void Animation::addFrame()
 {
     mLock.lock();
-    this->mFrames.append(Frame(this->mRows,this->mColumns));
+    mFrames.append(Frame(mRows,mColumns));
     mLock.unlock();
 }
 
 void Animation::duplicateCurrentFrame()
 {
     mLock.lock();
-    this->mFrames.insert(mCurrentFrame + 1,Frame(mFrames[mCurrentFrame]));
+    mFrames.insert(mCurrentFrame + 1,Frame(mFrames[mCurrentFrame]));
     mLock.unlock();
 }
 
@@ -154,12 +149,12 @@ QString Animation::writeInFile(QString address)
     {
        QTextStream stream(&file);
 
-       stream << QString::number(this->getLen()) << ", " <<
+       stream << QString::number(getLen()) << ", " <<
                  QString::number(mRows) << ", " <<
            QString::number(mColumns) << ", " <<
                  "\n";
 
-       for (int i = 0; i < this->getLen(); i++)
+       for (int i = 0; i < getLen(); i++)
        {
             stream << mFrames[i].toString();
        }
@@ -183,12 +178,12 @@ QString Animation::getFrameString()
 
 int Animation::getRows()
 {
-    return this->mRows;
+    return mRows;
 }
 
 int Animation::getColumns()
 {
-    return this->mColumns;
+    return mColumns;
 }
 
 void Animation::nextFrame()
@@ -207,12 +202,12 @@ int Animation::getCurrentFrameIndex()
 
 void Animation::setError()
 {
-    this->mCreationError = true;
+    mCreationError = true;
 }
 
 bool Animation::getError()
 {
-    return this->mCreationError;
+    return mCreationError;
 }
 
 void Animation::removeCurrentFrame()

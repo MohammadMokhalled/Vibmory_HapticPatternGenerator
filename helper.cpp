@@ -57,7 +57,9 @@
 
 //! [0]
 Helper::Helper(Animation* animation, int rows, int columns):
-    mAnimation(animation)
+    mAnimation(animation),
+    mRows(rows),
+    mColumns(columns)
 {
     QLinearGradient gradient(QPointF(50, -20), QPointF(80, 20));
     gradient.setColorAt(0.0, Qt::white);
@@ -71,8 +73,6 @@ Helper::Helper(Animation* animation, int rows, int columns):
     mBoldPen.setWidth(4);
     mTextPen = QPen(Qt::white);
     mTextFont.setPixelSize(50);
-    mRows = rows;
-    mColumns = columns;
     //ps = p;
 }
 //! [0]

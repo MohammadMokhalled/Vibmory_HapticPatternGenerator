@@ -2,36 +2,37 @@
 #include <QRegularExpression>
 #include <QMessageBox>
 
-Frame::Frame(int rows, int columns)
+Frame::Frame(int rows, int columns):
+    mRows(rows),
+    mColumns(columns)
 {
-    this->rows = rows;
-    this->columns = columns;
-
-    frequencies.resize(rows);
-    amplitudes.resize(rows);
-    colors.resize(rows);
+    mFrequencies.resize(rows);
+    mAmplitudes.resize(rows);
+    mColors.resize(rows);
 
     for (int i = 0; i < rows; i++)
     {
-        frequencies[i].resize(columns);
-        amplitudes[i].resize(columns);
-        colors[i].resize(columns);
+        mFrequencies[i].resize(columns);
+        mAmplitudes[i].resize(columns);
+        mColors[i].resize(columns);
 
         for (int j = 0; j < columns; j++)
         {
-            frequencies[i][j] = 0;
-            amplitudes[i][j] = 0;
-            colors[i][j] = Qt::white;
+            mFrequencies[i][j] = 0;
+            mAmplitudes[i][j] = 0;
+            mColors[i][j] = Qt::white;
         }
     }
 }
 
-Frame::Frame(QString csv, int columns, int rows)
+Frame::Frame(QString csv, int columns, int rows):
+    mRows(rows),
+    mColumns(columns)
 {
     int r = csv.count('\n');
     int n = csv.count(',');
 
-    if (r != rows || n != rows * columns * 2)
+    if (r != mRows || n != mRows * mColumns * 2)
     {
         QMessageBox messageBox;
         messageBox.critical(0,"Error","Frame data is not correct!");
@@ -39,29 +40,26 @@ Frame::Frame(QString csv, int columns, int rows)
         throw;
     }
 
-    this->rows = rows;
-    this->columns = columns;
+    mFrequencies.resize(mRows);
+    mAmplitudes.resize(mRows);
+    mColors.resize(mRows);
 
-    frequencies.resize(rows);
-    amplitudes.resize(rows);
-    colors.resize(rows);
-
-    for (int i = 0; i < rows; i++)
+    for (int i = 0; i < mRows; i++)
     {
-        frequencies[i].resize(columns);
-        amplitudes[i].resize(columns);
-        colors[i].resize(columns);
+        mFrequencies[i].resize(mColumns);
+        mAmplitudes[i].resize(mColumns);
+        mColors[i].resize(mColumns);
 
-        for (int j = 0; j < columns; j++)
+        for (int j = 0; j < mColumns; j++)
         {
-            frequencies[i][j] = 0;
-            amplitudes[i][j] = 0;
-            colors[i][j] = Qt::white;
+            mFrequencies[i][j] = 0;
+            mAmplitudes[i][j] = 0;
+            mColors[i][j] = Qt::white;
         }
     }
 
     QStringList lines = csv.split(QRegularExpression("[\n]"), Qt::SkipEmptyParts);
-    if (lines.length() != rows)
+    if (lines.length() != mRows)
     {
         QMessageBox messageBox;
         messageBox.critical(0,"Error","Frame data is not correct!");
@@ -69,10 +67,10 @@ Frame::Frame(QString csv, int columns, int rows)
         return;
     }
 
-    for (int i = 0; i < rows; i++)
+    for (int i = 0; i < mRows; i++)
     {
         QStringList cells = lines[i].split(", " , Qt::SkipEmptyParts);
-        if (cells.length() != (columns*2))
+        if (cells.length() != (mColumns *2))
         {
             QMessageBox messageBox;
             messageBox.critical(0,"Error","Frame data is not correct!");
@@ -80,11 +78,11 @@ Frame::Frame(QString csv, int columns, int rows)
             return;
 
         }
-        for (int j = 0; j < (columns * 2); j+=2)
+        for (int j = 0; j < (mColumns * 2); j+=2)
         {
             //QStringList values = cells[j].split('-' , Qt::SkipEmptyParts);
 
-            frequencies[i][j/2] = cells[j].toInt();
+            mFrequencies[i][j/2] = cells[j].toInt();
             setAmplitude(i,j/2,cells[j+1].toInt());
         }
     }
@@ -92,36 +90,36 @@ Frame::Frame(QString csv, int columns, int rows)
 
 void Frame::setColor(int row, int column)
 {
-    int h = frequencies[row][column] * 200 / 22000;
-    int s = (amplitudes[row][column]) * 255 / 32767;
-    colors[row][column].setHsv(h,s,255,255);
+    int h = mFrequencies[row][column] * 200 / 22000;
+    int s = (mAmplitudes[row][column]) * 255 / 32767;
+    mColors[row][column].setHsv(h,s,255,255);
 }
 
 void Frame::setAmplitude(int row, int column, uint32_t value)
 {
-    amplitudes[row][column] = value;
+    mAmplitudes[row][column] = value;
     setColor(row, column);
 }
 
 void Frame::setFrequency(int row, int column, uint32_t value)
 {
-    frequencies[row][column] = value;
+    mFrequencies[row][column] = value;
     setColor(row, column);
 }
 
 QColor Frame::getColor(int row, int column)
 {
-    return colors[row][column];
+    return mColors[row][column];
 }
 
 int Frame::getAmplitude(int row, int column)
 {
-    return amplitudes[row][column];
+    return mAmplitudes[row][column];
 }
 
 int Frame::getFrequency(int row, int column)
 {
-    return frequencies[row][column];
+    return mFrequencies[row][column];
 }
 
 
@@ -129,12 +127,12 @@ QString Frame::toString()
 {
     QString res = "";
 
-    for (int i = 0; i < rows; i++)
+    for (int i = 0; i < mRows; i++)
     {
-        for (int j = 0; j < columns; j++)
+        for (int j = 0; j < mColumns; j++)
         {
-            res += QString::number(frequencies[i][j])
-                    + ", " + QString::number(amplitudes[i][j]) + ", ";
+            res += QString::number(mFrequencies[i][j])
+                    + ", " + QString::number(mAmplitudes[i][j]) + ", ";
 
         }
         res += "\n";
@@ -145,10 +143,10 @@ QString Frame::toString()
 
 void Frame::setError()
 {
-    this->creationError = true;
+    mCreationError = true;
 }
 
 bool Frame::getError()
 {
-    return this->creationError;
+    return mCreationError;
 }

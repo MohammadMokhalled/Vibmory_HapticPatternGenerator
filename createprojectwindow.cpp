@@ -18,6 +18,6 @@ CreateProjectWindow::~CreateProjectWindow()
 void CreateProjectWindow::on_okButton_clicked()
 {
     ProjectSetting *prj = new ProjectSetting(true, this->ui->rowsSpinBox->value(), this->ui->columnsSpinBox->value());
-    this->hide();
+    hide();
     prj->show();
 }
