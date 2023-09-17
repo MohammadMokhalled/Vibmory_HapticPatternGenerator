@@ -15,23 +15,23 @@ QMAKE_CXX_FLAGS += /EHa
 SOURCES += \
     animation.cpp \
     animationaudio.cpp \
-    createproject.cpp \
+    createprojectwindow.cpp \
     frame.cpp \
     helper.cpp \
     main.cpp \
     mainwindow.cpp \
     paintingwidget.cpp \
-    projectsetting.cpp
+    projectsettingwindow.h
 
 HEADERS += \
     animation.h \
     animationaudio.h \
-    createproject.h \
+    createprojectwindow.h \
     frame.h \
     helper.h \
     mainwindow.h \
     paintingwidget.h \
-    projectsetting.h
+    projectsettingwindow.h
 
 FORMS += \
     createproject.ui \
