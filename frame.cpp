@@ -2,7 +2,7 @@
 #include <QRegularExpression>
 #include <QMessageBox>
 
-Frame::Frame(int rows, int columns):
+Frame::Frame(qint32 rows, qint32 columns):
     mRows(rows),
     mColumns(columns)
 {
@@ -10,13 +10,13 @@ Frame::Frame(int rows, int columns):
     mAmplitudes.resize(rows);
     mColors.resize(rows);
 
-    for (int i = 0; i < rows; i++)
+    for (qint32 i = 0; i < rows; i++)
     {
         mFrequencies[i].resize(columns);
         mAmplitudes[i].resize(columns);
         mColors[i].resize(columns);
 
-        for (int j = 0; j < columns; j++)
+        for (qint32 j = 0; j < columns; j++)
         {
             mFrequencies[i][j] = 0;
             mAmplitudes[i][j] = 0;
@@ -25,12 +25,12 @@ Frame::Frame(int rows, int columns):
     }
 }
 
-Frame::Frame(QString& csv, int columns, int rows):
+Frame::Frame(QString& csv, qint32 columns, qint32 rows):
     mRows(rows),
     mColumns(columns)
 {
-    int r = csv.count('\n');
-    int n = csv.count(',');
+    qint32 r = csv.count('\n');
+    qint32 n = csv.count(',');
 
     if (r != mRows || n != mRows * mColumns * 2)
     {
@@ -44,13 +44,13 @@ Frame::Frame(QString& csv, int columns, int rows):
     mAmplitudes.resize(mRows);
     mColors.resize(mRows);
 
-    for (int i = 0; i < mRows; i++)
+    for (qint32 i = 0; i < mRows; i++)
     {
         mFrequencies[i].resize(mColumns);
         mAmplitudes[i].resize(mColumns);
         mColors[i].resize(mColumns);
 
-        for (int j = 0; j < mColumns; j++)
+        for (qint32 j = 0; j < mColumns; j++)
         {
             mFrequencies[i][j] = 0;
             mAmplitudes[i][j] = 0;
@@ -67,7 +67,7 @@ Frame::Frame(QString& csv, int columns, int rows):
         return;
     }
 
-    for (int i = 0; i < mRows; i++)
+    for (qint32 i = 0; i < mRows; i++)
     {
         QStringList cells = lines[i].split(", " , Qt::SkipEmptyParts);
         if (cells.length() != (mColumns *2))
@@ -78,7 +78,7 @@ Frame::Frame(QString& csv, int columns, int rows):
             return;
 
         }
-        for (int j = 0; j < (mColumns * 2); j+=2)
+        for (qint32 j = 0; j < (mColumns * 2); j+=2)
         {
             //QStringList values = cells[j].split('-' , Qt::SkipEmptyParts);
 
@@ -88,36 +88,36 @@ Frame::Frame(QString& csv, int columns, int rows):
     }
 }
 
-void Frame::setColor(int row, int column)
+void Frame::setColor(qint32 row, qint32 column)
 {
-    int h = mFrequencies[row][column] * 200 / 22000;
-    int s = (mAmplitudes[row][column]) * 255 / 32767;
+    qint32 h = mFrequencies[row][column] * 200 / 22000;
+    qint32 s = (mAmplitudes[row][column]) * 255 / 32767;
     mColors[row][column].setHsv(h,s,255,255);
 }
 
-void Frame::setAmplitude(int row, int column, uint32_t value)
+void Frame::setAmplitude(qint32 row, qint32 column, quint32 value)
 {
     mAmplitudes[row][column] = value;
     setColor(row, column);
 }
 
-void Frame::setFrequency(int row, int column, uint32_t value)
+void Frame::setFrequency(qint32 row, qint32 column, quint32 value)
 {
     mFrequencies[row][column] = value;
     setColor(row, column);
 }
 
-QColor Frame::getColor(int row, int column)
+QColor Frame::getColor(qint32 row, qint32 column)
 {
     return mColors[row][column];
 }
 
-int Frame::getAmplitude(int row, int column)
+qint32 Frame::getAmplitude(qint32 row, qint32 column)
 {
     return mAmplitudes[row][column];
 }
 
-int Frame::getFrequency(int row, int column)
+qint32 Frame::getFrequency(qint32 row, qint32 column)
 {
     return mFrequencies[row][column];
 }
@@ -126,9 +126,9 @@ QString Frame::toString()
 {
     QString res = "";
 
-    for (int i = 0; i < mRows; i++)
+    for (qint32 i = 0; i < mRows; i++)
     {
-        for (int j = 0; j < mColumns; j++)
+        for (qint32 j = 0; j < mColumns; j++)
         {
             res += QString::number(mFrequencies[i][j])
                     + ", " + QString::number(mAmplitudes[i][j]) + ", ";

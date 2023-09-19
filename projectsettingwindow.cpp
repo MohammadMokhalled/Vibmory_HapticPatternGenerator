@@ -22,7 +22,7 @@ ProjectSettingWindow::ProjectSettingWindow(QWidget *parent) :
     ui->setupUi(this);
 }
 
-ProjectSettingWindow::ProjectSettingWindow(int rows, int columns, QWidget *parent) :
+ProjectSettingWindow::ProjectSettingWindow(qint32 rows, qint32 columns, QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::projectsettingwindow),
     mRows(rows),
@@ -100,7 +100,7 @@ void ProjectSettingWindow::initialize(Animation* animation)
 
     mHelper = new Helper(mAnimation, mRows, mColumns);
     mPaintingWidget = new PaintingWidget(mHelper, this);
-    for (int i = 0; i < mAnimation->getLen() - 1; i++)
+    for (qint32 i = 0; i < mAnimation->getLen() - 1; i++)
     {
         ui->tabWidget->insertTab(ui->tabWidget->count() - 1,new QLabel(), QString("frame ") + QString::number(ui->tabWidget->count()));
     }
@@ -193,12 +193,12 @@ void ProjectSettingWindow::stopPlay()
     ui->loopSpinBox->setEnabled(true);
 }
 
-void ProjectSettingWindow::on_frequencySlider_valueChanged(int value)
+void ProjectSettingWindow::on_frequencySlider_valueChanged(qint32 value)
 {
     ui->frequencySpinBox->setValue(value);
 }
 
-void ProjectSettingWindow::on_frequencySpinBox_valueChanged(int arg1)
+void ProjectSettingWindow::on_frequencySpinBox_valueChanged(qint32 arg1)
 {
     ui->frequencySlider->setValue(arg1);
     if (mHelper->isSelected())
@@ -208,12 +208,12 @@ void ProjectSettingWindow::on_frequencySpinBox_valueChanged(int arg1)
 //    frames[currentFrame].setFrequency(help->selectedRow, help->selectedColumn, arg1);
 }
 
-void ProjectSettingWindow::on_amplitudeSlider_valueChanged(int value)
+void ProjectSettingWindow::on_amplitudeSlider_valueChanged(qint32 value)
 {
     ui->amplitudeSpinBox->setValue(value);
 }
 
-void ProjectSettingWindow::on_amplitudeSpinBox_valueChanged(int arg1)
+void ProjectSettingWindow::on_amplitudeSpinBox_valueChanged(qint32 arg1)
 {
     ui->amplitudeSlider->setValue(arg1);
     if (mHelper->isSelected())
@@ -222,17 +222,17 @@ void ProjectSettingWindow::on_amplitudeSpinBox_valueChanged(int arg1)
     }
 }
 
-void ProjectSettingWindow::on_loopSlider_valueChanged(int value)
+void ProjectSettingWindow::on_loopSlider_valueChanged(qint32 value)
 {
     ui->loopSpinBox->setValue(value);
 }
 
-void ProjectSettingWindow::on_loopSpinBox_valueChanged(int arg1)
+void ProjectSettingWindow::on_loopSpinBox_valueChanged(qint32 arg1)
 {
     ui->loopSlider->setValue(arg1);
 }
 
-void ProjectSettingWindow::on_tabWidget_currentChanged(int index)
+void ProjectSettingWindow::on_tabWidget_currentChanged(qint32 index)
 {
     qDebug() << "len" << mAnimation->getLen() << "  " << index << "\n";
 

@@ -4,7 +4,7 @@
 #include <QDebug>
 #include <cmath>
 
-AnimationAudio::AnimationAudio(Animation *animation, int frameRate, int len):
+AnimationAudio::AnimationAudio(Animation *animation, qint32 frameRate, qint32 len):
     mAnimation(animation),
     mFrameRate(frameRate),
     mLength(len)
@@ -15,39 +15,39 @@ AnimationAudio::AnimationAudio(Animation *animation, int frameRate, int len):
 bool AnimationAudio::writeHeader(QDataStream *stream)
 {
 
-    *stream << (uint8_t)'R' << (uint8_t)'I' << (uint8_t)'F' << (uint8_t)'F';
+    *stream << (quint8)'R' << (quint8)'I' << (quint8)'F' << (quint8)'F';
     
-    uint32_t fileSize = mAnimation->getRows() * mAnimation->getColumns() * mLength * mSampleRate * 2 + 44;
+    quint32 fileSize = mAnimation->getRows() * mAnimation->getColumns() * mLength * mSampleRate * 2 + 44;
     *stream << fileSize;
 
-    *stream << (uint8_t)'W' << (uint8_t)'A' << (uint8_t)'V' << (uint8_t)'E';
+    *stream << (quint8)'W' << (quint8)'A' << (quint8)'V' << (quint8)'E';
 
-    *stream << (uint8_t)'f' << (uint8_t)'m' << (uint8_t)'t' << (uint8_t)' ';
+    *stream << (quint8)'f' << (quint8)'m' << (quint8)'t' << (quint8)' ';
 
-    uint32_t formatdata = 16;
+    quint32 formatdata = 16;
     *stream << formatdata;
 
-    uint16_t format = 1;
+    quint16 format = 1;
     *stream << format;
     
-    uint16_t numberOfChannels =  mAnimation->getRows() * mAnimation->getColumns();
+    quint16 numberOfChannels =  mAnimation->getRows() * mAnimation->getColumns();
     *stream << numberOfChannels;
 
     *stream << mSampleRate;
 
-    uint32_t dataRate = (mSampleRate * numberOfChannels * 16) / 8;
+    quint32 dataRate = (mSampleRate * numberOfChannels * 16) / 8;
     *stream << dataRate;
 
-    uint16_t blockAllign = (numberOfChannels * 16) / 8;
+    quint16 blockAllign = (numberOfChannels * 16) / 8;
     *stream << blockAllign;
 
 
-    uint16_t bitsPerSample = 16;
+    quint16 bitsPerSample = 16;
     *stream << bitsPerSample;
 
     *stream << 'd' << 'a' << 't' << 'a';
 
-    uint32_t subchunk2Size = fileSize - 44;
+    quint32 subchunk2Size = fileSize - 44;
     *stream << subchunk2Size;
 
     return true;
@@ -55,18 +55,18 @@ bool AnimationAudio::writeHeader(QDataStream *stream)
 
 bool AnimationAudio::writeData(QDataStream *stream)
 {
-    uint32_t maxValue = mSampleRate * mLength;
-    uint32_t frameLen = mSampleRate / mFrameRate;
-    uint32_t numberOfFrames = mAnimation->getLen();
+    quint32 maxValue = mSampleRate * mLength;
+    quint32 frameLen = mSampleRate / mFrameRate;
+    quint32 numberOfFrames = mAnimation->getLen();
 
-    for (uint32_t x = 0; x < maxValue; x++)
+    for (quint32 x = 0; x < maxValue; x++)
     {
         double t = static_cast<double>(x) / mSampleRate;
-        uint16_t frameIndex = (x / frameLen) % (numberOfFrames -1);
+        quint16 frameIndex = (x / frameLen) % (numberOfFrames -1);
         
-        for (int i = 0; i < mAnimation->getRows(); i++)
+        for (qint32 i = 0; i < mAnimation->getRows(); i++)
         {
-            for (int j = 0; j < mAnimation->getColumns(); j++)
+            for (qint32 j = 0; j < mAnimation->getColumns(); j++)
             {
                 double w = (mAnimation->getFrequency(i,j,frameIndex)  * TWOPI);
                 int16_t amplitude = mAnimation->getAmplitude(i,j,frameIndex);

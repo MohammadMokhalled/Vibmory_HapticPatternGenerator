@@ -21,7 +21,7 @@ class ProjectSettingWindow : public QMainWindow
 
 public:
     explicit ProjectSettingWindow(QWidget *parent = nullptr);
-    explicit ProjectSettingWindow(int rows, int columns, QWidget *parent = nullptr);
+    explicit ProjectSettingWindow(qint32 rows, qint32 columns, QWidget *parent = nullptr);
     explicit ProjectSettingWindow(Animation* animation, QWidget *parent = nullptr);
     ~ProjectSettingWindow();
 
@@ -38,19 +38,19 @@ private slots:
 
     void on_playPushButton_clicked();
 
-    void on_frequencySlider_valueChanged(int value);
+    void on_frequencySlider_valueChanged(qint32 value);
 
-    void on_frequencySpinBox_valueChanged(int arg1);
+    void on_frequencySpinBox_valueChanged(qint32 arg1);
 
-    void on_amplitudeSlider_valueChanged(int value);
+    void on_amplitudeSlider_valueChanged(qint32 value);
 
-    void on_amplitudeSpinBox_valueChanged(int arg1);
+    void on_amplitudeSpinBox_valueChanged(qint32 arg1);
 
-    void on_loopSlider_valueChanged(int value);
+    void on_loopSlider_valueChanged(qint32 value);
 
-    void on_loopSpinBox_valueChanged(int arg1);
+    void on_loopSpinBox_valueChanged(qint32 arg1);
 
-    void on_tabWidget_currentChanged(int index);
+    void on_tabWidget_currentChanged(qint32 index);
 
     void on_previousPushButton_clicked();
 
@@ -78,8 +78,8 @@ private slots:
 
 private:
     Ui::projectsettingwindow *ui;
-    int mRows;
-    int mColumns;
+    qint32 mRows;
+    qint32 mColumns;
     QGraphicsView* mGraphicViews;
 
     Helper* mHelper;
@@ -87,10 +87,10 @@ private:
 
     Animation* mAnimation;
 
-    uint16_t mCurrentFrame   = 0;
-    uint16_t mCurrentRow     = 0;
-    uint16_t mCurrentColumn  = 0;
-    uint8_t mTabChangeTries  = 0;
+    quint16 mCurrentFrame   = 0;
+    quint16 mCurrentRow     = 0;
+    quint16 mCurrentColumn  = 0;
+    quint8 mTabChangeTries  = 0;
     bool mEnableUnselect  = 0;
     QTimer* mTimer;
     QTimer* mStopTimer;

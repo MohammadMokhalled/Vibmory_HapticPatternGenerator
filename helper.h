@@ -64,54 +64,45 @@
 class Helper
 {
 public:
-    Helper(Animation* animation, int rows, int columns);
+    Helper(Animation* animation, qint32 rows, qint32 columns);
 
     void paint(QPainter *painter, QPaintEvent *event);
     void drawBackground(QPainter *painter);
-    bool setPaintingState(int state);
-    void selectCell(int x, int y);
+    bool setPaintingState(qint32 state);
+    void selectCell(qint32 x, qint32 y);
     void drawColors(QPainter * painter);
     void unselectCell();
     bool isSelected();
-    int getSelectedRow();
-    int getSelectedColumn();
+    qint32 getSelectedRow();
+    qint32 getSelectedColumn();
     void startPlay();
     void stopPlay();
     void playAudio();
 
 
 private:
+    Animation* mAnimation;
+    qint32 mRows;
+    qint32 mColumns;
     QBrush mBackgroundBrush;
     QBrush mForegroundBrush;
-    QBrush mCircleBrush;
-    QFont mTextFont;
-    QPen mCirclePen;
-    QPen mTextPen;
     QPen mBoldPen;
-    int mRows;
-    int mColumns;
+    QPen mTextPen;
+    QFont mTextFont;
+    bool mIsPlaying;
+    qint32 mTabIndexBeforePlay;
+    qint32 mSelectedRow;
+    qint32 mSelectedColumn;
+    bool mFirstFramePlay;
+    bool mSelectedPosition;
 
-    int mCellWidth;
-    int mCellHeight;
-
-    int mPaintingState = 0;
-
-    bool mSelectedPosition = false;
-
-    int mSelectedRow = -1;
-    int mSelectedColumn = -1;
-
-    Animation* mAnimation;
-
-    QMutex mLock;
-
-    bool mPlay = false;
-    int mTabIndexBeforePlay = 0;
-
-    QFile mSourceFile;
+    qint32 mCellWidth;
+    qint32 mCellHeight;
+    qint32 mPaintingState;
     QAudioOutput* mAudio;
-
-    bool mFirstFramePlay = false;
+    QMutex mLock;
+    QFile mSourceFile;
+    
 };
 
 #endif

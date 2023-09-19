@@ -4,6 +4,7 @@
 #include "frame.h"
 #include <QVector>
 #include <QMutex>
+#include <QtGlobal>
 
 class QString;
 class QColor;
@@ -19,8 +20,8 @@ public:
     void selectFrame(int index);
     int getLen() const;
     void setPos(int row, int column);
-    void setAmplitude(int row, int column, uint32_t value);
-    void setFrequency(int row, int column, uint32_t value);
+    void setAmplitude(int row, int column, quint32 value);
+    void setFrequency(int row, int column, quint32 value);
     QColor getColor(int row, int column);
     int getAmplitude(int row, int column, int frameIndex = -1);
     int getFrequency(int row, int column, int frameIndex = -1);
@@ -34,11 +35,11 @@ public:
     void removeCurrentFrame();
 
 private:
-    uint16_t mCurrentFrame = 0;
-    uint16_t mCurrentRow = 0;
-    uint16_t mCurrentColumn = 0;
-    uint16_t mRows;
-    uint16_t mColumns;
+    quint16 mCurrentFrame = 0;
+    quint16 mCurrentRow = 0;
+    quint16 mCurrentColumn = 0;
+    quint16 mRows;
+    quint16 mColumns;
     bool mCreationError = false;
 
     QVector<Frame> mFrames;

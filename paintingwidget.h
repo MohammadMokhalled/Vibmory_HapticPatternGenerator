@@ -27,7 +27,7 @@ protected:
 
 private:
     Helper* mHelper;
-    int mElapsed;
+    qint32 mElapsed;
     QPoint mPoint;
 };
 
