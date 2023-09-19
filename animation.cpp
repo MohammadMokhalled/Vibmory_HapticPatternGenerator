@@ -6,7 +6,11 @@
 
 Animation::Animation(qint32 rows, qint32 columns):
     mRows(rows),
-    mColumns(columns)
+    mColumns(columns),
+    mCurrentFrame(0),
+    mCurrentRow(0),
+    mCurrentColumn(0),
+    mCreationError(false)
 {
 
 }

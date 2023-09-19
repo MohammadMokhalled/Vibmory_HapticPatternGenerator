@@ -12,39 +12,89 @@ class QColor;
 class Animation
 {
 public:
+    /**
+     * Animation class constructor that takes the number of rows and columns as arguments
+     * @param rows The number of rows in the animation
+     * @param columns The number of columns in the animation
+     */
     explicit Animation(int rows, int columns);
+    
+    /**
+     * Animation class constructor that takes a csv file address as a QString argument
+     * @param fileAddress The address of the file used for the animation
+     */
     explicit Animation(const QString& fileAddress);
-
+    
+    /**
+     * Function to add a frame to the animation
+     */
     void addFrame();
+    
+    /**
+     * Function to duplicate the current frame of the animation
+     */
     void duplicateCurrentFrame();
+    
+    /**
+     * Function to select a frame at a specific index in the animation
+     * @param index The index of the frame to be selected
+     */
     void selectFrame(int index);
+    
+    /**
+     * Function to get the number of frames in the animation
+     * @return The length of the animation
+     */
     int getLen() const;
-    void setPos(int row, int column);
-    void setAmplitude(int row, int column, quint32 value);
-    void setFrequency(int row, int column, quint32 value);
-    QColor getColor(int row, int column);
-    int getAmplitude(int row, int column, int frameIndex = -1);
-    int getFrequency(int row, int column, int frameIndex = -1);
-    bool writeInFile(const QString& fileAddress);
-    int getRows() const;
-    int getColumns() const;
-    QString getFrameString();
-    void nextFrame();
-    int getCurrentFrameIndex() const;
-    bool getError() const;
-    void removeCurrentFrame();
+    /**
+     * Animation class constructor that takes the number of rows and columns as arguments
+     * @param rows The number of rows in the animation
+     * @param columns The number of columns in the animation
+     */
+    explicit Animation(int rows, int columns);
+    
+    /**
+     * Animation class constructor that takes the file address as a QString argument
+     * @param fileAddress The address of the file used for the animation
+     */
+    explicit Animation(const QString& fileAddress);
+    
+    /**
+     * Function to add a frame to the animation
+     */
+    void addFrame();
+    
+    /**
+     * Function to duplicate the current frame of the animation
+     */
+    void duplicateCurrentFrame();
+    
+    /**
+     * Function to select a frame at a specific index in the animation
+     * @param index The index of the frame to be selected
+     */
+    void selectFrame(int index);
+    
+    /**
+     * Function to get the number of frames in the animation
+     * @return The length of the animation
+     */
+    int getLen() const;
 
 private:
-    quint16 mCurrentFrame = 0;
-    quint16 mCurrentRow = 0;
-    quint16 mCurrentColumn = 0;
     quint16 mRows;
     quint16 mColumns;
-    bool mCreationError = false;
+    quint16 mCurrentFrame;
+    quint16 mCurrentRow;
+    quint16 mCurrentColumn;
+    bool mCreationError;
 
     QVector<Frame> mFrames;
     mutable QMutex mLock;
 
+    /**
+     * Function to set the error state.
+     */
     void setError();
 };
 
