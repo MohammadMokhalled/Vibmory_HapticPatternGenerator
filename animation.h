@@ -5,81 +5,154 @@
 #include <QVector>
 #include <QMutex>
 #include <QtGlobal>
-
-class QString;
-class QColor;
+#include <QString>
+#include <QColor>
 
 class Animation
 {
 public:
     /**
-     * Animation class constructor that takes the number of rows and columns as arguments
-     * @param rows The number of rows in the animation
-     * @param columns The number of columns in the animation
+     * Animation constructor with specified number of rows and columns.
+     * 
+     * @param rows The number of rows in the animation.
+     * @param columns The number of columns in the animation.
      */
     explicit Animation(int rows, int columns);
-    
+
     /**
-     * Animation class constructor that takes a csv file address as a QString argument
-     * @param fileAddress The address of the file used for the animation
+     * Animation constructor with specified csv file address.
+     * 
+     * @param fileAddress The address of the file to load the animation from.
      */
     explicit Animation(const QString& fileAddress);
-    
+
     /**
-     * Function to add a frame to the animation
+     * Adds a new blank frame
      */
     void addFrame();
     
     /**
-     * Function to duplicate the current frame of the animation
+     * Duplicates the current frame
      */
     void duplicateCurrentFrame();
     
     /**
-     * Function to select a frame at a specific index in the animation
+     * Selects a frame at a specific index in the animation
+     *
      * @param index The index of the frame to be selected
      */
     void selectFrame(int index);
-    
+
     /**
-     * Function to get the number of frames in the animation
-     * @return The length of the animation
+     * Returns number of frames in the animation.
+     * 
+     * @return The number of frames.
      */
     int getLen() const;
-    /**
-     * Animation class constructor that takes the number of rows and columns as arguments
-     * @param rows The number of rows in the animation
-     * @param columns The number of columns in the animation
-     */
-    explicit Animation(int rows, int columns);
     
     /**
-     * Animation class constructor that takes the file address as a QString argument
-     * @param fileAddress The address of the file used for the animation
+     * Sets the position of current cell.
+     * 
+     * @param row The row of the cell.
+     * @param column The column of the cell.
      */
-    explicit Animation(const QString& fileAddress);
+    void setPos(int row, int column);
     
     /**
-     * Function to add a frame to the animation
+     * Sets the amplitude value at the specified position.
+     * 
+     * @param row The row position.
+     * @param column The column position.
+     * @param value The amplitude value.
      */
-    void addFrame();
-    
+    void setAmplitude(int row, int column, quint32 value);
     /**
-     * Function to duplicate the current frame of the animation
+     * Set the frequency value for a specific row and column.
+     * 
+     * @param row - The row index.
+     * @param column - The column index.
+     * @param value - The frequency value to set.
      */
-    void duplicateCurrentFrame();
-    
+    void setFrequency(int row, int column, quint32 value);
+
     /**
-     * Function to select a frame at a specific index in the animation
-     * @param index The index of the frame to be selected
+     * Get the color for a specific row and column.
+     * 
+     * @param row - The row index.
+     * @param column - The column index.
+     * @return The color at the specified row and column.
      */
-    void selectFrame(int index);
-    
+    QColor getColor(int row, int column);
+
     /**
-     * Function to get the number of frames in the animation
-     * @return The length of the animation
+     * Get the amplitude for a specific row, column, and frame index.
+     * 
+     * @param row - The row index.
+     * @param column - The column index.
+     * @param frameIndex - The frame index (optional, default value is -1 which means the current frame).
+     * @return The amplitude at the specified row, column, and frame index.
      */
-    int getLen() const;
+    int getAmplitude(int row, int column, int frameIndex = -1);
+    /**
+     * Gets the frequency value of the specified row and column cell.
+     *
+     * @param row The row index.
+     * @param column The column index.
+     * @param frameIndex The index of the frame (optional, default value is -1 which means the current frame).
+     * @return The frequency value at the specified row and column.
+     */
+    int getFrequency(int row, int column, int frameIndex = -1);
+
+    /**
+     * Writes the data into a file.
+     *
+     * @param fileAddress The address of the file to write to.
+     * @return True if the write operation is successful, false otherwise.
+     */
+    bool writeInFile(const QString& fileAddress);
+
+    /**
+     * Gets the number of rows.
+     *
+     * @return The number of rows.
+     */
+    int getRows() const;
+    /**
+     * Get the number of columns.
+     * 
+     * @return int The number of columns.
+     */
+    int getColumns() const;
+
+    /**
+     * Get the frame string.
+     * 
+     * @return QString The frame string.
+     */
+    QString getFrameString();
+
+    /**
+     * Move to the next frame.
+     */
+    void nextFrame();
+    /**
+     * Get the current frame index.
+     * 
+     * @return int The current frame index.
+     */
+    int getCurrentFrameIndex() const;
+
+    /**
+     * Check if there is an error.
+     * 
+     * @return bool True if there is an error, false otherwise.
+     */
+    bool getError() const;
+
+    /**
+     * Remove the current frame.
+     */
+    void removeCurrentFrame();
 
 private:
     quint16 mRows;
@@ -93,7 +166,7 @@ private:
     mutable QMutex mLock;
 
     /**
-     * Function to set the error state.
+     * Set the error state.
      */
     void setError();
 };
