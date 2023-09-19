@@ -75,10 +75,9 @@ public:
      * @param columns The number of columns.
      */
     Helper(Animation* animation, qint32 rows, qint32 columns);
-};
 
     /**
-     * @brief This function is responsible for painting on the QPainter object.
+     * This function is responsible for painting on the QPainter object.
      * 
      * @param painter The QPainter object to paint on.
      * @param event The QPaintEvent object representing the event that triggered the painting.
@@ -87,14 +86,14 @@ public:
 
 
     /**
-     * @brief drawBackground - Draws the background using the specified QPainter object.
+     * Draws the background using the specified QPainter object.
      * 
      * @param painter - The QPainter object used for drawing.
      */
     void drawBackground(QPainter *painter);
     
     /**
-     * @brief setPaintingState - Sets the painting state.
+     * Sets the painting state.
      * 
      * @param state - The new painting state.
      * @return true if the painting state was successfully set, false otherwise.
@@ -102,7 +101,7 @@ public:
     bool setPaintingState(qint32 state);
     
     /**
-     * @brief selectCell - Selects the cell at the specified coordinates.
+     * Selects the cell at the specified coordinates.
      * 
      * @param x - The x-coordinate of the cell.
      * @param y - The y-coordinate of the cell.
@@ -110,37 +109,37 @@ public:
     void selectCell(qint32 x, qint32 y);
     
     /**
-     * @brief drawColors - Draws the colors cells.
+     * Draws the colors cells.
      * 
      * @param painter - The QPainter object used for drawing.
      */
     void drawColors(QPainter * painter);
 
     /**
-     * @brief Unselects the current cell.
+     * Unselects the current cell.
      */
     void unselectCell();
 
     /**
-     * @brief Checks if a cell is currently selected.
+     * Checks if a cell is currently selected.
      * @return true if a cell is selected, false otherwise.
      */
     bool isSelected();
 
     /**
-     * @brief Gets the row index of the selected cell.
+     * Gets the row index of the selected cell.
      * @return the row index of the selected cell.
      */
     qint32 getSelectedRow();
 
     /**
-     * @brief Gets the selected column.
+     * Gets the selected column.
      * @return the selected column.
      */
     qint32 getSelectedColumn();
     
     /**
-     * Start playing audio.
+     * Start playing animation.
      */
     void startPlay();
     

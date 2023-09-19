@@ -4,7 +4,8 @@
 
 Frame::Frame(qint32 rows, qint32 columns):
     mRows(rows),
-    mColumns(columns)
+    mColumns(columns),
+    mCreationError(false)
 {
     mFrequencies.resize(rows);
     mAmplitudes.resize(rows);
