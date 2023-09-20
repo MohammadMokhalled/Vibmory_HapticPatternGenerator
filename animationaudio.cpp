@@ -4,10 +4,11 @@
 #include <QDebug>
 #include <cmath>
 
-AnimationAudio::AnimationAudio(Animation *animation, qint32 frameRate, qint32 len):
+AnimationAudio::AnimationAudio(Animation *animation, qint32 frameRate, qint32 len, quint32 sampleRate):
     mAnimation(animation),
     mFrameRate(frameRate),
-    mLength(len)
+    mLength(len),
+    mSampleRate(sampleRate)
 {
 
 }
