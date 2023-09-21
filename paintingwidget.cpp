@@ -38,7 +38,6 @@ void PaintingWidget::mousePressEvent( QMouseEvent * evt )
 
 void PaintingWidget::drawBackground()
 {
-    const QRect re = QRect(0,0,width(), height());
     QPainter painter;
     painter.begin(this);
     painter.setRenderHint(QPainter::Antialiasing);
