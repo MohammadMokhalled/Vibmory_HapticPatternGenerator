@@ -20,13 +20,41 @@ class ProjectSettingWindow : public QMainWindow
     Q_OBJECT
 
 public:
+    /**
+     * @brief Constructs a ProjectSettingWindow object with a parent widget.
+     * @param parent The parent widget (default: nullptr).
+     */
     explicit ProjectSettingWindow(QWidget *parent = nullptr);
+    
+    /**
+     * @brief Constructs a ProjectSettingWindow object with the specified number of rows and columns, and a parent widget.
+     * It could be used for creating new blank projects
+     *
+     * @param rows The number of rows.
+     * @param columns The number of columns.
+     * @param parent The parent widget (default: nullptr).
+     */
     explicit ProjectSettingWindow(qint32 rows, qint32 columns, QWidget *parent = nullptr);
+    
+    /**
+     * @brief Constructs a ProjectSettingWindow object with the specified animation and a parent widget.
+     * It is used for loading saved projects
+     *
+     * @param animation The Animation object.
+     * @param parent The parent widget (default: nullptr).
+     */
     explicit ProjectSettingWindow(Animation* animation, QWidget *parent = nullptr);
     ~ProjectSettingWindow();
 
 public slots:
+    /**
+     * Enables the group box.
+     */
     void enableGroupBox();
+    
+    /**
+     * Stops the play the animation.
+     */
     void stopPlay();
 
 private slots:
@@ -87,11 +115,11 @@ private:
 
     Animation* mAnimation;
 
-    quint16 mCurrentFrame   = 0;
-    quint16 mCurrentRow     = 0;
-    quint16 mCurrentColumn  = 0;
-    quint8 mTabChangeTries  = 0;
-    bool mEnableUnselect  = 0;
+    quint16 mCurrentFrame;
+    quint16 mCurrentRow;
+    quint16 mCurrentColumn;
+    quint8 mTabChangeTries;
+    bool mEnableUnselect;
     QTimer* mTimer;
     QTimer* mStopTimer;
     QMediaPlayer* mPlayer;
@@ -99,10 +127,30 @@ private:
     QFile* mSourceFile;
     QAudioOutput* mAudio;
 
+    /**
+     * Save project to file
+     */
     void saveToFile();
+
+    /**
+     * Import project data from file
+     */
     void importFromFile();
+
+    /**
+     * Initialize the user interface
+     */
     void initializeUI();
+
+    /**
+     * Initialize the animation
+     * @param animation The animation object to initialize
+     */
     void initialize(Animation* animation);
+
+    /**
+     * Start playing the animation
+     */
     void startPlay();
 };
 

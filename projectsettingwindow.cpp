@@ -17,7 +17,12 @@ QThreadPool *thread_pool = QThreadPool::globalInstance();
 
 ProjectSettingWindow::ProjectSettingWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::projectsettingwindow)
+    ui(new Ui::projectsettingwindow),
+    mCurrentFrame(0),
+    mCurrentRow(0),
+    mCurrentColumn(0),
+    mTabChangeTries(0),
+    mEnableUnselect(0)
 {
     ui->setupUi(this);
 }
@@ -27,7 +32,12 @@ ProjectSettingWindow::ProjectSettingWindow(qint32 rows, qint32 columns, QWidget 
     ui(new Ui::projectsettingwindow),
     mRows(rows),
     mColumns(columns),
-    mAnimation(new Animation(rows, columns))
+    mAnimation(new Animation(rows, columns)),
+    mCurrentFrame(0),
+    mCurrentRow(0),
+    mCurrentColumn(0),
+    mTabChangeTries(0),
+    mEnableUnselect(0)
 {
     ui->setupUi(this);
 
@@ -51,7 +61,12 @@ ProjectSettingWindow::ProjectSettingWindow(qint32 rows, qint32 columns, QWidget 
 
 ProjectSettingWindow::ProjectSettingWindow(Animation * anim, QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::projectsettingwindow)
+    ui(new Ui::projectsettingwindow),
+    mCurrentFrame(0),
+    mCurrentRow(0),
+    mCurrentColumn(0),
+    mTabChangeTries(0),
+    mEnableUnselect(0)
 {
     ui->setupUi(this);
     initialize(anim);
