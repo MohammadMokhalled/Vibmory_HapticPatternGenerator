@@ -123,7 +123,7 @@ qint32 Frame::getFrequency(qint32 row, qint32 column)
     return mFrequencies[row][column];
 }
 
-QString Frame::toString()
+QString Frame::toString() const
 {
     QString res = "";
 

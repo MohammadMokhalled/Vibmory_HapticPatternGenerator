@@ -57,9 +57,9 @@ void Helper::drawColors(QPainter *painter)
     {
         for (int j = 0; j < mColumns; j++)
         {
-            if (mAnimation->getColor(i,j) != Qt::white)
+            if (mAnimation->getColor(QPoint(i,j)) != Qt::white)
             {
-                mForegroundBrush = QBrush(mAnimation->getColor(i,j));
+                mForegroundBrush = QBrush(mAnimation->getColor(QPoint(i,j)));
                 const QRect rect = QRect(j*mCellWidth+2, i*mCellHeight+2, mCellWidth-4, mCellHeight-4);
                 painter->fillRect(rect, mForegroundBrush);
             }
@@ -75,7 +75,7 @@ void Helper::playAudio()
     QAudioFormat format;
     // Set up the format, eg.
     format.setSampleRate(48000);
-    format.setChannelCount(mAnimation->getColumns() * mAnimation->getRows());
+    format.setChannelCount(mAnimation->getSize().height() * mAnimation->getSize().width());
     format.setSampleSize(16);
     format.setCodec("audio/pcm");
     format.setByteOrder(QAudioFormat::LittleEndian);

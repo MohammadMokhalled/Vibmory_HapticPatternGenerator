@@ -18,7 +18,7 @@ bool AnimationAudio::writeHeader(QDataStream *stream)
 
     *stream << (quint8)'R' << (quint8)'I' << (quint8)'F' << (quint8)'F';
     
-    quint32 fileSize = mAnimation->getRows() * mAnimation->getColumns() * mLength * mSampleRate * 2 + 44;
+    quint32 fileSize = mAnimation->getSize().width() * mAnimation->getSize().height() * mLength * mSampleRate * 2 + 44;
     *stream << fileSize;
 
     *stream << (quint8)'W' << (quint8)'A' << (quint8)'V' << (quint8)'E';
@@ -31,7 +31,7 @@ bool AnimationAudio::writeHeader(QDataStream *stream)
     quint16 format = 1;
     *stream << format;
     
-    quint16 numberOfChannels =  mAnimation->getRows() * mAnimation->getColumns();
+    quint16 numberOfChannels =  mAnimation->getSize().width() * mAnimation->getSize().height();
     *stream << numberOfChannels;
 
     *stream << mSampleRate;
@@ -65,12 +65,12 @@ bool AnimationAudio::writeData(QDataStream *stream)
         double t = static_cast<double>(x) / mSampleRate;
         quint16 frameIndex = (x / frameLen) % (numberOfFrames -1);
         
-        for (qint32 i = 0; i < mAnimation->getRows(); i++)
+        for (qint32 i = 0; i < mAnimation->getSize().width(); i++)
         {
-            for (qint32 j = 0; j < mAnimation->getColumns(); j++)
+            for (qint32 j = 0; j < mAnimation->getSize().height(); j++)
             {
-                double w = (mAnimation->getFrequency(i,j,frameIndex)  * TWOPI);
-                int16_t amplitude = mAnimation->getAmplitude(i,j,frameIndex);
+                double w = (mAnimation->getFrequency(QPoint(i,j),frameIndex)  * TWOPI);
+                int16_t amplitude = mAnimation->getAmplitude(QPoint(i,j),frameIndex);
 
                 int16_t value = amplitude * sin(w * t);
                 *stream << value;

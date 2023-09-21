@@ -67,7 +67,7 @@ public:
      * Convert the frame data to a string representation
      * @return The string representation of the frame data
      */
-    QString toString();
+    QString toString() const;
 
     /**
      * Check if there was an error in the frame data

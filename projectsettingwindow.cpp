@@ -32,7 +32,7 @@ ProjectSettingWindow::ProjectSettingWindow(qint32 rows, qint32 columns, QWidget 
     ui(new Ui::projectsettingwindow),
     mRows(rows),
     mColumns(columns),
-    mAnimation(new Animation(rows, columns)),
+    mAnimation(new Animation(QSize(rows, columns))),
     mCurrentFrame(0),
     mCurrentRow(0),
     mCurrentColumn(0),
@@ -106,8 +106,8 @@ void ProjectSettingWindow::initializeUI()
 
 void ProjectSettingWindow::initialize(Animation* animation)
 {
-    mRows = animation->getRows();
-    mColumns = animation->getColumns();
+    mRows = animation->getSize().width();
+    mColumns = animation->getSize().height();
 
     mAnimation = animation;
 
@@ -129,10 +129,10 @@ void ProjectSettingWindow::enableGroupBox()
     ui->groupBox->setEnabled(true);
     ui->amplitudeSpinBox->setValue
         (mAnimation->getAmplitude
-                                         (mHelper->getSelectedRow(), mHelper->getSelectedColumn()));
+                                   (QPoint(mHelper->getSelectedRow(), mHelper->getSelectedColumn())));
     ui->frequencySpinBox->setValue
         (mAnimation->getFrequency
-                                         (mHelper->getSelectedRow(), mHelper->getSelectedColumn()));
+                                   (QPoint(mHelper->getSelectedRow(), mHelper->getSelectedColumn())));
 }
 
 void ProjectSettingWindow::addFrame()
@@ -218,7 +218,7 @@ void ProjectSettingWindow::on_frequencySpinBox_valueChanged(qint32 arg1)
     ui->frequencySlider->setValue(arg1);
     if (mHelper->isSelected())
     {
-        mAnimation->setFrequency(mHelper->getSelectedRow(), mHelper->getSelectedColumn(), arg1);
+        mAnimation->setFrequency(QPoint(mHelper->getSelectedRow(), mHelper->getSelectedColumn()), arg1);
     }
 //    frames[currentFrame].setFrequency(help->selectedRow, help->selectedColumn, arg1);
 }
@@ -233,7 +233,7 @@ void ProjectSettingWindow::on_amplitudeSpinBox_valueChanged(qint32 arg1)
     ui->amplitudeSlider->setValue(arg1);
     if (mHelper->isSelected())
     {
-        mAnimation->setAmplitude(mHelper->getSelectedRow(), mHelper->getSelectedColumn(), arg1);
+        mAnimation->setAmplitude(QPoint(mHelper->getSelectedRow(), mHelper->getSelectedColumn()), arg1);
     }
 }
 
