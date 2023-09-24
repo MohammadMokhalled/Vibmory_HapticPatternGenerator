@@ -2,7 +2,6 @@
 #include <QFile>
 #include <QTextStream>
 #include <QMessageBox>
-#include <QDebug>
 
 Animation::Animation(const QSize& size)
     : mSize(size),
