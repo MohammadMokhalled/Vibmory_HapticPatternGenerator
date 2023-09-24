@@ -13,6 +13,7 @@ Animation::Animation(const QSize& size)
 }
 
 Animation::Animation(const QString& fileAddress)
+    : mCreationError(false)
 {
     QFile file(fileAddress);
     if (!file.open(QIODevice::ReadOnly))
