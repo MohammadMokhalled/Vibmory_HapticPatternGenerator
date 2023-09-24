@@ -1,53 +1,53 @@
 #include "animationaudio.h"
 #include <QByteArray>
 #include <QDataStream>
-#include <QDebug>
 #include <cmath>
 
-AnimationAudio::AnimationAudio(Animation *anim, int frameRate, int len)
+AnimationAudio::AnimationAudio(Animation *animation, qint32 frameRate, qint32 len, quint32 sampleRate):
+    mAnimation(animation),
+    mFrameRate(frameRate),
+    mLength(len),
+    mSampleRate(sampleRate)
 {
-    animation = anim;
-    this->frameRate = frameRate;
-    length = len;
 
 }
 
 bool AnimationAudio::writeHeader(QDataStream *stream)
 {
 
-    *stream << (uint8_t)'R' << (uint8_t)'I' << (uint8_t)'F' << (uint8_t)'F';
-
-    uint32_t fileSize = animation->getRows() * animation->getColumns() * length * sampleRate * 2 + 44;
+    *stream << (quint8)'R' << (quint8)'I' << (quint8)'F' << (quint8)'F';
+    
+    quint32 fileSize = mAnimation->getSize().width() * mAnimation->getSize().height() * mLength * mSampleRate * 2 + 44;
     *stream << fileSize;
 
-    *stream << (uint8_t)'W' << (uint8_t)'A' << (uint8_t)'V' << (uint8_t)'E';
+    *stream << (quint8)'W' << (quint8)'A' << (quint8)'V' << (quint8)'E';
 
-    *stream << (uint8_t)'f' << (uint8_t)'m' << (uint8_t)'t' << (uint8_t)' ';
+    *stream << (quint8)'f' << (quint8)'m' << (quint8)'t' << (quint8)' ';
 
-    uint32_t formatdata = 16;
+    quint32 formatdata = 16;
     *stream << formatdata;
 
-    uint16_t format = 1;
+    quint16 format = 1;
     *stream << format;
-
-    uint16_t numberOfChannels =  animation->getRows() * animation->getColumns();
+    
+    quint16 numberOfChannels =  mAnimation->getSize().width() * mAnimation->getSize().height();
     *stream << numberOfChannels;
 
-    *stream << sampleRate;
+    *stream << mSampleRate;
 
-    uint32_t dataRate = (sampleRate * numberOfChannels * 16) / 8;
+    quint32 dataRate = (mSampleRate * numberOfChannels * 16) / 8;
     *stream << dataRate;
 
-    uint16_t blockAllign = (numberOfChannels * 16) / 8;
+    quint16 blockAllign = (numberOfChannels * 16) / 8;
     *stream << blockAllign;
 
 
-    uint16_t bitsPerSample = 16;
+    quint16 bitsPerSample = 16;
     *stream << bitsPerSample;
 
     *stream << 'd' << 'a' << 't' << 'a';
 
-    uint32_t subchunk2Size = fileSize - 44;
+    quint32 subchunk2Size = fileSize - 44;
     *stream << subchunk2Size;
 
     return true;
@@ -55,23 +55,21 @@ bool AnimationAudio::writeHeader(QDataStream *stream)
 
 bool AnimationAudio::writeData(QDataStream *stream)
 {
-    uint32_t maxValue = sampleRate * length;
-    uint32_t frameLen = sampleRate / frameRate;
-    uint32_t numberOfFrames = animation->getLen();
-    uint16_t numberOfActuators = animation->getRows() * animation->getColumns();
+    quint32 maxValue = mSampleRate * mLength;
+    quint32 frameLen = mSampleRate / mFrameRate;
+    quint32 numberOfFrames = mAnimation->getLen();
 
-
-    for (uint32_t x = 0; x < maxValue; x++)
+    for (quint32 x = 0; x < maxValue; x++)
     {
-        double t = static_cast<double>(x) / sampleRate;
-        uint16_t frameIndex = (x / frameLen) % (numberOfFrames -1);
-
-        for (int i = 0; i < animation->getRows(); i++)
+        double t = static_cast<double>(x) / mSampleRate;
+        quint16 frameIndex = (x / frameLen) % (numberOfFrames -1);
+        
+        for (qint32 i = 0; i < mAnimation->getSize().width(); i++)
         {
-            for (int j = 0; j < animation->getColumns(); j++)
+            for (qint32 j = 0; j < mAnimation->getSize().height(); j++)
             {
-                double w = (animation->getFrequency(i,j,frameIndex)  * TWOPI);
-                int16_t amplitude = animation->getAmplitude(i,j,frameIndex);
+                double w = (mAnimation->getFrequency(QPoint(i,j),frameIndex)  * TWOPI);
+                int16_t amplitude = mAnimation->getAmplitude(QPoint(i,j),frameIndex);
 
                 int16_t value = amplitude * sin(w * t);
                 *stream << value;
@@ -81,7 +79,7 @@ bool AnimationAudio::writeData(QDataStream *stream)
     return true;
 }
 
-bool AnimationAudio::generateFile(QString fileName)
+bool AnimationAudio::generateFile(QString& fileName)
 {
     QString message = "";
     QFile file(fileName);

@@ -2,220 +2,180 @@
 #include <QFile>
 #include <QTextStream>
 #include <QMessageBox>
-#include <QDebug>
 
-Animation::Animation(int rows, int columns)
+Animation::Animation(const QSize& size)
+    : mSize(size),
+      mCurrentFrame(0),
+      mCurrentPos(0, 0),
+      mCreationError(false)
 {
-    lock.lock();
-    qDebug() << frames.length();
-    this->rows    = rows;
-    this->columns = columns;
 
-//    this->frames.append(Frame(rows,columns));
-    qDebug() << frames.length();
-    lock.unlock();
 }
 
-Animation::Animation(QString fileAddress)
+Animation::Animation(const QString& fileAddress)
+    : mCreationError(false)
 {
     QFile file(fileAddress);
-    if (file.open(QIODevice::ReadOnly))
+    if (!file.open(QIODevice::ReadOnly))
     {
-        QTextStream in(&file);
-        QString setting = in.readLine();
-        QStringList values = setting.split(',' , Qt::SkipEmptyParts);
-        if (values.length() < 3)
-        {
-            QMessageBox messageBox;
-            messageBox.critical(0,"Error","Data is corrupted!");
-            setError();
-            return;
-        }
-        // frames.resize(values[0].toInt() + 1);
-        int frameNumber = values[0].toInt();
-        this->rows      = values[1].toInt();
-        this->columns   = values[2].toInt();
-
-        for (int i = 0; i < frameNumber; i++)
-        {
-            QString frame = "";
-            for (int j = 0; j < rows; j++)
-            {
-                 frame += in.readLine() + "\n";
-            }
-            Frame newFrame = Frame(frame, columns, rows);
-
-            if (newFrame.getError())
-            {
-                setError();
-                return;
-            }
-
-            frames.append(newFrame);
-        }
-
-
-        file.close();
-    }
-    else
-    {
-        QMessageBox messageBox;
-        messageBox.critical(0,"Error","Cannot open the file");
+        QMessageBox::critical(nullptr, "Error", "Cannot open the file");
         setError();
         return;
     }
+    QTextStream in(&file);
+    QString setting = in.readLine();
+    QStringList values = setting.split(',' , Qt::SkipEmptyParts);
+    if (values.length() < 3)
+    {
+        QMessageBox::critical(nullptr, "Error", "Data is corrupted!");
+        setError();
+        return;
+    }
+    int frameNumber = values[0].toInt();
+    mSize = QSize(values[1].toInt(), values[2].toInt());
+    for (int i = 0; i < frameNumber; ++i)
+    {
+        QString frame;
+        for (int j = 0; j < mSize.height(); ++j)
+        {
+            frame += in.readLine() + "\n";
+        }
+        Frame newFrame(frame, mSize);
+        if (newFrame.getError())
+        {
+            setError();
+            return;
+        }
+        mFrames.append(newFrame);
+    }
+    file.close();
 }
 
 void Animation::addFrame()
 {
-    lock.lock();
-    this->frames.append(Frame(this->rows,this->columns));
-    lock.unlock();
+    QMutexLocker locker(&mLock);
+    mFrames.append(Frame(mSize));
 }
 
 void Animation::duplicateCurrentFrame()
 {
-    lock.lock();
-    this->frames.insert(currentFrame + 1,Frame(frames[currentFrame]));
-    lock.unlock();
+    QMutexLocker locker(&mLock);
+    mFrames.insert(mCurrentFrame + 1, Frame(mFrames.at(mCurrentFrame)));
 }
 
 void Animation::selectFrame(int index)
 {
-    lock.lock();
-    currentFrame = index;
-    lock.unlock();
+    QMutexLocker locker(&mLock);
+    mCurrentFrame = index;
 }
 
-int  Animation::getLen()
+int Animation::getLen() const
 {
-    return frames.length();
+    QMutexLocker locker(&mLock);
+    return mFrames.length();
 }
 
-void Animation::setPos(int row, int column)
+void Animation::setPos(const QPoint& pos)
 {
-    lock.lock();
-    currentRow     = row;
-    currentColumn  = column;
-    lock.unlock();
+    QMutexLocker locker(&mLock);
+    mCurrentPos = pos;
 }
 
-void Animation::setAmplitude(int row, int column, uint32_t value)
+void Animation::setAmplitude(const QPoint& pos, quint32 value)
 {
-    lock.lock();
-    frames[currentFrame].setAmplitude(row, column, value);
-    lock.unlock();
+    QMutexLocker locker(&mLock);
+    mFrames[mCurrentFrame].setAmplitude(pos, value);
 }
 
-void Animation::setFrequency(int row, int column, uint32_t value)
+void Animation::setFrequency(const QPoint& pos, quint32 value)
 {
-    lock.lock();
-    frames[currentFrame].setFrequency(row, column, value);
-    lock.unlock();
+    QMutexLocker locker(&mLock);
+    mFrames[mCurrentFrame].setFrequency(pos, value);
 }
 
-QColor Animation::getColor(int row, int column)
+QColor Animation::getColor(const QPoint& pos)
 {
-    lock.lock();
-    QColor color = frames[currentFrame].getColor(row, column);
-    lock.unlock();
+    QMutexLocker locker(&mLock);
+    QColor color = mFrames[mCurrentFrame].getColor(pos);
     return color;
 }
 
-int Animation::getAmplitude(int row, int column, int frameIndex)
+int Animation::getAmplitude(const QPoint& pos, int frameIndex)
 {
     if (frameIndex == -1)
     {
-        frameIndex = currentFrame;
+        frameIndex = mCurrentFrame;
     }
-    lock.lock();
-    int amp = frames[frameIndex].getAmplitude(row, column);
-    lock.unlock();
-    return amp;
+    return mFrames[frameIndex].getAmplitude(pos);
 }
 
-int Animation::getFrequency(int row, int column, int frameIndex)
+int Animation::getFrequency(const QPoint& pos, int frameIndex)
 {
     if (frameIndex == -1)
     {
-        frameIndex = currentFrame;
+        frameIndex = mCurrentFrame;
     }
-    lock.lock();
-    int freq = frames[frameIndex].getFrequency(row, column);
-    lock.unlock();
-    return freq;
+    return mFrames[frameIndex].getFrequency(pos);
 }
 
-QString Animation::writeInFile(QString address)
+bool Animation::writeInFile(const QString& fileAddress)
 {
-    QString message = "";
-    QFile file(address);
-    if(file.open(QIODevice::WriteOnly | QIODevice::Text))
+    QFile file(fileAddress);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
     {
-       QTextStream stream(&file);
-
-       stream << QString::number(this->getLen()) << ", " <<
-                 QString::number(rows) << ", " <<
-                 QString::number(columns) << ", " <<
-                 "\n";
-
-       for (int i = 0; i < this->getLen(); i++)
-       {
-           stream << frames[i].toString();
-       }
-       file.close();
-
-       message = "File is exported sucessfully";
-
+        return false;
     }
-    else
+    QTextStream stream(&file);
+    stream << QString::number(getLen()) << ", " << QString::number(mSize.height()) << ", " << QString::number(mSize.width()) << "\n";
+    for (const auto& frame : qAsConst(mFrames))
     {
-        message = "Cannot open or create the file.";
+        stream << frame.toString();
     }
-
-    return message;
+    file.close();
+    return true;
 }
 
 QString Animation::getFrameString()
 {
-    return frames[currentFrame].toString();
+    return mFrames[mCurrentFrame].toString();
 }
 
-int Animation::getRows()
+QSize Animation::getSize() const
 {
-    return this->rows;
-}
-
-int Animation::getColumns()
-{
-    return this->columns;
+    return mSize;
 }
 
 void Animation::nextFrame()
 {
-    currentFrame++;
-    if (currentFrame > frames.length() -1)
+    mCurrentFrame++;
+    if (mCurrentFrame >= mFrames.size())
     {
-        currentFrame = 0;
+        mCurrentFrame = 0;
     }
 }
 
-int Animation::getCurrentFrameIndex()
+int Animation::getCurrentFrameIndex() const
 {
-    return currentFrame;
+    return mCurrentFrame;
 }
 
 void Animation::setError()
 {
-    this->creationError = true;
+    mCreationError = true;
 }
 
-bool Animation::getError()
+bool Animation::getError() const
 {
-    return this->creationError;
+    return mCreationError;
 }
 
 void Animation::removeCurrentFrame()
 {
-    frames.remove(currentFrame);
+    QMutexLocker locker(&mLock);
+    if (mFrames.isEmpty()) return;
+    mFrames.removeAt(mCurrentFrame);
+    if (mCurrentFrame >= mFrames.size())
+    {
+        mCurrentFrame = mFrames.size() - 1;
+    }
 }

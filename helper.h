@@ -61,59 +61,122 @@
 #include <QAudioOutput>
 #include <QFile>
 
-//! [0]
-class Helper
+/**
+ * This is a helper class that provides some helper functions for animation drawing and audio playing.
+ */
+class Helper 
 {
 public:
-    Helper(Animation * anim, int rows, int columns);
+    /**
+     * Constructor for the Helper class.
+     * 
+     * @param animation The animation object.
+     * @param rows The number of rows.
+     * @param columns The number of columns.
+     */
+    Helper(Animation* animation, qint32 rows, qint32 columns);
 
+    /**
+     * This function is responsible for painting on the QPainter object.
+     * 
+     * @param painter The QPainter object to paint on.
+     * @param event The QPaintEvent object representing the event that triggered the painting.
+     */
     void paint(QPainter *painter, QPaintEvent *event);
+
+
+    /**
+     * Draws the background using the specified QPainter object.
+     * 
+     * @param painter - The QPainter object used for drawing.
+     */
     void drawBackground(QPainter *painter);
-    bool setPaintingState(int state);
-    void selectCell(int x, int y);
+    
+    /**
+     * Sets the painting state.
+     * 
+     * @param state - The new painting state.
+     * @return true if the painting state was successfully set, false otherwise.
+     */
+    bool setPaintingState(qint32 state);
+    
+    /**
+     * Selects the cell at the specified coordinates.
+     * 
+     * @param x - The x-coordinate of the cell.
+     * @param y - The y-coordinate of the cell.
+     */
+    void selectCell(qint32 x, qint32 y);
+    
+    /**
+     * Draws the colors cells.
+     * 
+     * @param painter - The QPainter object used for drawing.
+     */
     void drawColors(QPainter * painter);
+
+    /**
+     * Unselects the current cell.
+     */
     void unselectCell();
+
+    /**
+     * Checks if a cell is currently selected.
+     * @return true if a cell is selected, false otherwise.
+     */
     bool isSelected();
-    int getSelectedRow();
-    int getSelectedColumn();
+
+    /**
+     * Gets the row index of the selected cell.
+     * @return the row index of the selected cell.
+     */
+    qint32 getSelectedRow();
+
+    /**
+     * Gets the selected column.
+     * @return the selected column.
+     */
+    qint32 getSelectedColumn();
+    
+    /**
+     * Start playing animation.
+     */
     void startPlay();
+    
+    /**
+     * Stop playing audio.
+     */
     void stopPlay();
+    
+    /**
+     * Play audio.
+     */
     void playAudio();
 
 
 private:
-    QBrush background;
-    QBrush foreground;
-    QBrush circleBrush;
-    QFont textFont;
-    QPen circlePen;
-    QPen textPen;
-    QPen boldPen;
-    int rows;
-    int columns;
+    Animation* mAnimation;
+    qint32 mRows;
+    qint32 mColumns;
+    QBrush mBackgroundBrush;
+    QBrush mForegroundBrush;
+    QPen mBoldPen;
+    QPen mTextPen;
+    QFont mTextFont;
+    bool mIsPlaying;
+    qint32 mTabIndexBeforePlay;
+    qint32 mSelectedRow;
+    qint32 mSelectedColumn;
+    bool mFirstFramePlay;
+    bool mSelectedPosition;
 
-    int cellWidth;
-    int cellHeight;
-
-    int paintingState = 0;
-
-    bool selectedPosition = false;
-
-    int selectedRow = -1;
-    int selectedColumn = -1;
-
-    Animation * animation;
-
-    QMutex lock;
-
-    bool play = false;
-    int tabIndexBeforePlay = 0;
-
-    QFile sourceFile;
-    QAudioOutput* audio;
-
-    bool firstFramePlay = false;
+    qint32 mCellWidth;
+    qint32 mCellHeight;
+    qint32 mPaintingState;
+    QAudioOutput* mAudio;
+    QMutex mLock;
+    QFile mSourceFile;
+    
 };
-//! [0]
 
 #endif

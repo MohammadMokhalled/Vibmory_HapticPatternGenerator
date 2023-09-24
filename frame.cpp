@@ -2,36 +2,36 @@
 #include <QRegularExpression>
 #include <QMessageBox>
 
-Frame::Frame(int rows, int columns)
+Frame::Frame(const QSize& size):
+    mSize(size), 
+    mCreationError(false)
 {
-    this->rows = rows;
-    this->columns = columns;
+    mFrequencies.resize(mSize.height());
+    mAmplitudes.resize(mSize.height());
+    mColors.resize(mSize.height());
 
-    frequencies.resize(rows);
-    amplitudes.resize(rows);
-    colors.resize(rows);
-
-    for (int i = 0; i < rows; i++)
+    for (qint32 i = 0; i < mSize.height(); i++)
     {
-        frequencies[i].resize(columns);
-        amplitudes[i].resize(columns);
-        colors[i].resize(columns);
+        mFrequencies[i].resize(mSize.width());
+        mAmplitudes[i].resize(mSize.width());
+        mColors[i].resize(mSize.width());
 
-        for (int j = 0; j < columns; j++)
+        for (qint32 j = 0; j < mSize.width(); j++)
         {
-            frequencies[i][j] = 0;
-            amplitudes[i][j] = 0;
-            colors[i][j] = Qt::white;
+            mFrequencies[i][j] = 0;
+            mAmplitudes[i][j] = 0;
+            mColors[i][j] = Qt::white;
         }
     }
 }
 
-Frame::Frame(QString csv, int columns, int rows)
+Frame::Frame(const QString& csv, const QSize& size)
+    : mSize(size), mCreationError(false)
 {
-    int r = csv.count('\n');
-    int n = csv.count(',');
+    qint32 r = csv.count('\n');
+    qint32 n = csv.count(',');
 
-    if (r != rows || n != rows * columns * 2)
+    if (r != mSize.height() || n != mSize.height() * mSize.width() * 2)
     {
         QMessageBox messageBox;
         messageBox.critical(0,"Error","Frame data is not correct!");
@@ -39,29 +39,26 @@ Frame::Frame(QString csv, int columns, int rows)
         throw;
     }
 
-    this->rows = rows;
-    this->columns = columns;
+    mFrequencies.resize(mSize.height());
+    mAmplitudes.resize(mSize.height());
+    mColors.resize(mSize.height());
 
-    frequencies.resize(rows);
-    amplitudes.resize(rows);
-    colors.resize(rows);
-
-    for (int i = 0; i < rows; i++)
+    for (qint32 i = 0; i < mSize.height(); i++)
     {
-        frequencies[i].resize(columns);
-        amplitudes[i].resize(columns);
-        colors[i].resize(columns);
+        mFrequencies[i].resize(mSize.width());
+        mAmplitudes[i].resize(mSize.width());
+        mColors[i].resize(mSize.width());
 
-        for (int j = 0; j < columns; j++)
+        for (qint32 j = 0; j < mSize.width(); j++)
         {
-            frequencies[i][j] = 0;
-            amplitudes[i][j] = 0;
-            colors[i][j] = Qt::white;
+            mFrequencies[i][j] = 0;
+            mAmplitudes[i][j] = 0;
+            mColors[i][j] = Qt::white;
         }
     }
 
     QStringList lines = csv.split(QRegularExpression("[\n]"), Qt::SkipEmptyParts);
-    if (lines.length() != rows)
+    if (lines.length() != mSize.height())
     {
         QMessageBox messageBox;
         messageBox.critical(0,"Error","Frame data is not correct!");
@@ -69,86 +66,87 @@ Frame::Frame(QString csv, int columns, int rows)
         return;
     }
 
-    for (int i = 0; i < rows; i++)
+    for (qint32 i = 0; i < mSize.height(); i++)
     {
         QStringList cells = lines[i].split(", " , Qt::SkipEmptyParts);
-        if (cells.length() != (columns*2))
+        if (cells.length() != (mSize.width() * 2))
         {
             QMessageBox messageBox;
             messageBox.critical(0,"Error","Frame data is not correct!");
             setError();
             return;
-
         }
-        for (int j = 0; j < (columns * 2); j+=2)
+        for (qint32 j = 0; j < (mSize.width() * 2); j+=2)
         {
-            //QStringList values = cells[j].split('-' , Qt::SkipEmptyParts);
-
-            frequencies[i][j/2] = cells[j].toInt();
-            setAmplitude(i,j/2,cells[j+1].toInt());
+            mFrequencies[i][j/2] = cells[j].toInt();
+            setAmplitude(QPoint(j/2, i), cells[j+1].toInt());
         }
     }
 }
 
-void Frame::setColor(int row, int column)
+void Frame::setColor(const QPoint& pos)
 {
-    int h = frequencies[row][column] * 200 / 22000;
-    int s = (amplitudes[row][column]) * 255 / 32767;
-    colors[row][column].setHsv(h,s,255,255);
+    if (!isValidIndex(pos)) return;
+    qint32 h = mFrequencies[pos.y()][pos.x()] * 200 / 22000;
+    qint32 s = mAmplitudes[pos.y()][pos.x()] * 255 / 32767;
+    mColors[pos.y()][pos.x()].setHsv(h, s, 255, 255);
 }
 
-void Frame::setAmplitude(int row, int column, uint32_t value)
+void Frame::setAmplitude(const QPoint& pos, quint32 value)
 {
-    amplitudes[row][column] = value;
-    setColor(row, column);
+    if (!isValidIndex(pos)) return;
+    mAmplitudes[pos.y()][pos.x()] = value;
+    setColor(pos);
 }
 
-void Frame::setFrequency(int row, int column, uint32_t value)
+void Frame::setFrequency(const QPoint& pos, quint32 value)
 {
-    frequencies[row][column] = value;
-    setColor(row, column);
+    if (!isValidIndex(pos)) return;
+    mFrequencies[pos.y()][pos.x()] = value;
+    setColor(pos);
 }
 
-QColor Frame::getColor(int row, int column)
+QColor Frame::getColor(const QPoint& pos) const
 {
-    return colors[row][column];
+    return isValidIndex(pos) ? mColors[pos.y()][pos.x()] : QColor();
 }
 
-int Frame::getAmplitude(int row, int column)
+qint32 Frame::getAmplitude(const QPoint& pos) const
 {
-    return amplitudes[row][column];
+    return isValidIndex(pos) ? mAmplitudes[pos.y()][pos.x()] : -1;
 }
 
-int Frame::getFrequency(int row, int column)
+qint32 Frame::getFrequency(const QPoint& pos) const
 {
-    return frequencies[row][column];
+    return isValidIndex(pos) ? mFrequencies[pos.y()][pos.x()] : -1;
 }
 
-
-QString Frame::toString()
+QString Frame::toString() const
 {
     QString res = "";
-
-    for (int i = 0; i < rows; i++)
+    for (qint32 i = 0; i < mSize.height(); i++)
     {
-        for (int j = 0; j < columns; j++)
+        for (qint32 j = 0; j < mSize.width(); j++)
         {
-            res += QString::number(frequencies[i][j])
-                    + ", " + QString::number(amplitudes[i][j]) + ", ";
-
+            res += QString::number(mFrequencies[i][j])
+                    + ", " + QString::number(mAmplitudes[i][j]) + ", ";
         }
         res += "\n";
     }
-
     return res;
 }
 
 void Frame::setError()
 {
-    this->creationError = true;
+    mCreationError = true;
 }
 
-bool Frame::getError()
+bool Frame::getError() const
 {
-    return this->creationError;
+    return mCreationError;
+}
+
+bool Frame::isValidIndex(const QPoint& pos) const
+{
+    return pos.x() >= 0 && pos.x() < mSize.width() && pos.y() >= 0 && pos.y() < mSize.height();
 }
