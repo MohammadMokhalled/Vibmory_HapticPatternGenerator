@@ -4,97 +4,96 @@
 #include <QVector>
 #include <QColor>
 #include <QString>
+#include <QSize>
+#include <QPoint>
 
 class Frame
 {
 public:
     /**
      * Constructor for creating a Frame object
-     * @param columns The number of columns in the frame
-     * @param rows The number of rows in the frame
+     * @param size A QSize object containing the number of columns (width) and rows (height) in the frame.
      */
-    Frame(qint32 columns, qint32 rows);
-
+    Frame(const QSize& size);
+    
     /**
-     * Constructor for creating a Frame object from a CSV string
-     * @param csv The CSV string representing the frame data
-     * @param columns The number of columns in the frame
-     * @param rows The number of rows in the frame
+     * Constructor for creating a Frame object from a CSV string.
+     * @param csv The CSV string representing the frame data.
+     * @param size A QSize object containing the number of columns (width) and rows (height) in the frame.
      */
-    Frame(QString& csv, qint32 columns, qint32 rows);
-
+    Frame(const QString& csv, const QSize& size);
+    
     /**
-     * Set the amplitude value for a specific cell in the frame
-     * @param row The row index of the cell
-     * @param column The column index of the cell
-     * @param value The amplitude value to set
+     * Set the amplitude value for a specific cell in the frame.
+     * @param pos A QPoint object containing the row (y-coordinate) and column (x-coordinate) indices of the cell.
+     * @param value The amplitude value to set.
      */
-    void setAmplitude(qint32 row, qint32 column, quint32 value);
-
+    void setAmplitude(const QPoint& pos, quint32 value);
+    
     /**
-     * Set the frequency value for a specific cell in the frame
-     * @param row The row index of the cell
-     * @param column The column index of the cell
-     * @param value The frequency value to set
+     * Set the frequency value for a specific cell in the frame.
+     * @param pos A QPoint object containing the row (y-coordinate) and column (x-coordinate) indices of the cell.
+     * @param value The frequency value to set.
      */
-    void setFrequency(qint32 row, qint32 column, quint32 value);
-
+    void setFrequency(const QPoint& pos, quint32 value);
+    
     /**
-     * Get the color of a specific cell in the frame
-     * @param row The row index of the cell
-     * @param column The column index of the cell
-     * @return The color of the cell
+     * Get the color of a specific cell in the frame.
+     * @param pos A QPoint object containing the row (y-coordinate) and column (x-coordinate) indices of the cell.
+     * @return The color of the cell.
      */
-    QColor getColor(qint32 row, qint32 column);
-
+    QColor getColor(const QPoint& pos) const;
+    
     /**
-     * Get the amplitude value of a specific cell in the frame
-     * @param row The row index of the cell
-     * @param column The column index of the cell
-     * @return The amplitude value of the cell
+     * Get the amplitude value of a specific cell in the frame.
+     * @param pos A QPoint object containing the row (y-coordinate) and column (x-coordinate) indices of the cell.
+     * @return The amplitude value of the cell.
      */
-    qint32 getAmplitude(qint32 row, qint32 column);
-
+    qint32 getAmplitude(const QPoint& pos) const;
+    
     /**
-     * Get the frequency value of a specific cell in the frame
-     * @param row The row index of the cell
-     * @param column The column index of the cell
-     * @return The frequency value of the cell
+     * Get the frequency value of a specific cell in the frame.
+     * @param pos A QPoint object containing the row (y-coordinate) and column (x-coordinate) indices of the cell.
+     * @return The frequency value of the cell.
      */
-    qint32 getFrequency(qint32 row, qint32 column);
-
+    qint32 getFrequency(const QPoint& pos) const;
+    
     /**
-     * Convert the frame data to a string representation
-     * @return The string representation of the frame data
+     * Convert the frame data to a string representation.
+     * @return The string representation of the frame data.
      */
     QString toString() const;
-
+    
     /**
-     * Check if there was an error in the frame data
-     * @return True if there was an error, false otherwise
+     * Check if there was an error in the frame data.
+     * @return True if there was an error, false otherwise.
      */
-    bool getError();
+    bool getError() const;
 
 private:
-    qint32 mRows;
-    qint32 mColumns;
+    QSize mSize;
     bool mCreationError;
     QVector<QVector<quint32>> mFrequencies;
     QVector<QVector<quint32>> mAmplitudes;
     QVector<QVector<QColor>> mColors;
-
+    
     /**
-     * Sets the color for the specified row and column.
-     *
-     * @param row The row index.
-     * @param column The column index.
+     * Sets the color for the specified position.
+     * @param pos A QPoint object containing the row (y-coordinate) and column (x-coordinate) indices.
      */
-    void setColor(qint32 row, qint32 column);
+    void setColor(const QPoint& pos);
     
     /**
      * Sets the error.
      */
     void setError();
+    
+    /**
+     * Checks whether the given position is valid in the frame.
+     * @param pos A QPoint object containing the row (y-coordinate) and column (x-coordinate) indices.
+     * @return True if the position is valid, false otherwise.
+     */
+    bool isValidIndex(const QPoint& pos) const;
 };
 
 #endif // FRAME_H

@@ -40,7 +40,7 @@ Animation::Animation(const QString& fileAddress)
         {
             frame += in.readLine() + "\n";
         }
-        Frame newFrame(frame, mSize.width(), mSize.height());
+        Frame newFrame(frame, mSize);
         if (newFrame.getError())
         {
             setError();
@@ -54,7 +54,7 @@ Animation::Animation(const QString& fileAddress)
 void Animation::addFrame()
 {
     QMutexLocker locker(&mLock);
-    mFrames.append(Frame(mSize.height(), mSize.width()));
+    mFrames.append(Frame(mSize));
 }
 
 void Animation::duplicateCurrentFrame()
@@ -84,19 +84,19 @@ void Animation::setPos(const QPoint& pos)
 void Animation::setAmplitude(const QPoint& pos, quint32 value)
 {
     QMutexLocker locker(&mLock);
-    mFrames[mCurrentFrame].setAmplitude(pos.y(), pos.x(), value);
+    mFrames[mCurrentFrame].setAmplitude(pos, value);
 }
 
 void Animation::setFrequency(const QPoint& pos, quint32 value)
 {
     QMutexLocker locker(&mLock);
-    mFrames[mCurrentFrame].setFrequency(pos.y(), pos.x(), value);
+    mFrames[mCurrentFrame].setFrequency(pos, value);
 }
 
 QColor Animation::getColor(const QPoint& pos)
 {
     QMutexLocker locker(&mLock);
-    QColor color = mFrames[mCurrentFrame].getColor(pos.y(), pos.x());
+    QColor color = mFrames[mCurrentFrame].getColor(pos);
     return color;
 }
 
@@ -106,7 +106,7 @@ int Animation::getAmplitude(const QPoint& pos, int frameIndex)
     {
         frameIndex = mCurrentFrame;
     }
-    return mFrames[frameIndex].getAmplitude(pos.y(), pos.x());
+    return mFrames[frameIndex].getAmplitude(pos);
 }
 
 int Animation::getFrequency(const QPoint& pos, int frameIndex)
@@ -115,7 +115,7 @@ int Animation::getFrequency(const QPoint& pos, int frameIndex)
     {
         frameIndex = mCurrentFrame;
     }
-    return mFrames[frameIndex].getFrequency(pos.y(), pos.x());
+    return mFrames[frameIndex].getFrequency(pos);
 }
 
 bool Animation::writeInFile(const QString& fileAddress)
