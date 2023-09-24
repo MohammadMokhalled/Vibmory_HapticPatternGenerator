@@ -4,6 +4,7 @@
 #include <QFileDialog>
 #include <exception>
 #include "createprojectwindow.h"
+#include <QDebug>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)

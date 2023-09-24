@@ -1,7 +1,6 @@
 #include "animationaudio.h"
 #include <QByteArray>
 #include <QDataStream>
-#include <QDebug>
 #include <cmath>
 
 AnimationAudio::AnimationAudio(Animation *animation, qint32 frameRate, qint32 len, quint32 sampleRate):

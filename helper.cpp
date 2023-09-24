@@ -3,7 +3,6 @@
 #include <QPainter>
 #include <QPaintEvent>
 #include <QWidget>
-#include <QDebug>
 
 Helper::Helper(Animation* animation, int rows, int columns):
     mAnimation(animation),

@@ -249,8 +249,6 @@ void ProjectSettingWindow::on_loopSpinBox_valueChanged(qint32 arg1)
 
 void ProjectSettingWindow::on_tabWidget_currentChanged(qint32 index)
 {
-    qDebug() << "len" << mAnimation->getLen() << "  " << index << "\n";
-
     if (index < mAnimation->getLen() && index >= 0)
     {
         mCurrentFrame = index;
@@ -379,7 +377,6 @@ void ProjectSettingWindow::on_maxFrequencyPushButton_clicked()
 
 void ProjectSettingWindow::on_maxAmplitudePushButton_clicked()
 {
-    qDebug() << "len" << mAnimation->getLen() << "\n";
     ui->amplitudeSpinBox->setValue(ui->amplitudeSpinBox->maximum());
 }
 
