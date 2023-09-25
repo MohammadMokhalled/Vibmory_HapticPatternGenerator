@@ -39,7 +39,7 @@ FORMS += \
     projectsettingwindow.ui
 
 TRANSLATIONS += \
-    Sensors_CPP_en_001.ts
+    Vibmory_HapticPatternGenerator_en_001.ts
 
 # Default rules for deployment.
 target.path = $$[PWD]
