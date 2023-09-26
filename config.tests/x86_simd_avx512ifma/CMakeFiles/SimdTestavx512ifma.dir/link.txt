@@ -1,3 +1,0 @@
-C:\Qt\Tools\CMake_64\bin\cmake.exe -E rm -f CMakeFiles\SimdTestavx512ifma.dir/objects.a
-C:\PROGRA~1\MINGW-~1\X86_64~1.0-P\mingw64\bin\ar.exe cr CMakeFiles\SimdTestavx512ifma.dir/objects.a @CMakeFiles\SimdTestavx512ifma.dir\objects1.rsp
-C:\PROGRA~1\MINGW-~1\X86_64~1.0-P\mingw64\bin\G__~1.EXE -Wl,--whole-archive CMakeFiles\SimdTestavx512ifma.dir/objects.a -Wl,--no-whole-archive -o SimdTestavx512ifma.exe -Wl,--out-implib,libSimdTestavx512ifma.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles\SimdTestavx512ifma.dir\linklibs.rsp

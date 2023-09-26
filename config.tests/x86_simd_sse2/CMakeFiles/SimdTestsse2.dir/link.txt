@@ -1,3 +1,0 @@
-C:\Qt\Tools\CMake_64\bin\cmake.exe -E rm -f CMakeFiles\SimdTestsse2.dir/objects.a
-C:\PROGRA~1\MINGW-~1\X86_64~1.0-P\mingw64\bin\ar.exe cr CMakeFiles\SimdTestsse2.dir/objects.a @CMakeFiles\SimdTestsse2.dir\objects1.rsp
-C:\PROGRA~1\MINGW-~1\X86_64~1.0-P\mingw64\bin\G__~1.EXE -Wl,--whole-archive CMakeFiles\SimdTestsse2.dir/objects.a -Wl,--no-whole-archive -o SimdTestsse2.exe -Wl,--out-implib,libSimdTestsse2.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles\SimdTestsse2.dir\linklibs.rsp
