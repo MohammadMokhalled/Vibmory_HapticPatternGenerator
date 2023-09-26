@@ -6,31 +6,35 @@ CONFIG += c++20 static
 
 QMAKE_CXX_FLAGS += /EHa
 
+INCLUDEPATH += $$PWD/src
+INCLUDEPATH += $$PWD/include
+INCLUDEPATH += $$PWD/ui
+
 SOURCES += \
-    animation.cpp \
-    animationaudio.cpp \
-    createprojectwindow.cpp \
-    frame.cpp \
-    helper.cpp \
-    main.cpp \
-    mainwindow.cpp \
-    paintingwidget.cpp \
-    projectsettingwindow.cpp
+    src/animation.cpp \
+    src/animationaudio.cpp \
+    src/createprojectwindow.cpp \
+    src/frame.cpp \
+    src/helper.cpp \
+    src/main.cpp \
+    src/mainwindow.cpp \
+    src/paintingwidget.cpp \
+    src/projectsettingwindow.cpp
 
 HEADERS += \
-    animation.h \
-    animationaudio.h \
-    createprojectwindow.h \
-    frame.h \
-    helper.h \
-    mainwindow.h \
-    paintingwidget.h \
-    projectsettingwindow.h
+    include/animation.h \
+    include/animationaudio.h \
+    include/createprojectwindow.h \
+    include/frame.h \
+    include/helper.h \
+    include/mainwindow.h \
+    include/paintingwidget.h \
+    include/projectsettingwindow.h
 
 FORMS += \
-    createprojectwindow.ui \
-    mainwindow.ui \
-    projectsettingwindow.ui
+    ui/createprojectwindow.ui \
+    ui/mainwindow.ui \
+    ui/projectsettingwindow.ui
 
 # Default rules for deployment.
 target.path = $$[PWD]
