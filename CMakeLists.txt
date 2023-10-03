@@ -1,28 +1,34 @@
-cmake_minimum_required(VERSION 3.5) 
+# Minimum required version of CMake
+cmake_minimum_required(VERSION 3.5)
+
+# Define the project and its properties
 project(Vibmory VERSION 1.1.0 LANGUAGES CXX)
 
+# Enable automoc, autouic, and autorcc for Qt
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
+# Set C++ standard and require it
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# Find required packages and components
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Gui Widgets Multimedia)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Gui Widgets Multimedia)
 
-# If you are building a static app with MSVC, you might want to add these flags
-  if(MSVC AND BUILD_SHARED_LIBS)
-      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHa /MT")
-  endif()
+# MSVC & BUILD_SHARED_LIBS specific flags
+if(MSVC AND BUILD_SHARED_LIBS)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHa /MT")
+endif()
 
+# Define source files, header files, and form files
 set(SOURCES
     src/animation.cpp
     src/animationaudio.cpp
     src/createprojectwindow.cpp
     src/frame.cpp
     src/helper.cpp
-    src/main.cpp
     src/mainwindow.cpp
     src/paintingwidget.cpp
     src/projectsettingwindow.cpp
@@ -45,57 +51,22 @@ set(FORMS
     ui/projectsettingwindow.ui
 )
 
-set(PROJECT_SOURCES
-    ${SOURCES}
-    ${HEADERS}
-    ${FORMS}
-)
+# Define object library with target properties and link libraries
+add_library(${PROJECT_NAME}Objs OBJECT ${SOURCES} ${HEADERS} ${FORMS})
+target_include_directories(${PROJECT_NAME}Objs PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_link_libraries(${PROJECT_NAME}Objs PRIVATE Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Gui Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Multimedia)
+set_target_properties(${PROJECT_NAME}Objs PROPERTIES AUTOUIC_SEARCH_PATHS ${CMAKE_CURRENT_SOURCE_DIR}/ui)
 
-if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
-    qt_add_executable(${PROJECT_NAME}
-        MANUAL_FINALIZATION
-        ${PROJECT_SOURCES}
-    )
-# Define target properties for Android with Qt 6 as:
-#    set_property(TARGET ${PROJECT_NAME} APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
-#                 ${CMAKE_CURRENT_SOURCE_DIR}/android)
-# For more information, see https://doc.qt.io/qt-6/qt-add-executable.html#target-creation
-else()
-    if(ANDROID)
-        add_library(${PROJECT_NAME} SHARED
-            ${PROJECT_SOURCES}
-        )
-# Define properties for Android with Qt 5 after find_package() calls as:
-#    set(ANDROID_PACKAGE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/android")
-    else()
-        add_executable(${PROJECT_NAME}
-            ${PROJECT_SOURCES}
-        )
-    endif()
-endif()
+# Define the main executable
+add_executable(${PROJECT_NAME} src/main.cpp $<TARGET_OBJECTS:${PROJECT_NAME}Objs>)
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
-
 target_link_libraries(${PROJECT_NAME} PRIVATE Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Gui Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Multimedia)
 
-# Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
-# If you are developing for iOS or macOS you should consider setting an
-# explicit, fixed bundle identifier manually though.
-if(${QT_VERSION} VERSION_LESS 6.1.0)
-  set(BUNDLE_ID_OPTION MACOSX_BUNDLE_GUI_IDENTIFIER com.example.${PROJECT_NAME})
-  message("BUNDLE_ID_OPTION: ${BUNDLE_ID_OPTION}")
-endif()
-set_target_properties(${PROJECT_NAME} PROPERTIES
-    ${BUNDLE_ID_OPTION}
-    MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
-    MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
-    MACOSX_BUNDLE TRUE
-    WIN32_EXECUTABLE TRUE
-)
+# Configure Google Test
+enable_testing()
+add_subdirectory(tests)
 
-set_target_properties(${PROJECT_NAME} PROPERTIES
-    AUTOUIC_SEARCH_PATHS ${CMAKE_CURRENT_SOURCE_DIR}/ui
-)
-
+# Define installation directories
 include(GNUInstallDirs)
 install(TARGETS ${PROJECT_NAME}
     BUNDLE DESTINATION .
@@ -103,6 +74,7 @@ install(TARGETS ${PROJECT_NAME}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
+# Special handling for Qt6 projects
 if(QT_VERSION_MAJOR EQUAL 6)
     qt_finalize_executable(${PROJECT_NAME})
 endif()

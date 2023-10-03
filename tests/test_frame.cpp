@@ -58,13 +58,12 @@ TEST_F(FrameTest, InvalidIndexCheck) {
 }
 
 TEST_F(FrameTest, ErrorCheck) {
-    QSize size(2, 2);
-    QString invalidCsv = "0, 0, 0,\n0, 0, 0, 0,\n";
-    Frame frame(invalidCsv, size);
-    EXPECT_TRUE(frame.getError());
+   QSize size(2, 2);
+   QString invalidCsv = "0, 0, 0,\n0, 0, 0, 0,\n";
+   // Expecting that constructor of Frame will throw an exception of any type
+    EXPECT_THROW(
+      [&]() { Frame frame(invalidCsv, size); }(),
+      std::exception
+   );
 }
 
-int main(int argc, char **argv) {
-    ::testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
-}
