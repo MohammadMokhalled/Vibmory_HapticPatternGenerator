@@ -1,0 +1,16 @@
+---
+BasedOnStyle: Microsoft
+AccessModifierOffset: '4'
+AlignEscapedNewlines: Left
+ColumnLimit: '80'
+ObjCSpaceAfterProperty: 'false'
+ReflowComments: 'true'
+SortIncludes: 'false'
+SpaceAfterTemplateKeyword: 'false'
+SpaceBeforeParens: Never
+SpaceBeforeRangeBasedForLoopColon: 'true'
+SpaceInEmptyParentheses: 'false'
+TabWidth: '4'
+UseTab: Never
+
+...
