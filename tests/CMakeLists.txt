@@ -3,6 +3,8 @@ set(gtest_force_shared_crt on)
 # Add Google Test as a subdirectory
 add_subdirectory(googletest)
 
+add_definitions(-DCMAKE_TESTS_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
+
 # Define the source files for the test executable
 set(TEST_SOURCES
     test_main.cpp

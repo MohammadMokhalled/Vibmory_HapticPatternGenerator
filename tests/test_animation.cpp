@@ -24,15 +24,14 @@ TEST_F(AnimationTest, DefaultConstructor)
 
 TEST_F(AnimationTest, FileConstructor_ValidFile)
 {
-
-    QString filePath = "resources/valid.csv";
+    QString filePath = CMAKE_TESTS_DIR "/resources/valid.csv";
     Animation anim(filePath);
     EXPECT_FALSE(anim.getError());
 }
 
 TEST_F(AnimationTest, FileConstructor_InvalidFile)
 {
-    QString filePath = "resources/invalid.csv";
+    QString filePath = CMAKE_TESTS_DIR "/resources/invalid.csv";
     ASSERT_THROW(Animation anim(filePath), std::runtime_error);
 }
 
