@@ -320,7 +320,16 @@ void ProjectSettingWindow::importFromFile()
     }
     else
     {
-        Animation * newPrj = new Animation(fileName);
+        Animation * newPrj;
+        try
+        {
+            newPrj = new Animation(fileName);
+        }
+        catch (std::exception& e)
+        {
+            QMessageBox::critical(nullptr, "Error", e.what());
+        }
+        
         if (newPrj->getError())
         {
             qDebug() << "the animation did not work";

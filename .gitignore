@@ -77,3 +77,6 @@ release/
 x64/
 Sensors_CPP.qtvscr
 
+CMakeLists.txt.user
+
+.vscode/

@@ -1,6 +1,5 @@
 #include "frame.h"
 #include <QRegularExpression>
-#include <QMessageBox>
 
 Frame::Frame(const QSize& size):
     mSize(size), 
@@ -33,10 +32,8 @@ Frame::Frame(const QString& csv, const QSize& size)
 
     if (r != mSize.height() || n != mSize.height() * mSize.width() * 2)
     {
-        QMessageBox messageBox;
-        messageBox.critical(0,"Error","Frame data is not correct!");
         setError();
-        throw;
+        throw std::runtime_error("Frame data is not correct!");
     }
 
     mFrequencies.resize(mSize.height());
@@ -60,10 +57,8 @@ Frame::Frame(const QString& csv, const QSize& size)
     QStringList lines = csv.split(QRegularExpression("[\n]"), Qt::SkipEmptyParts);
     if (lines.length() != mSize.height())
     {
-        QMessageBox messageBox;
-        messageBox.critical(0,"Error","Frame data is not correct!");
         setError();
-        return;
+        throw std::runtime_error("Frame data is not correct!");
     }
 
     for (qint32 i = 0; i < mSize.height(); i++)
@@ -71,10 +66,8 @@ Frame::Frame(const QString& csv, const QSize& size)
         QStringList cells = lines[i].split(", " , Qt::SkipEmptyParts);
         if (cells.length() != (mSize.width() * 2))
         {
-            QMessageBox messageBox;
-            messageBox.critical(0,"Error","Frame data is not correct!");
             setError();
-            return;
+            throw std::runtime_error("Frame data is not correct!");
         }
         for (qint32 j = 0; j < (mSize.width() * 2); j+=2)
         {
