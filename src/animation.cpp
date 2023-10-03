@@ -1,7 +1,6 @@
 #include "animation.h"
 #include <QFile>
 #include <QTextStream>
-// #include <QMessageBox>
 
 Animation::Animation(const QSize& size)
     : mSize(size),
@@ -18,7 +17,6 @@ Animation::Animation(const QString& fileAddress)
     QFile file(fileAddress);
     if (!file.open(QIODevice::ReadOnly))
     {
-        // QMessageBox::critical(nullptr, "Error", "Cannot open the file");
         setError();
         throw std::runtime_error("Cannot open the file");
     }
@@ -27,7 +25,6 @@ Animation::Animation(const QString& fileAddress)
     QStringList values = setting.split(',' , Qt::SkipEmptyParts);
     if (values.length() < 3)
     {
-        // QMessageBox::critical(nullptr, "Error", "Data is corrupted!");
         setError();
         throw std::runtime_error("Data is corrupted!");
     }
