@@ -5,6 +5,7 @@
 #include <exception>
 #include "createprojectwindow.h"
 #include <QDebug>
+#include <QMessageBox>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -38,7 +39,16 @@ void MainWindow::on_uploadButton_clicked()
     }
     else
     {
-        animation = new Animation(fileName);
+        try
+        {
+            animation = new Animation(fileName);
+        }
+        catch (std::exception& e)
+        {
+            QMessageBox::critical(nullptr, "Error", e.what());
+            return;
+        }
+
         if (animation->getError())
         {
             qDebug() << "the animation did not work";
