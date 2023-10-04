@@ -59,7 +59,8 @@ ProjectSettingWindow::ProjectSettingWindow(qint32 rows, qint32 columns, QWidget 
     connect(ui->actionImport, &QAction::triggered, this, &ProjectSettingWindow::on_importAction_triggered);
 }
 
-ProjectSettingWindow::ProjectSettingWindow(Animation * anim, QWidget *parent) :
+ProjectSettingWindow::ProjectSettingWindow(QString& fileName, QWidget *parent) :
+    mAnimation(new Animation(fileName)),
     QMainWindow(parent),
     ui(new Ui::projectsettingwindow),
     mCurrentFrame(0),
@@ -69,7 +70,7 @@ ProjectSettingWindow::ProjectSettingWindow(Animation * anim, QWidget *parent) :
     mEnableUnselect(0)
 {
     ui->setupUi(this);
-    initialize(anim);
+    initialize(mAnimation);
     mStopTimer = new QTimer(this);
     mTimer = new QTimer(this);
     connect(mTimer, &QTimer::timeout, mPaintingWidget, &PaintingWidget::animate);
@@ -108,8 +109,6 @@ void ProjectSettingWindow::initialize(Animation* animation)
 {
     mRows = animation->getSize().width();
     mColumns = animation->getSize().height();
-
-    mAnimation = animation;
 
     initializeUI();
 
@@ -320,25 +319,15 @@ void ProjectSettingWindow::importFromFile()
     }
     else
     {
-        Animation * newPrj;
         try
         {
-            newPrj = new Animation(fileName);
+            ProjectSettingWindow * newPS = new ProjectSettingWindow(fileName);
+            newPS->show();
+            close();
         }
         catch (std::exception& e)
         {
             QMessageBox::critical(nullptr, "Error", e.what());
-        }
-        
-        if (newPrj->getError())
-        {
-            qDebug() << "the animation did not work";
-        }
-        else
-        {
-           ProjectSettingWindow * newPS = new ProjectSettingWindow(newPrj);
-           newPS->show();
-           close();
         }
     }
 }

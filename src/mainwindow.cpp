@@ -1,6 +1,5 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include "animation.h"
 #include <QFileDialog>
 #include <exception>
 #include "createprojectwindow.h"
@@ -29,7 +28,6 @@ void MainWindow::on_newProjectButton_clicked()
 
 void MainWindow::on_uploadButton_clicked()
 {
-    Animation * animation;
     QString fileName = QFileDialog::getOpenFileName(this,
         tr("Save"), "",
         tr("CSV File (*.csv);;All Files (*)"));
@@ -41,23 +39,14 @@ void MainWindow::on_uploadButton_clicked()
     {
         try
         {
-            animation = new Animation(fileName);
+            mSecondWindow = new ProjectSettingWindow(fileName, this);
+            close();
+            mSecondWindow->show();
         }
         catch (std::exception& e)
         {
             QMessageBox::critical(nullptr, "Error", e.what());
             return;
-        }
-
-        if (animation->getError())
-        {
-            qDebug() << "the animation did not work";
-        }
-        else
-        {
-            mSecondWindow = new ProjectSettingWindow(animation, this);
-            close();
-            mSecondWindow->show();
         }
     }
 }

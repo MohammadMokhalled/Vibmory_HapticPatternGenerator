@@ -43,7 +43,7 @@ public:
      * @param animation The Animation object.
      * @param parent The parent widget (default: nullptr).
      */
-    explicit ProjectSettingWindow(Animation* animation, QWidget *parent = nullptr);
+    explicit ProjectSettingWindow(QString& fileName, QWidget *parent = nullptr);
     ~ProjectSettingWindow();
 
 public slots:
