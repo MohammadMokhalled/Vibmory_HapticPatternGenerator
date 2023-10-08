@@ -30,13 +30,13 @@ public:
      * Set the frame rate of the animation.
      * @param frameRate The frame rate of the animation.
      */
-    void setFrameRate(qint32 frameRate);
+    void setFrameRate(qint32 frameRate) override;
 
     /**
      * Set the duration of audio in seconds.
      * @param duration The duration of audio in seconds.
      */
-    void setDuration(qint32 duration);
+    void setDuration(qint32 duration) override;
 
     /**
      * Set the sample rate of the audio file.
@@ -48,19 +48,19 @@ public:
      * Prepare the object for controlling the actuators.
      * @return True if the object is successfully prepared, false otherwise.
      */
-    bool prepare();
+    bool prepare() override;
 
     /**
      * Starts controlling the actuators.
      * @return True if the file is successfully played, false otherwise.
      */
-    bool play();
+    bool play() override;
 
     /**
      * Stops controlling the actuators.
      * @return True if the file is successfully stopped, false otherwise.
      */
-    bool stop();
+    bool stop() override;
 
 private:
     Animation *mAnimation;
