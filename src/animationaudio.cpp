@@ -3,13 +3,43 @@
 #include <QDataStream>
 #include <cmath>
 
-AnimationAudio::AnimationAudio(Animation *animation, qint32 frameRate, qint32 len, quint32 sampleRate):
+AnimationAudio::AnimationAudio(Animation *animation, qint32 frameRate, qint32 duration, quint32 sampleRate):
     mAnimation(animation),
     mFrameRate(frameRate),
-    mLength(len),
+    mDuration(duration),
     mSampleRate(sampleRate)
 {
+}
 
+bool AnimationAudio::generateFile(QString &fileName)
+{
+    QString message = "";
+    QFile file(fileName);
+    if(file.open(QIODevice::WriteOnly | QFile::Truncate))
+    {
+        QDataStream stream(&file);
+        stream.setByteOrder(QDataStream::LittleEndian);
+
+        writeData(&stream);
+    }
+    file.close();
+
+    return true;
+}
+
+void AnimationAudio::setFrameRate(qint32 frameRate)
+{
+    mFrameRate = frameRate;
+}
+
+void AnimationAudio::setDuration(qint32 duration)
+{
+    mDuration = duration;
+}
+
+void AnimationAudio::setSampleRate(quint32 sampleRate)
+{
+    mSampleRate = sampleRate;
 }
 
 bool AnimationAudio::writeHeader(QDataStream *stream)
@@ -17,7 +47,7 @@ bool AnimationAudio::writeHeader(QDataStream *stream)
 
     *stream << (quint8)'R' << (quint8)'I' << (quint8)'F' << (quint8)'F';
     
-    quint32 fileSize = mAnimation->getSize().width() * mAnimation->getSize().height() * mLength * mSampleRate * 2 + 44;
+    quint32 fileSize = mAnimation->getSize().width() * mAnimation->getSize().height() * mDuration * mSampleRate * 2 + 44;
     *stream << fileSize;
 
     *stream << (quint8)'W' << (quint8)'A' << (quint8)'V' << (quint8)'E';
@@ -55,14 +85,14 @@ bool AnimationAudio::writeHeader(QDataStream *stream)
 
 bool AnimationAudio::writeData(QDataStream *stream)
 {
-    quint32 maxValue = mSampleRate * mLength;
+    quint32 maxValue = mSampleRate * mDuration;
     quint32 frameLen = mSampleRate / mFrameRate;
     quint32 numberOfFrames = mAnimation->getLen();
 
     for (quint32 x = 0; x < maxValue; x++)
     {
         double t = static_cast<double>(x) / mSampleRate;
-        quint16 frameIndex = (x / frameLen) % (numberOfFrames -1);
+        quint16 frameIndex = (x / frameLen) % (numberOfFrames);
         
         for (qint32 i = 0; i < mAnimation->getSize().width(); i++)
         {
@@ -76,22 +106,5 @@ bool AnimationAudio::writeData(QDataStream *stream)
             }
         }
     }
-    return true;
-}
-
-bool AnimationAudio::generateFile(QString& fileName)
-{
-    QString message = "";
-    QFile file(fileName);
-    if(file.open(QIODevice::WriteOnly|QFile::Truncate))
-    {
-       QDataStream stream(&file);
-       stream.setByteOrder(QDataStream::LittleEndian);
-
-       writeData(&stream);
-
-    }
-    file.close();
-
     return true;
 }

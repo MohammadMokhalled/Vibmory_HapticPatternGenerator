@@ -52,12 +52,6 @@ public:
     int getLen() const;
     
     /**
-     * Sets the position of the current cell in the frame.
-     * @param pos The QPoint object representing the row and column of the cell.
-     */
-    void setPos(const QPoint& pos);
-    
-    /**
      * Sets the amplitude value at the specified position.
      * @param pos The QPoint object representing the row and column of the cell.
      * @param value The amplitude value.

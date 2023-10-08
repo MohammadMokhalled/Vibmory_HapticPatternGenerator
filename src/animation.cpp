@@ -72,12 +72,6 @@ int Animation::getLen() const
     return mFrames.length();
 }
 
-void Animation::setPos(const QPoint& pos)
-{
-    QMutexLocker locker(&mLock);
-    mCurrentPos = pos;
-}
-
 void Animation::setAmplitude(const QPoint& pos, quint32 value)
 {
     QMutexLocker locker(&mLock);

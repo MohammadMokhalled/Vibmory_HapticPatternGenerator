@@ -32,6 +32,7 @@ set(SOURCES
     src/mainwindow.cpp
     src/paintingwidget.cpp
     src/projectsettingwindow.cpp
+    src/animationcontroller.cpp
 )
 
 set(HEADERS
@@ -43,6 +44,7 @@ set(HEADERS
     include/mainwindow.h
     include/paintingwidget.h
     include/projectsettingwindow.h
+    include/animationcontroller.h
 )
 
 set(FORMS
