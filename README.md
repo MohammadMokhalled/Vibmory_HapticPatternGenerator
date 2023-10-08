@@ -21,6 +21,11 @@ This tool has been developed and utilized in a research study, and the findings 
 
 TODO
 
+## Diagrams and Architecture
+
+Here is a simple class diagram of the project for a better overview of the project. 
+![Class Diagram](docs/diagrams/ClassDiagram.png)
+
 ## Contributing
 
 This is not a very active project and it is developed for Tallinn University but if you have suggestions or improvements, we welcome your contributions. You can check the issues and start there. There is not a restrict rules to contribute, just start, we will help :). 
