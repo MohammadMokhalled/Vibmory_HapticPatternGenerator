@@ -25,7 +25,7 @@ endif()
 # Define source files, header files, and form files
 set(SOURCES
     src/animation.cpp
-    "src/audioactuator.cpp"
+    src/audioactuator.cpp
     src/createprojectwindow.cpp
     src/frame.cpp
     src/helper.cpp
@@ -37,7 +37,7 @@ set(SOURCES
 
 set(HEADERS
     include/animation.h
-    "include/audioactuator.h"
+    include/audioactuator.h
     include/createprojectwindow.h
     include/frame.h
     include/helper.h
