@@ -5,7 +5,7 @@ AnimationController::AnimationController(const QString &fileName,
     :
     QObject(parent),
     mAnimation(new Animation(fileName)),
-    mAnimationAudio(new AnimationAudio(mAnimation)),
+    mAudioActuator(new AudioActuator(mAnimation)),
       mHelper(new Helper(mAnimation)),
     mPaintingWidget(new PaintingWidget(mHelper)),
     mTimer(new QTimer(this)),
@@ -21,7 +21,7 @@ AnimationController::AnimationController(const QSize &size, QObject *parent)
     :
     QObject(parent),
     mAnimation(new Animation(size)),
-    mAnimationAudio(new AnimationAudio(mAnimation)),
+    mAudioActuator(new AudioActuator(mAnimation)),
       mHelper(new Helper(mAnimation)),
     mPaintingWidget(new PaintingWidget(mHelper)),
     mTimer(new QTimer(this)),
@@ -86,11 +86,13 @@ void AnimationController::playAnimation(quint16 framerate, quint32 duration)
     connect(mStopTimer, &QTimer::timeout, this, &AnimationController::stopAnimation);
     mStopTimer->start(1000*duration);
     mHelper->startPlay();
+    mAudioActuator->play();
 }
 
 void AnimationController::stopAnimation()
 {
     mHelper->stopPlay();
+    mAudioActuator->stop();
     mTimer->stop();
     mTimer->start(50);
     disconnect(mStopTimer, &QTimer::timeout, this,
@@ -106,22 +108,17 @@ void AnimationController::saveToFile(const QString& fileName)
 
 void AnimationController::setFrameRate(qint32 frameRate)
 {
-    mAnimationAudio->setFrameRate(frameRate);
+    mAudioActuator->setFrameRate(frameRate);
 }
 
 void AnimationController::setDuration(qint32 duration)
 {
-    mAnimationAudio->setDuration(duration);
+    mAudioActuator->setDuration(duration);
 }
 
-void AnimationController::setSampleRate(quint32 sampleRate)
+bool AnimationController::prepareActuator(QString &fileName)
 {
-    mAnimationAudio->setSampleRate(sampleRate);
-}
-
-bool AnimationController::generateAudioFile(QString &fileName)
-{
-    return mAnimationAudio->generateFile(fileName);
+    return mAudioActuator->prepare();
 }
 
 int AnimationController::getAmplitude(const QPoint& pos) const

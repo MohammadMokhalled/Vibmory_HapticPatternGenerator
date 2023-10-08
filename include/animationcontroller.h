@@ -6,7 +6,7 @@
 #include <QtGlobal>
 #include <QTimer>
 #include "animation.h"
-#include "animationaudio.h"
+#include "audioactuator.h"
 #include "helper.h"
 #include "paintingwidget.h"
 
@@ -105,16 +105,10 @@ public:
     void setDuration(qint32 duration);
 
     /**
-     * set sample rate of the animation.
-     * @param sampleRate The sample rate of the animation.
-     */
-    void setSampleRate(quint32 sampleRate);
-
-    /**
      * generate audio file of the animation.
      * @param fileName The address of the file to save the audio to.
      */
-    bool generateAudioFile(QString &fileName);
+    bool prepareActuator(QString &fileName);
 
     /**
      * get amplitude of a pixel in the animation.
@@ -165,7 +159,7 @@ signals:
 
 private:
     Animation *mAnimation;
-    AnimationAudio *mAnimationAudio;
+    IActuatorController *mAudioActuator;
     Helper *mHelper;
     PaintingWidget *mPaintingWidget;
     QTimer *mTimer;

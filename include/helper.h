@@ -130,14 +130,9 @@ public:
     void startPlay();
     
     /**
-     * Stop playing audio.
+     * Stop playing animation.
      */
     void stopPlay();
-    
-    /**
-     * Play audio.
-     */
-    void playAudio();
 
 
 private:
@@ -150,13 +145,10 @@ private:
     bool mIsPlaying;
     qint32 mTabIndexBeforePlay;
     QPoint mSelectedCell;
-    bool mFirstFramePlay;
     bool mIsSelected;
 
     QSize mCellSize;
-    QAudioOutput* mAudio;
     QMutex mLock;
-    QFile mSourceFile;
     
 };
 

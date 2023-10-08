@@ -15,10 +15,8 @@ Helper::Helper(Animation* animation):
     mIsPlaying(false),
     mTabIndexBeforePlay(0),
     mSelectedCell(QPoint(0,0)),
-    mFirstFramePlay(false),
     mIsSelected(false),
-    mCellSize(QSize(0,0)),
-    mAudio(nullptr)
+    mCellSize(QSize(0,0))
 {
     QLinearGradient gradient(QPointF(50, -20), QPointF(80, 20));
     gradient.setColorAt(0.0, Qt::white);
@@ -62,54 +60,25 @@ void Helper::drawColors(QPainter *painter)
     }
 }
 
-void Helper::playAudio()
-{
-    mSourceFile.setFileName("file.wav"); //C:/Users/mmokh/OneDrive/Documents/build-Sensors_CPP-Desktop_Qt_6_0_3_MSVC2019_64bit-Debug/
-    mSourceFile.open(QIODevice::ReadOnly);
-
-    QAudioFormat format;
-    // Set up the format, eg.
-    format.setSampleRate(48000);
-    format.setChannelCount(mAnimation->getSize().height() * mAnimation->getSize().width());
-    format.setSampleSize(16);
-    format.setCodec("audio/pcm");
-    format.setByteOrder(QAudioFormat::LittleEndian);
-    format.setSampleType(QAudioFormat::SignedInt);
-
-    QAudioDeviceInfo info(QAudioDeviceInfo::defaultOutputDevice());
-    if (!info.isFormatSupported(format)) {
-        qWarning() << "Raw audio format not supported by backend, cannot play audio.";
-    }
-
-    mAudio = new QAudioOutput(format);
-    mAudio->start(&mSourceFile);
-}
 
 void Helper::startPlay()
 {
     mTabIndexBeforePlay = mAnimation->getCurrentFrameIndex();
     mAnimation->selectFrame(0);
     mIsPlaying = true;
-    mFirstFramePlay = true;
 }
 
 void Helper::stopPlay()
 {
     mIsPlaying = false;
     mAnimation->selectFrame(mTabIndexBeforePlay);
-    mAudio->stop();
-    mSourceFile.close();
 }
 
 
 void Helper::paint(QPainter *painter, QPaintEvent *event)
 {
     mLock.lock();
-    if (mFirstFramePlay)
-    {
-        playAudio();
-        mFirstFramePlay = false;
-    }
+
     drawBackground(painter);
 
     drawColors(painter);

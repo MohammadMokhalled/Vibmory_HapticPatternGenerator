@@ -2,18 +2,11 @@
 #include "ui_projectsettingwindow.h"
 #include "qtoolbutton.h"
 #include "qtabbar.h"
-#include <QThreadPool>
 #include <QGraphicsScene>
-
 #include <QFileDialog>
-#include <QTimer>
 #include <QMessageBox>
-#include <animationaudio.h>
 #include <createprojectwindow.h>
-#include <QAudioOutput>
 #include <QFileInfo>
-
-QThreadPool *thread_pool = QThreadPool::globalInstance();
 
 ProjectSettingWindow::ProjectSettingWindow(QWidget *parent)
     : QMainWindow(parent), ui(new Ui::projectsettingwindow), mCurrentFrame(0),
@@ -325,7 +318,7 @@ void ProjectSettingWindow::on_generateSounFileButton_clicked()
         ui->frameRateComboBox->currentText().toInt());
     mAnimationController->setDuration(ui->loopSpinBox->value());
     auto filename = QString("file.wav");
-    mAnimationController->generateAudioFile(filename);
+    mAnimationController->prepareActuator(filename);
 }
 
 void ProjectSettingWindow::on_actionNew_Project_triggered()
