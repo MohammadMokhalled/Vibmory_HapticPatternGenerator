@@ -15,7 +15,8 @@ CreateProjectWindow::~CreateProjectWindow()
 
 void CreateProjectWindow::on_okButton_clicked()
 {
-    mSecondWindow  = new ProjectSettingWindow(ui->rowsSpinBox->value(), ui->columnsSpinBox->value());
+    mSecondWindow = new ProjectSettingWindow(
+        QSize(ui->rowsSpinBox->value(), ui->columnsSpinBox->value()));
     close();
     mSecondWindow->show();
 }

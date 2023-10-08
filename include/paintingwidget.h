@@ -16,7 +16,7 @@ public:
      * @param helper The helper object used for painting
      * @param parent The parent widget
      */
-    PaintingWidget(Helper* helper, QWidget* parent);
+    PaintingWidget(Helper* helper, QWidget* parent = nullptr);
     
     /**
      * Event handler for mouse press events

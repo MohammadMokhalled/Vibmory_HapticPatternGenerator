@@ -25,24 +25,27 @@ endif()
 # Define source files, header files, and form files
 set(SOURCES
     src/animation.cpp
-    src/animationaudio.cpp
+    src/audioactuator.cpp
     src/createprojectwindow.cpp
     src/frame.cpp
     src/helper.cpp
     src/mainwindow.cpp
     src/paintingwidget.cpp
     src/projectsettingwindow.cpp
+    src/animationcontroller.cpp
 )
 
 set(HEADERS
     include/animation.h
-    include/animationaudio.h
+    include/audioactuator.h
     include/createprojectwindow.h
     include/frame.h
     include/helper.h
     include/mainwindow.h
     include/paintingwidget.h
     include/projectsettingwindow.h
+    include/animationcontroller.h
+    include/iactuatorcontroller.h
 )
 
 set(FORMS

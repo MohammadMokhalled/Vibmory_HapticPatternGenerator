@@ -80,3 +80,6 @@ Sensors_CPP.qtvscr
 CMakeLists.txt.user
 
 .vscode/
+out/
+CMakePresets.json
+CMakeUserPresets.json

@@ -74,7 +74,7 @@ public:
      * @param rows The number of rows.
      * @param columns The number of columns.
      */
-    Helper(Animation* animation, qint32 rows, qint32 columns);
+    Helper(Animation* animation);
 
     /**
      * This function is responsible for painting on the QPainter object.
@@ -93,20 +93,12 @@ public:
     void drawBackground(QPainter *painter);
     
     /**
-     * Sets the painting state.
-     * 
-     * @param state - The new painting state.
-     * @return true if the painting state was successfully set, false otherwise.
-     */
-    bool setPaintingState(qint32 state);
-    
-    /**
      * Selects the cell at the specified coordinates.
      * 
      * @param x - The x-coordinate of the cell.
      * @param y - The y-coordinate of the cell.
      */
-    void selectCell(qint32 x, qint32 y);
+    void selectCell(const QPoint& pos);
     
     /**
      * Draws the colors cells.
@@ -125,39 +117,26 @@ public:
      * @return true if a cell is selected, false otherwise.
      */
     bool isSelected();
-
-    /**
-     * Gets the row index of the selected cell.
-     * @return the row index of the selected cell.
-     */
-    qint32 getSelectedRow();
-
-    /**
-     * Gets the selected column.
-     * @return the selected column.
-     */
-    qint32 getSelectedColumn();
     
+    /**
+     * Gets the selected cell coordination.
+     * @return The selected cell coordination.
+     */
+    QPoint getSelectedCell() const;
+
     /**
      * Start playing animation.
      */
     void startPlay();
     
     /**
-     * Stop playing audio.
+     * Stop playing animation.
      */
     void stopPlay();
-    
-    /**
-     * Play audio.
-     */
-    void playAudio();
 
 
 private:
     Animation* mAnimation;
-    qint32 mRows;
-    qint32 mColumns;
     QBrush mBackgroundBrush;
     QBrush mForegroundBrush;
     QPen mBoldPen;
@@ -165,17 +144,11 @@ private:
     QFont mTextFont;
     bool mIsPlaying;
     qint32 mTabIndexBeforePlay;
-    qint32 mSelectedRow;
-    qint32 mSelectedColumn;
-    bool mFirstFramePlay;
-    bool mSelectedPosition;
+    QPoint mSelectedCell;
+    bool mIsSelected;
 
-    qint32 mCellWidth;
-    qint32 mCellHeight;
-    qint32 mPaintingState;
-    QAudioOutput* mAudio;
+    QSize mCellSize;
     QMutex mLock;
-    QFile mSourceFile;
     
 };
 

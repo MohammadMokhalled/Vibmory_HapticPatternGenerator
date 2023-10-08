@@ -2,93 +2,51 @@
 #include "ui_projectsettingwindow.h"
 #include "qtoolbutton.h"
 #include "qtabbar.h"
-#include <QThreadPool>
 #include <QGraphicsScene>
-
 #include <QFileDialog>
-#include <QTimer>
 #include <QMessageBox>
-#include <animationaudio.h>
 #include <createprojectwindow.h>
-#include <QAudioOutput>
 #include <QFileInfo>
 
-QThreadPool *thread_pool = QThreadPool::globalInstance();
-
-ProjectSettingWindow::ProjectSettingWindow(QWidget *parent) :
-    QMainWindow(parent),
-    ui(new Ui::projectsettingwindow),
-    mCurrentFrame(0),
-    mCurrentRow(0),
-    mCurrentColumn(0),
-    mTabChangeTries(0),
-    mEnableUnselect(0)
+ProjectSettingWindow::ProjectSettingWindow(QWidget *parent)
+    : QMainWindow(parent), ui(new Ui::projectsettingwindow), mCurrentFrame(0),
+      mCurrentCell(QPoint(0, 0)), mTabChangeTries(0), mEnableUnselect(0)
 {
     ui->setupUi(this);
 }
 
-ProjectSettingWindow::ProjectSettingWindow(qint32 rows, qint32 columns, QWidget *parent) :
-    QMainWindow(parent),
-    ui(new Ui::projectsettingwindow),
-    mRows(rows),
-    mColumns(columns),
-    mAnimation(new Animation(QSize(rows, columns))),
-    mCurrentFrame(0),
-    mCurrentRow(0),
-    mCurrentColumn(0),
-    mTabChangeTries(0),
-    mEnableUnselect(0)
+ProjectSettingWindow::ProjectSettingWindow(const QSize &size, QWidget *parent)
+    : QMainWindow(parent), ui(new Ui::projectsettingwindow), mSize(size),
+      mAnimationController(new AnimationController(mSize)), mCurrentFrame(0),
+      mCurrentCell(QPoint(0, 0)), mEnableUnselect(0)
 {
     ui->setupUi(this);
 
-    initializeUI();
-    mHelper = new Helper(mAnimation, rows, columns);
-    mPaintingWidget = new PaintingWidget(mHelper, this);
-    mAnimation->addFrame();
-
-    ui->gridLayout->addWidget(mPaintingWidget,0,0);
-    mPaintingWidget->drawBackground();
-
-    mStopTimer = new QTimer(this);
-    mTimer = new QTimer(this);
-    connect(mTimer, &QTimer::timeout, mPaintingWidget, &PaintingWidget::animate);
-    mTimer->start(15);
-
-    connect(mPaintingWidget, &PaintingWidget::selectedSignal, this, &ProjectSettingWindow::enableGroupBox);
-    connect(ui->actionSave, &QAction::triggered, this, &ProjectSettingWindow::on_saveAction_triggered);
-    connect(ui->actionImport, &QAction::triggered, this, &ProjectSettingWindow::on_importAction_triggered);
+    initialize();
 }
 
-ProjectSettingWindow::ProjectSettingWindow(Animation * anim, QWidget *parent) :
-    QMainWindow(parent),
-    ui(new Ui::projectsettingwindow),
-    mCurrentFrame(0),
-    mCurrentRow(0),
-    mCurrentColumn(0),
-    mTabChangeTries(0),
-    mEnableUnselect(0)
+ProjectSettingWindow::ProjectSettingWindow(const QString &fileName, QWidget *parent)
+    : mAnimationController(new AnimationController(fileName)),
+      QMainWindow(parent), ui(new Ui::projectsettingwindow),
+      mSize(mAnimationController->getSize()), mCurrentFrame(0),
+      mCurrentCell(QPoint(0, 0)), mTabChangeTries(0), mEnableUnselect(0)
 {
     ui->setupUi(this);
-    initialize(anim);
-    mStopTimer = new QTimer(this);
-    mTimer = new QTimer(this);
-    connect(mTimer, &QTimer::timeout, mPaintingWidget, &PaintingWidget::animate);
-    mTimer->start(50);
-    connect(mPaintingWidget, &PaintingWidget::selectedSignal, this, &ProjectSettingWindow::enableGroupBox);
-    connect(ui->actionSave, &QAction::triggered, this, &ProjectSettingWindow::on_saveAction_triggered);
-    connect(ui->actionImport, &QAction::triggered, this, &ProjectSettingWindow::on_importAction_triggered);
+    initialize();
 }
 
 void ProjectSettingWindow::initializeUI()
 {
     ui->tabWidget->clear();
-    ui->tabWidget->insertTab(ui->tabWidget->count() - 1,new QLabel(), QString("frame 1"));
+    ui->tabWidget->insertTab(ui->tabWidget->count() - 1, new QLabel(),
+                             QString("frame 1"));
     QToolButton *tb = ui->addFrameToolButton;
     tb->setText("+");
     // Add empty, not enabled tab to tabWidget
     ui->tabWidget->addTab(new QLabel(), QString());
     ui->tabWidget->setTabEnabled(ui->tabWidget->count() - 1, false);
-    ui->tabWidget->tabBar()->setTabButton(ui->tabWidget->count() - 1, QTabBar::LeftSide, tb);
+    ui->tabWidget->tabBar()->setTabButton(ui->tabWidget->count() - 1,
+                                          QTabBar::LeftSide, tb);
 
     ui->frameRateComboBox->clear();
     ui->frameRateComboBox->addItem(QString("1"));
@@ -102,42 +60,50 @@ void ProjectSettingWindow::initializeUI()
 
     ui->tabWidget->setCurrentIndex(0);
 
-}
-
-void ProjectSettingWindow::initialize(Animation* animation)
-{
-    mRows = animation->getSize().width();
-    mColumns = animation->getSize().height();
-
-    mAnimation = animation;
-
-    initializeUI();
-
-    mHelper = new Helper(mAnimation, mRows, mColumns);
-    mPaintingWidget = new PaintingWidget(mHelper, this);
-    for (qint32 i = 0; i < mAnimation->getLen() - 1; i++)
+    // The first frame tab is already created up here this is why mAnimationController->getLen()
+    for(qint32 i = 0; i < mAnimationController->getLen() - 1; i++)
     {
-        ui->tabWidget->insertTab(ui->tabWidget->count() - 1,new QLabel(), QString("frame ") + QString::number(ui->tabWidget->count()));
+        ui->tabWidget->insertTab(ui->tabWidget->count() - 1, new QLabel(),
+                                 QString("frame ") +
+                                     QString::number(ui->tabWidget->count()));
     }
 
-    ui->gridLayout->addWidget(mPaintingWidget,0,0);
-    mPaintingWidget->drawBackground();
+    ui->gridLayout->addWidget(mAnimationController->getPaintingWidget(), 0, 0);
+    mAnimationController->drawBackground();
+}
+
+void ProjectSettingWindow::initializeSlots()
+{
+    connect(mAnimationController, &AnimationController::selectedSignal, this,
+            &ProjectSettingWindow::enableGroupBox);
+    connect(ui->actionSave, &QAction::triggered, this,
+            &ProjectSettingWindow::on_saveAction_triggered);
+    connect(ui->actionImport, &QAction::triggered, this,
+            &ProjectSettingWindow::on_importAction_triggered);
+    connect(mAnimationController, &AnimationController::stopAnimationSignal, this,
+        			&ProjectSettingWindow::stopPlay);
+}
+
+void ProjectSettingWindow::initialize()
+{
+    initializeUI();
+    initializeSlots();
 }
 
 void ProjectSettingWindow::enableGroupBox()
 {
     ui->groupBox->setEnabled(true);
-    ui->amplitudeSpinBox->setValue
-        (mAnimation->getAmplitude
-                                   (QPoint(mHelper->getSelectedRow(), mHelper->getSelectedColumn())));
-    ui->frequencySpinBox->setValue
-        (mAnimation->getFrequency
-                                   (QPoint(mHelper->getSelectedRow(), mHelper->getSelectedColumn())));
+    ui->amplitudeSpinBox->setValue(
+        mAnimationController->getAmplitude());
+    ui->frequencySpinBox->setValue( 
+        mAnimationController->getFrequency());
 }
 
 void ProjectSettingWindow::addFrame()
 {
-    ui->tabWidget->addTab(nullptr, QString("frame ") + QString::number(ui->tabWidget->count() - 1));
+    ui->tabWidget->addTab(nullptr,
+                          QString("frame ") +
+                              QString::number(ui->tabWidget->count() - 1));
 }
 
 ProjectSettingWindow::~ProjectSettingWindow()
@@ -147,63 +113,55 @@ ProjectSettingWindow::~ProjectSettingWindow()
 
 void ProjectSettingWindow::on_addFrameToolButton_clicked()
 {
-    ui->tabWidget->insertTab(ui->tabWidget->count() - 1,new QLabel(), QString("frame ") + QString::number(ui->tabWidget->count()));
-    mAnimation->addFrame();
+    ui->tabWidget->insertTab(ui->tabWidget->count() - 1, new QLabel(),
+                             QString("frame ") +
+                                 QString::number(ui->tabWidget->count()));
+    mAnimationController->addFrame();
 }
 
 void ProjectSettingWindow::on_playPushButton_clicked()
 {
-    if (!QFileInfo::exists("file.wav") && !QFileInfo("file.wav").isFile())
+    if(!QFileInfo::exists("file.wav") && !QFileInfo("file.wav").isFile())
     {
         QMessageBox messageBox;
-        messageBox.warning(0,"Error","please generate an audio file first.");
+        messageBox.warning(0, "Error", "please generate an audio file first.");
         return;
     }
 
-    if (ui->frameRateComboBox->currentIndex() >= 0)
+    if(ui->frameRateComboBox->currentIndex() >= 0)
     {
 
-        if (ui->playPushButton->text() != QString("Stop"))
+        if(ui->playPushButton->text() != QString("Stop"))
         {
             startPlay();
         }
         else
         {
+            mAnimationController->stopAnimation();
             stopPlay();
         }
     }
     else
     {
         QMessageBox messageBox;
-        messageBox.warning(0,"Error","please select a correct frame rate");
+        messageBox.warning(0, "Error", "please select a correct frame rate");
     }
 }
 
 void ProjectSettingWindow::startPlay()
 {
     ui->playPushButton->setText("Stop");
-
-    mTimer->stop();
-    mTimer->start(1000/ui->frameRateComboBox->currentText().toInt());
     ui->frameRateComboBox->setDisabled(true);
-
-    connect(mStopTimer, &QTimer::timeout, this, &ProjectSettingWindow::stopPlay);
-    mStopTimer->start(1000*ui->loopSlider->value());
     ui->loopSlider->setDisabled(true);
     ui->loopSpinBox->setDisabled(true);
-    mHelper->startPlay();
+    mAnimationController->playAnimation(
+        ui->frameRateComboBox->currentText().toInt(), ui->loopSpinBox->value());
 }
 
 void ProjectSettingWindow::stopPlay()
 {
     ui->playPushButton->setText("Play");
-    mHelper->stopPlay();
-    mTimer->stop();
-    mTimer->start(50);
-
     ui->frameRateComboBox->setEnabled(true);
-    disconnect(mStopTimer, &QTimer::timeout, this, &ProjectSettingWindow::stopPlay);
-    mStopTimer->stop();
     ui->loopSlider->setEnabled(true);
     ui->loopSpinBox->setEnabled(true);
 }
@@ -216,11 +174,10 @@ void ProjectSettingWindow::on_frequencySlider_valueChanged(qint32 value)
 void ProjectSettingWindow::on_frequencySpinBox_valueChanged(qint32 arg1)
 {
     ui->frequencySlider->setValue(arg1);
-    if (mHelper->isSelected())
+    if(mAnimationController->isSelected())
     {
-        mAnimation->setFrequency(QPoint(mHelper->getSelectedRow(), mHelper->getSelectedColumn()), arg1);
+        mAnimationController->setFrequency(arg1);
     }
-//    frames[currentFrame].setFrequency(help->selectedRow, help->selectedColumn, arg1);
 }
 
 void ProjectSettingWindow::on_amplitudeSlider_valueChanged(qint32 value)
@@ -231,9 +188,10 @@ void ProjectSettingWindow::on_amplitudeSlider_valueChanged(qint32 value)
 void ProjectSettingWindow::on_amplitudeSpinBox_valueChanged(qint32 arg1)
 {
     ui->amplitudeSlider->setValue(arg1);
-    if (mHelper->isSelected())
+    if(mAnimationController->isSelected())
     {
-        mAnimation->setAmplitude(QPoint(mHelper->getSelectedRow(), mHelper->getSelectedColumn()), arg1);
+        mAnimationController->setAmplitude(
+            arg1);
     }
 }
 
@@ -249,19 +207,19 @@ void ProjectSettingWindow::on_loopSpinBox_valueChanged(qint32 arg1)
 
 void ProjectSettingWindow::on_tabWidget_currentChanged(qint32 index)
 {
-    if (index < mAnimation->getLen() && index >= 0)
+    if(index < mAnimationController->getLen() && index >= 0)
     {
         mCurrentFrame = index;
-        mAnimation->selectFrame(index);
+        mAnimationController->selectFrame(index);
         mTabChangeTries++;
-        if (mTabChangeTries > 2)
+        if(mTabChangeTries > 2)
         {
             mEnableUnselect = true;
         }
 
-        if (mEnableUnselect)
+        if(mEnableUnselect)
         {
-            mHelper->unselectCell();
+            mAnimationController->unselect();
             ui->groupBox->setDisabled(true);
         }
     }
@@ -269,16 +227,15 @@ void ProjectSettingWindow::on_tabWidget_currentChanged(qint32 index)
 
 void ProjectSettingWindow::on_previousPushButton_clicked()
 {
-    if (ui->tabWidget->currentIndex() > 0)
+    if(ui->tabWidget->currentIndex() > 0)
     {
         ui->tabWidget->setCurrentIndex(ui->tabWidget->currentIndex() - 1);
     }
-
 }
 
 void ProjectSettingWindow::on_nextPushButton_clicked()
 {
-    if (ui->tabWidget->currentIndex() < ui->tabWidget->count() - 2)
+    if(ui->tabWidget->currentIndex() < ui->tabWidget->count() - 2)
     {
         ui->tabWidget->setCurrentIndex(ui->tabWidget->currentIndex() + 1);
     }
@@ -291,16 +248,15 @@ void ProjectSettingWindow::on_saveAction_triggered(bool action)
 
 void ProjectSettingWindow::saveToFile()
 {
-    QString fileName = QFileDialog::getSaveFileName(this,
-        tr("Save"), "",
-        tr("CSV File (*.csv);;All Files (*)"));
-    if (fileName.isEmpty())
+    QString fileName = QFileDialog::getSaveFileName(
+        this, tr("Save"), "", tr("CSV File (*.csv);;All Files (*)"));
+    if(fileName.isEmpty())
     {
         return;
     }
     else
     {
-        mAnimation->writeInFile(fileName);
+        mAnimationController->saveToFile(fileName);
     }
 }
 
@@ -311,65 +267,58 @@ void ProjectSettingWindow::on_importAction_triggered(bool action)
 
 void ProjectSettingWindow::importFromFile()
 {
-    QString fileName = QFileDialog::getOpenFileName(this,
-        tr("Import"), "",
-        tr("CSV File (*.csv);;All Files (*)"));
-    if (fileName.isEmpty())
+    QString fileName = QFileDialog::getOpenFileName(
+        this, tr("Import"), "", tr("CSV File (*.csv);;All Files (*)"));
+    if(fileName.isEmpty())
     {
         return;
     }
     else
     {
-        Animation * newPrj;
         try
         {
-            newPrj = new Animation(fileName);
+            ProjectSettingWindow *newPS = new ProjectSettingWindow(fileName);
+            newPS->show();
+            close();
         }
-        catch (std::exception& e)
+        catch(std::exception &e)
         {
             QMessageBox::critical(nullptr, "Error", e.what());
-        }
-        
-        if (newPrj->getError())
-        {
-            qDebug() << "the animation did not work";
-        }
-        else
-        {
-           ProjectSettingWindow * newPS = new ProjectSettingWindow(newPrj);
-           newPS->show();
-           close();
         }
     }
 }
 
 void ProjectSettingWindow::on_duplicatePushButton_clicked()
 {
-    ui->tabWidget->insertTab(ui->tabWidget->count() - 1,new QLabel(), QString("frame ") + QString::number(ui->tabWidget->count()));
-    mAnimation->duplicateCurrentFrame();
+    ui->tabWidget->insertTab(ui->tabWidget->count() - 1, new QLabel(),
+                             QString("frame ") +
+                                 QString::number(ui->tabWidget->count()));
+    mAnimationController->duplicateCurrentFrame();
 }
 
 void ProjectSettingWindow::on_deletePushButton_clicked()
 {
-    if (ui->tabWidget->count() > 2)
+    if(ui->tabWidget->count() > 2)
     {
         ui->tabWidget->removeTab(ui->tabWidget->currentIndex());
-        mAnimation->removeCurrentFrame();
+        mAnimationController->removeFrame();
     }
 }
 
 void ProjectSettingWindow::on_generateSounFileButton_clicked()
 {
-    if (ui->frameRateComboBox->currentIndex() < 0)
+    if(ui->frameRateComboBox->currentIndex() < 0)
     {
         QMessageBox messageBox;
-        messageBox.critical(0,"Error","Please select frame rate value.");
+        messageBox.critical(0, "Error", "Please select frame rate value.");
         return;
     }
 
-    AnimationAudio *audio = new AnimationAudio(mAnimation, ui->frameRateComboBox->currentText().toInt(), ui->loopSpinBox->value());
-    QString fileName = "file.wav";
-    audio->generateFile(fileName);
+    mAnimationController->setFrameRate(
+        ui->frameRateComboBox->currentText().toInt());
+    mAnimationController->setDuration(ui->loopSpinBox->value());
+    auto filename = QString("file.wav");
+    mAnimationController->prepareActuator(filename);
 }
 
 void ProjectSettingWindow::on_actionNew_Project_triggered()

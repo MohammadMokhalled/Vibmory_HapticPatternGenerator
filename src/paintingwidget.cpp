@@ -4,6 +4,7 @@
 #include <QPainter>
 #include <QTimer>
 
+
 PaintingWidget::PaintingWidget(Helper* helper, QWidget *parent)
     : QWidget(parent), mHelper(helper)
 {
@@ -31,8 +32,8 @@ void PaintingWidget::paintEvent(QPaintEvent *event)
 void PaintingWidget::mousePressEvent( QMouseEvent * evt )
 {
     mPoint = evt->pos();
-    mHelper->selectCell(mPoint.x(), mPoint.y());
-    emit mousePressed( mPoint );
+    mHelper->selectCell(mPoint);
+    emit mousePressed(mPoint);
     emit selectedSignal();
 }
 

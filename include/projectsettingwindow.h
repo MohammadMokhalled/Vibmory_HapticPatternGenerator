@@ -2,15 +2,13 @@
 #define PROJECTSETTING_H
 
 #include <QMainWindow>
-#include "qgraphicsview.h"
-#include "paintingwidget.h"
-#include "helper.h"
+#include <QGraphicsView>
 #include <QVector>
-#include <frame.h>
-#include <animation.h>
 #include <QMediaPlayer>
 #include <QAudioOutput>
-
+#include <QTimer>
+#include "paintingwidget.h"
+#include "animationcontroller.h"
 namespace Ui {
 class projectsettingwindow;
 }
@@ -34,7 +32,7 @@ public:
      * @param columns The number of columns.
      * @param parent The parent widget (default: nullptr).
      */
-    explicit ProjectSettingWindow(qint32 rows, qint32 columns, QWidget *parent = nullptr);
+    explicit ProjectSettingWindow(const QSize& size, QWidget *parent = nullptr);
     
     /**
      * @brief Constructs a ProjectSettingWindow object with the specified animation and a parent widget.
@@ -43,7 +41,7 @@ public:
      * @param animation The Animation object.
      * @param parent The parent widget (default: nullptr).
      */
-    explicit ProjectSettingWindow(Animation* animation, QWidget *parent = nullptr);
+    explicit ProjectSettingWindow(const QString& fileName, QWidget *parent = nullptr);
     ~ProjectSettingWindow();
 
 public slots:
@@ -58,7 +56,6 @@ public slots:
     void stopPlay();
 
 private slots:
-
 
     void addFrame();
 
@@ -106,24 +103,14 @@ private slots:
 
 private:
     Ui::projectsettingwindow *ui;
-    qint32 mRows;
-    qint32 mColumns;
+    QSize mSize;
     QGraphicsView* mGraphicViews;
-
-    Helper* mHelper;
-    PaintingWidget* mPaintingWidget;
-
-    Animation* mAnimation;
-
+    AnimationController* mAnimationController;
     quint16 mCurrentFrame;
-    quint16 mCurrentRow;
-    quint16 mCurrentColumn;
+    QPoint mCurrentCell;
     quint8 mTabChangeTries;
     bool mEnableUnselect;
-    QTimer* mTimer;
-    QTimer* mStopTimer;
     QMediaPlayer* mPlayer;
-
     QFile* mSourceFile;
     QAudioOutput* mAudio;
 
@@ -143,10 +130,14 @@ private:
     void initializeUI();
 
     /**
-     * Initialize the animation
-     * @param animation The animation object to initialize
+     * Initialize the slots
      */
-    void initialize(Animation* animation);
+    void initializeSlots();
+
+    /**
+     * Initialize the UI and Slots
+     */
+    void initialize();
 
     /**
      * Start playing the animation
