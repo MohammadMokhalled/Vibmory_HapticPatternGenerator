@@ -1,6 +1,7 @@
 #pragma once
 
 #include "application/document_store.h"
+#include "application/document_workflow.h"
 #include "application/editor_session.h"
 #include "application/playback_service.h"
 
@@ -57,7 +58,7 @@ private:
     void refreshDevices();
 
     EditorSession session_;
-    DocumentStore& store_;
+    DocumentWorkflow documents_;
     PlaybackBackend& backend_;
     PlaybackService playback_;
     WaveExportJob& exporter_;

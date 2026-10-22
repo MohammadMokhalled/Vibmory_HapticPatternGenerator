@@ -36,8 +36,9 @@ namespace vibmory
 EditorWindow::EditorWindow(DocumentStore& store, PlaybackBackend& backend,
                            const MonotonicClock& clock, WaveExportJob& exporter,
                            PatternDocument document, QWidget* parent)
-    : QMainWindow(parent), session_(std::move(document)), store_(store),
-      backend_(backend), playback_(backend, clock), exporter_(exporter)
+    : QMainWindow(parent), session_(std::move(document)),
+      documents_(session_, store), backend_(backend), playback_(backend, clock),
+      exporter_(exporter)
 {
     setObjectName("editorWindow");
     resize(1100, 720);
@@ -336,16 +337,19 @@ bool EditorWindow::saveProject(bool saveAs)
             selected += ".vibmory";
         path = toPath(selected);
     }
-    const auto result = store_.save(path, session_.document());
+    const auto result = documents_.save(path);
     if (!result)
     {
         showError(result.error());
         return false;
     }
-    session_.markSaved(path);
-    statusBar()->showMessage(tr("Project saved."), 3000);
+    const bool current = result.value().savedCurrentRevision;
+    statusBar()->showMessage(
+        current ? tr("Project saved.")
+                : tr("Snapshot saved; newer changes remain unsaved."),
+        3000);
     refresh();
-    return true;
+    return current;
 }
 
 bool EditorWindow::confirmDiscard()
@@ -362,11 +366,11 @@ bool EditorWindow::confirmDiscard()
 
 Result<void> EditorWindow::loadProject(const std::filesystem::path& path)
 {
-    auto result = store_.load(path);
+    auto result = documents_.read(path);
     if (!result)
         return result.error();
     playback_.stop();
-    session_.replace(std::move(result.value()), path);
+    documents_.replace(std::move(result.value()), path);
     refresh();
     return {};
 }
@@ -398,7 +402,7 @@ void EditorWindow::openProject(bool legacy)
         loaded = importLegacy(toPath(selected), orientation);
     }
     else
-        loaded = store_.load(toPath(selected));
+        loaded = documents_.read(toPath(selected));
     if (!loaded)
     {
         showError(loaded.error());
@@ -406,8 +410,8 @@ void EditorWindow::openProject(bool legacy)
     }
     if (!confirmDiscard())
         return;
-    session_.replace(std::move(loaded.value()),
-                     legacy ? std::filesystem::path{} : toPath(selected));
+    documents_.replace(std::move(loaded.value()),
+                       legacy ? std::filesystem::path{} : toPath(selected));
     refresh();
 }
 
@@ -442,7 +446,7 @@ void EditorWindow::newProject()
     auto document =
         PatternDocument::create({static_cast<std::uint32_t>(rows->value()),
                                  static_cast<std::uint32_t>(columns->value())});
-    session_.replace(std::move(document.value()));
+    documents_.replace(std::move(document.value()));
     refresh();
 }
 

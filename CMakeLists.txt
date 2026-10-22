@@ -38,7 +38,7 @@ function(vibmory_library name)
 endfunction()
 
 vibmory_library(vibmory_domain src/domain/pattern.cpp)
-vibmory_library(vibmory_application src/application/editor_session.cpp src/application/playback_service.cpp)
+vibmory_library(vibmory_application src/application/editor_session.cpp src/application/playback_service.cpp src/application/document_workflow.cpp)
 target_link_libraries(vibmory_application PUBLIC vibmory_domain)
 vibmory_library(vibmory_audio src/audio/pcm_renderer.cpp)
 target_link_libraries(vibmory_audio PUBLIC vibmory_domain)

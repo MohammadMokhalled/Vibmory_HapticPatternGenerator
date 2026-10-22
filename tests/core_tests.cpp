@@ -1,11 +1,14 @@
+#include "application/document_workflow.h"
 #include "application/editor_session.h"
 #include "application/playback_service.h"
 #include "audio/pcm_renderer.h"
 #include "persistence/project_codec.h"
 
 #include <fstream>
+#include <functional>
 #include <iostream>
 #include <limits>
+#include <optional>
 #include <sstream>
 #include <stdexcept>
 
@@ -367,6 +370,77 @@ TEST(session_saved_revision_and_edit_groups)
     const auto revision = session.revision();
     CHECK(session.editCell({200, 20}));
     CHECK(session.revision() == revision);
+}
+
+class MemoryStore final : public DocumentStore
+{
+public:
+    PatternDocument stored = makeDocument();
+    bool failRead = false;
+    bool failWrite = false;
+    bool throwRead = false;
+    std::function<void()> onSave;
+    mutable std::optional<PatternDocument> saved;
+    Result<PatternDocument> load(const std::filesystem::path&) const override
+    {
+        if (throwRead)
+            throw std::runtime_error("test store exception");
+        if (failRead)
+            return Error{ErrorCode::Io, "read failed"};
+        return stored;
+    }
+    Result<void> save(const std::filesystem::path&,
+                      const PatternDocument& document) const override
+    {
+        if (failWrite)
+            return Error{ErrorCode::Io, "write failed"};
+        saved = document;
+        if (onSave)
+            onSave();
+        return {};
+    }
+};
+
+TEST(session_document_workflow_publishes_only_successful_loads)
+{
+    EditorSession session(distinctDocument());
+    MemoryStore store;
+    DocumentWorkflow workflow(session, store);
+    const auto before = session.document();
+    store.failRead = true;
+    CHECK(!workflow.open("missing.vibmory"));
+    CHECK(session.document() == before);
+    store.failRead = false;
+    store.throwRead = true;
+    const auto exception = workflow.open("throw.vibmory");
+    CHECK(!exception && exception.error().code == ErrorCode::Io);
+    CHECK(session.document() == before);
+    store.throwRead = false;
+    CHECK(workflow.open("loaded.vibmory"));
+    CHECK(session.document() == store.stored);
+    CHECK(session.path() == "loaded.vibmory" && !session.dirty());
+}
+
+TEST(session_document_workflow_keeps_failed_or_stale_saves_dirty)
+{
+    EditorSession session(makeDocument());
+    CHECK(session.selectCell(CellPosition{0, 0}));
+    CHECK(session.editCell({100, 1000}));
+    MemoryStore store;
+    DocumentWorkflow workflow(session, store);
+    store.failWrite = true;
+    CHECK(!workflow.save("failed.vibmory"));
+    CHECK(session.dirty() && session.path().empty());
+    store.failWrite = false;
+    store.onSave = [&session] { CHECK(session.editCell({200, 2000})); };
+    const auto stale = workflow.save("snapshot.vibmory");
+    CHECK(stale && !stale.value().savedCurrentRevision);
+    CHECK(session.dirty());
+    CHECK(store.saved->cell(0, {0, 0}).value().amplitude == 1000);
+    store.onSave = {};
+    const auto current = workflow.save("saved.vibmory");
+    CHECK(current && current.value().savedCurrentRevision);
+    CHECK(!session.dirty() && session.path() == "saved.vibmory");
 }
 
 class FakeBackend final : public PlaybackBackend
