@@ -51,7 +51,7 @@ Requirements for the desktop build:
 cmake --preset desktop
 cmake --build --preset desktop
 ctest --preset desktop
-cmake --install out/desktop --prefix stage/Vibmory
+cmake --install out/desktop --prefix "$PWD/stage/Vibmory"
 ```
 
 Run `out/desktop/Vibmory.exe` or the deployed `stage/Vibmory/Vibmory.exe`. An optional positional argument opens a `.vibmory` project. `--smoke-test` starts the complete UI and exits without audio.

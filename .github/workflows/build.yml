@@ -56,7 +56,7 @@ jobs:
       - name: Core and offscreen UI tests
         run: ctest --preset desktop
       - name: Install runtime and plugins
-        run: cmake --install out/desktop --prefix stage/Vibmory
+        run: cmake --install out/desktop --prefix "$pwd/stage/Vibmory"
       - name: Verify portable package
         shell: pwsh
         run: |
@@ -67,8 +67,8 @@ jobs:
           $process = Start-Process -FilePath "$pwd/stage/Vibmory/Vibmory.exe" -ArgumentList '--smoke-test' -PassThru -WindowStyle Hidden
           if (-not $process.WaitForExit(30000)) { $process.Kill(); throw 'Packaged application did not exit.' }
           if ($process.ExitCode -ne 0) { throw "Packaged application failed: $($process.ExitCode)" }
-          if (-not (Test-Path 'stage/Vibmory/platforms/qwindows.dll')) { throw 'Qt Windows platform plugin is missing.' }
-          if (-not (Test-Path 'stage/Vibmory/multimedia')) { throw 'Qt Multimedia plugins are missing.' }
+          if (-not (Get-ChildItem stage/Vibmory -Filter qwindows.dll -Recurse)) { throw 'Qt Windows platform plugin is missing.' }
+          if (-not (Get-ChildItem stage/Vibmory -Directory -Recurse | Where-Object Name -eq 'multimedia')) { throw 'Qt Multimedia plugins are missing.' }
       - name: Create ZIP and checksum
         shell: pwsh
         run: |
