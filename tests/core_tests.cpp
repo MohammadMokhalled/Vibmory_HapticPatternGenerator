@@ -214,6 +214,32 @@ TEST(audio_known_samples_and_little_endian)
     CHECK(renderer.render(samples).value() == 0);
 }
 
+TEST(audio_rational_timing_and_phase_policy)
+{
+    for(const auto phase :
+        {PhasePolicy::Continuous, PhasePolicy::LegacyAbsolute})
+    {
+        auto document = makeDocument({1, 1});
+        CHECK(document.setSettings({7, 300, 8000, phase}));
+        CHECK(document.addFrame());
+        CHECK(document.setCell(1, {0, 0}, {2000, 1000}));
+        auto renderer = PcmRenderer::create(document).value();
+        std::vector<std::int16_t> samples(2400);
+        CHECK(renderer.render(samples));
+        CHECK(samples[1142] == 0);
+        CHECK(samples[1143] == (phase == PhasePolicy::Continuous ? 0 : -1000));
+        CHECK(samples[2286] == 0);
+    }
+    auto document = makeDocument({1, 1});
+    CHECK(document.setSettings({10, 1, 8000, PhasePolicy::LegacyAbsolute}));
+    CHECK(document.setCell(0, {0, 0}, {1000, 1001}));
+    auto renderer = PcmRenderer::create(document).value();
+    std::vector<std::int16_t> samples(8);
+    CHECK(renderer.render(samples));
+    CHECK(samples[1] ==
+          707); // Legacy quantization truncates rather than rounds.
+}
+
 TEST(audio_channel_mapping_and_calibration)
 {
     auto document = makeDocument({1, 2});

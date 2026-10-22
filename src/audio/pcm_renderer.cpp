@@ -62,11 +62,14 @@ Result<std::size_t> PcmRenderer::render(std::span<std::int16_t> output)
             const auto stimulus = values[routing.cells[channel]];
             const double phase = settings.phase == PhasePolicy::Continuous
                                      ? phases_[channel]
-                                     : tau * stimulus.frequencyHz *
-                                           static_cast<double>(position_) /
-                                           settings.sampleRate;
-            const auto value = std::lround(
-                stimulus.amplitude * routing.gains[channel] * std::sin(phase));
+                                     : (tau * stimulus.frequencyHz) *
+                                           (static_cast<double>(position_) /
+                                            settings.sampleRate);
+            const double scaled =
+                stimulus.amplitude * routing.gains[channel] * std::sin(phase);
+            const auto value = settings.phase == PhasePolicy::LegacyAbsolute
+                                   ? static_cast<long>(scaled)
+                                   : std::lround(scaled);
             output[sample * channelCount() + channel] =
                 static_cast<std::int16_t>(std::clamp(value, -32767L, 32767L));
             phases_[channel] =

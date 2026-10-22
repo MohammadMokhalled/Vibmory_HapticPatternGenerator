@@ -16,7 +16,7 @@ This tracks the full 69-item audit, including optional items requested in the fo
 - Domain/application/codec/PCM modules use standard C++20 so local testing does not need Qt.
 - Canonical projects use a bounded versioned `.vibmory` text format. Legacy CSV import requires an explicit orientation and retains legacy physical channel order and phase mode.
 - Playback streams a fixed snapshot. Editing is locked during playback/export. Preview never depends on a temporary filename.
-- Frequency must remain below Nyquist, amplitude is signed-PCM peak 0?32767, maximum 256 channels/1024 frames/262144 stored cells/512 MiB rendered audio.
+- Frequency must remain below Nyquist, amplitude is signed-PCM peak 0-32767, maximum 256 channels/1024 frames/262144 stored cells/512 MiB rendered audio.
 - Existing third-party notices are preserved. Distribution/license metadata and bundled Qt notices still require completion.
 
 ## Item status
