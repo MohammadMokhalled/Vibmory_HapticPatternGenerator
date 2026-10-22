@@ -22,12 +22,15 @@ flowchart LR
 
 - `PatternDocument` owns validated rows/columns, stimulus frames, settings, and explicit channel routing. It has no selected frame/cell, colors, timers, mutexes, file paths, or devices.
 - `EditorSession` owns the editable document, selection, monotonic revision, save identity, and bounded undo/redo. Commands apply to a candidate state and publish only after success. Selection changes do not dirty the document.
+- `DocumentWorkflow` owns document publication and saved-revision policy through a storage port. Failed reads never publish; failed saves never clear dirty state. Saving an earlier snapshot cannot mark newer edits as saved.
 - `PlaybackService` owns an immutable snapshot and playback state. A backend supplies processed sample position; a monotonic-clock fallback exists for backends without one. A UI timer requests projection updates and never defines elapsed frame count.
 - `GridWidget` owns only a one-frame numeric view projection. Geometry uses column=x, row=y and floating cell rectangles, including remainder pixels. Paint events are pure.
+- `CellInspector` owns its controls and emits edit intentions. Its programmatic refresh blocks command signals, including transitions back to zero values. The editor applies those intentions through its session.
 - `QtAudioBackend` owns its sink and sequential PCM source. The stream owns a renderer snapshot and serves bounded blocks. Preview has no temporary files and no independently generated stale audio.
-- The executable constructs store, backend, clock, and editor in lifetime order. The editor stops playback and cancels/joins its export future before its session is destroyed. Qt parents own child widgets; smart pointers own non-parented sink/stream objects.
+- `WaveExportJob` owns the asynchronous export future, cancellation/progress state, and exception boundary. It accepts a snapshot and a replaceable export operation; it never reads mutable UI/session objects. Cancellation preserves the destination through the file adapter's atomic commit.
+- The executable constructs store, backend, clock, exporter, and editor in lifetime order. The editor stops playback and cancels/joins its export job before its session is destroyed. Qt parents own child widgets; smart pointers own non-parented sink/stream objects.
 
-The GUI thread owns mutable editor/widgets and Qt audio objects. Export receives a document copy and creates its QSaveFile on a worker. Only atomic progress/cancel values cross the worker boundary. Completion is delivered to the live window by QFutureWatcher. No worker captures a widget or editor reference.
+The GUI thread owns mutable editor/widgets and Qt audio objects. Export receives a document copy and creates its QSaveFile on a worker. Only atomic progress/cancel values cross the worker boundary. The job receives QFutureWatcher completion on the GUI thread and reports a result to the live window. No worker captures a widget or editor reference. Audio callbacks carry a generation token so queued notifications from a stopped session cannot terminate a newer one.
 
 ## Playback states
 
@@ -55,6 +58,8 @@ Saves and exports use QSaveFile with direct-write fallback disabled. Open valida
 
 ## Verification boundaries
 
-Core tests check shape/index/value limits, frame commands, complete codec round trips, malformed input, exact samples/endian/channel mapping, WAV chunks, cancellation, undo/redo/dirty revisions, fake-clock playback and snapshot isolation. Qt Test covers geometry, signal ordering, view refresh purity, widget synchronization, file adapters, and preview editing state. CI's deployed launch removes Qt from PATH. Actual driver support, physical routing and latency require the user's intended hardware.
+Core tests check shape/index/value limits, frame commands, complete codec round trips, malformed input, exact samples/endian/channel mapping, WAV chunks, cancellation, undo/redo/dirty revisions, fake-clock playback, snapshot isolation, and failure/revision behavior through a fake storage port. Qt Test covers geometry/keyboard bounds, signal ordering, view refresh purity, device-selection preservation, widget synchronization, file adapters, modal close/save failures, worker exceptions/cancel/restart, and shutdown ownership. CI's deployed launch removes Qt from PATH and checks app-local compiler DLLs. Actual driver support, physical routing and latency require the user's intended hardware.
+
+Formatting and include-direction checks run for all owned C++ sources. Clang-Tidy analyzes the actual core compilation database using pinned LLVM 21.1.0. Sanitizer builds and independent WAV decoding complement analysis; no one check establishes all behavior.
 
 The original audit remains a historical snapshot; use the implementation tracker for remaining scope and current evidence.

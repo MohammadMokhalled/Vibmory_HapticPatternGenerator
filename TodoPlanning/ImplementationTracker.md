@@ -6,7 +6,7 @@ This tracks the full 69-item audit, including optional items requested in the fo
 
 1. **Core contracts and regression tests:** validated standard C++ domain, transactional editor session, bounded undo/redo, deterministic PCM/WAV rendering, strict versioned project codec, explicit legacy CSV orientation/routing. Local MSVC Debug core suites currently pass with warnings as errors.
 2. **Qt 6 desktop integration:** one owned editor window, pure grid projection, signal-blocked inspector, state-based streamed playback, atomic file store, cancellable asynchronous export, explicit routing/gains/device selection. Windows Qt 6.8.3 compilation and UI suites passed in run 39806088336; remaining component extraction/lifecycle tests are listed below.
-3. **Build/test/package delivery:** pinned GitHub Actions, Linux sanitizer core tests, Windows Qt 6.8.3 build/UI tests/deployed ZIP/smoke test. Windows job passed in run 39806088336. Its ZIP checksum, contents, screenshot, and local packaged launch were verified. The overall run still failed the new Doxygen gate; app-local CRT deployment and the input fix are pending another run.
+3. **Build/test/package delivery:** pinned GitHub Actions, Linux sanitizer core tests, Windows Qt 6.8.3 build/UI tests/deployed ZIP/smoke test. Windows job passed in run 39806088336. Its ZIP checksum, contents, screenshot, and local packaged launch were verified. The complete workflow passed in run 39807471809, including Doxygen and app-local CRT deployment. Artifact contents/checksum were independently verified locally.
 4. **Polish and extended scope:** finish all remaining documentation, diagnostics, lifecycle/UI regressions, stable timeline identities, profiles, localization/theme, recovery, fuzz/benchmark tooling, and release automation. Items remain open until evidenced.
 
 ## Decisions
@@ -31,7 +31,7 @@ Verified (software) means the implemented behavior has supporting current source
 | R02 | P0 | — Initialize a loaded document's current frame | Verified (software) |
 | R03 | P0 | — Establish one grid-coordinate convention end to end | Verified (software) |
 | R04 | P0 | — Enforce document, frame, and numeric invariants at the boundary | Verified (software) |
-| R05 | P0 | — Make frame edits transactional across the model and selector | Partial / acceptance gaps |
+| R05 | P0 | — Make frame edits transactional across the model and selector | Verified (software) |
 | R06 | P0 | — Resolve unsupported frame-tab dragging | Verified (software) |
 | R07 | P0 | — Repair the generated-audio/Play contract | Verified (software) |
 | R08 | P0 | — Make project saves atomic and failure-aware | Verified (software) |
@@ -40,10 +40,10 @@ Verified (software) means the implemented behavior has supporting current source
 | R11 | P0 | — Make supported Qt versions and dependencies truthful | Verified (software) |
 | R12 | P1 | — Introduce enforceable module boundaries | Verified (software) |
 | R13 | P1 | — Make frames and documents data models | Verified (software) |
-| R14 | P1 | — Make ownership explicit and construction exception-safe | Partial / acceptance gaps |
+| R14 | P1 | — Make ownership explicit and construction exception-safe | Verified (software) |
 | R15 | P1 | — Give polymorphic backend contracts safe destruction | Verified (software) |
-| R16 | P1 | — Define project close, replacement, and application shutdown | Partial / acceptance gaps |
-| R17 | P1 | — Choose one recoverable error model | Partial / acceptance gaps |
+| R16 | P1 | — Define project close, replacement, and application shutdown | Verified (software) |
+| R17 | P1 | — Choose one recoverable error model | Verified (software) |
 | R18 | P1 | — Centralize editor selection and remove sentinel-driven APIs | Verified (software) |
 | R19 | P1 | — Replace button text and boolean fragments with playback state | Verified (software) |
 | R20 | P1 | — Make painting a side-effect-free projection | Verified (software) |
@@ -51,26 +51,26 @@ Verified (software) means the implemented behavior has supporting current source
 | R22 | P1 | — Render immutable snapshots and track preparation validity | Verified (software) |
 | R23 | P1 | — Prevent view refreshes from editing the document | Verified (software) |
 | R24 | P1 | — Remove initialization-event counting and signal-order workarounds | Verified (software) |
-| R25 | P1 | — Adopt and document a real thread-safety policy | Partial / acceptance gaps |
+| R25 | P1 | — Adopt and document a real thread-safety policy | Verified (software) |
 | R26 | P1 | — Separate deterministic synthesis from devices and files | Verified (software) |
 | R27 | P1 | — Correct and bound audio timing/arithmetic | Verified (software) |
-| R28 | P1 | — Make device capabilities and physical channel mapping explicit | Partial / acceptance gaps |
+| R28 | P1 | — Make device capabilities and physical channel mapping explicit | Verified (software) |
 | R29 | P1 | — Specify waveform transitions instead of inheriting accidental phase behavior | Verified (software) |
 | R30 | P1 | — Give temporary audio a session-scoped lifetime | Verified (software) |
 | R31 | P1 | — Define a versioned project format and a strict legacy reader | Verified (software) |
 | R32 | P1 | — Persist the complete reproducible project configuration | Verified (software) |
 | R33 | P1 | — Track unsaved changes and document identity | Verified (software) |
-| R34 | P1 | — Bound rendering work and keep the GUI responsive | Partial / acceptance gaps |
-| R35 | P1 | — Introduce useful error context and deliberate logging | Partial / acceptance gaps |
+| R34 | P1 | — Bound rendering work and keep the GUI responsive | Verified (software) |
+| R35 | P1 | — Introduce useful error context and deliberate logging | Verified (software) |
 | R36 | P1 | — Replace the all-purpose object collection with target-scoped build rules | Verified (software) |
 | R37 | P1 | — Make tests optional to build and dependencies reproducible | Verified (software) |
 | R38 | P1 | — Standardize build presets and compiler/runtime settings | Verified (software) |
 | R39 | P1 | — Add meaningful domain, persistence, and sample regressions | Verified (software) |
-| R40 | P1 | — Test application workflows with fake playback, storage, and time | Partial / acceptance gaps |
-| R41 | P1 | — Add a small high-value Qt UI integration suite | Partial / acceptance gaps |
-| R42 | P1 | — Add repeatable CI and diagnostic builds | Partial / acceptance gaps |
+| R40 | P1 | — Test application workflows with fake playback, storage, and time | Verified (software) |
+| R41 | P1 | — Add a small high-value Qt UI integration suite | Verified (software) |
+| R42 | P1 | — Add repeatable CI and diagnostic builds | Verified (software) |
 | R43 | P2 | — Replace idle repaint polling with explicit updates | Verified (software) |
-| R44 | P2 | — Finish grid geometry and accessibility behavior | Partial / acceptance gaps |
+| R44 | P2 | — Finish grid geometry and accessibility behavior | Verified (software) |
 | R45 | P2 | — Simplify startup and new-project navigation | Verified (software) |
 | R46 | P2 | — Make Designer forms and action wiring deliberate | Verified (software) |
 | R47 | P2 | — Adopt a precise naming and vocabulary guide | Verified (software) |
@@ -78,13 +78,13 @@ Verified (software) means the implemented behavior has supporting current source
 | R49 | P2 | — Clean include dependencies, constants, and ordinary C++ contracts | Verified (software) |
 | R50 | P2 | — Consolidate cell storage if it improves invariants | Verified (software) |
 | R51 | P2 | — Remove dead state, APIs, and boilerplate | Verified (software) |
-| R52 | P2 | — Consolidate repeated UI construction and view-state updates | Partial / acceptance gaps |
+| R52 | P2 | — Consolidate repeated UI construction and view-state updates | Verified (software) |
 | R53 | P2 | — Make existing tests small, isolated, and informative | Verified (software) |
 | R54 | P2 | — Add lightweight style and dependency guardrails | Verified (software) |
 | R55 | P2 | — Replace README onboarding TODO with verified instructions | Verified (software) |
 | R56 | P2 | — Keep architecture, decisions, and diagrams current | Verified (software) |
-| R57 | P2 | — Fix Doxygen input and output configuration | Partial / acceptance gaps |
-| R58 | P2 | — Verify an installable, runnable application artifact | Partial / acceptance gaps |
+| R57 | P2 | — Fix Doxygen input and output configuration | Verified (software) |
+| R58 | P2 | — Verify an installable, runnable application artifact | Verified (software) |
 | R59 | P2 | — Make repository hygiene intentional | Verified (software) |
 | R60 | P2 | — Align project metadata and preserve third-party notices | Partial / acceptance gaps |
 | R61 | P3 | — Undo/redo through editor commands | Verified (software) |
@@ -105,14 +105,23 @@ Verified (software) means the implemented behavior has supporting current source
 - GitHub run 39806088336 / commit 2e224cc: Windows Qt build, 8 CTest suites, expanded Qt modal tests, install, native package smoke test, screenshot and ZIP upload passed. Linux sanitizer/quality/tests passed; Doxygen stopped on missing planning-document inputs.
 - Downloaded artifact 12437962351 (Vibmory-windows-x64); verified SHA-256 4c4447846d6afedb3bb80a7ef0215a1fa2e847a8b92bf8be347863972300cfde and 65 archive entries.
 - Actual downloaded executable launched locally with Qt removed from PATH and exited 0 using --smoke-test. Reviewed editor.png; controls and grid fit at the default size. Local files: artifacts/39806088336/ (ignored build evidence).
-- Local current core: 7/7 CTest suites pass, including 500 generated project round trips, 10000 parser mutations and independent stereo/multichannel WAV decoding. First/middle/last deletion regression added; corresponding new UI case awaits CI.
+- Local current core: 7/7 CTest suites pass, including 500 generated project round trips, 10000 parser mutations and independent stereo/multichannel WAV decoding. First/middle/last deletion regressions passed both core and Qt UI suites.
 - Test-disabled Release configuration built successfully without Qt or test dependencies.
 - Informational local Debug renderer benchmark: 16 channels x 48 kHz x 10 seconds rendered in approximately 0.25 wall seconds. This is not a latency or physical-output measurement.
 
 ## Next implementation stages (still required)
 
-1. Finish the entirely green workflow after adding planning docs to Doxygen and copying the C++ runtime DLLs beside the executable. Download/check the new artifact; preserve diagnostic and screenshot evidence.
-2. Extract inspector/settings/frame-selector/dialog/export-job responsibilities from EditorWindow. Put document I/O orchestration behind an application service, handle worker exceptions, and expand keyboard/async-close/lifetime tests.
-3. Finish categorized diagnostics, focused static analysis, deployment licenses/notices, and item-by-item acceptance gaps. Keep the historical audit unchanged except for links to this tracker.
+1. Keep the final branch head green after each change and refresh the checked artifact/evidence before the completion audit.
+2. Inspector, asynchronous export job, save-path dialog policy, and document workflow have been extracted. Continue component extraction where the upcoming timeline/profile/recovery features introduce a coherent responsibility; avoid wrappers for trivial slots.
+3. Categorized diagnostics and focused Clang analysis are implemented and passed with LLVM 21.1.0. Finish the deployment license/attribution inventory and remaining item acceptance gaps. Preserve existing project rights while documenting distribution terms.
 4. Implement the remaining requested extensions: stable frame identities/model-backed timeline, device profiles, autosave/recovery, theme/localization, and tagged release/installer/signing configuration where credentials are available. Existing undo, bounded streaming, property tests/benchmark and standard C++ core already provide the other extended items.
 5. Audit every requirement against current source and test/artifact evidence. Only then mark the goal complete. Physical routing and latency checks remain for the user's intended device, as requested.
+
+## Verified foundation checkpoint
+
+- Full workflow 39813346547 / source d4c9b18 passed: unchanged focused analysis checks under pinned LLVM 21.1.0, compiler warnings as errors, sanitizers, 7 Linux CTest suites, 8 Windows CTest suites, Doxygen warnings as errors, native Windows package launch, screenshot, ZIP and checksum.
+- Earlier fully green runs also verified the inspector extraction (39808181239), export worker lifecycle (39809445979), document workflow (39810165862), and output-device preservation/shutdown ownership (39810914332).
+- The distribution with app-local C++ runtime was downloaded from 39807471809 and verified: SHA-256 1a25e084cd93563e87fa94bd4b45970258bf191f2e75e60f313c1d78aa306466; 75 entries, including msvcp140.dll, vcruntime140.dll and vcruntime140_1.dll.
+- No analysis checks were suppressed. LLVM 18's variant error-copy diagnostic was not reproduced under the pinned 21.1.0 analyzer; Error construction additionally requires an explicit code/message.
+- Save/export filenames now receive their default suffix inside QFileDialog before overwrite confirmation; the application does not rewrite the chosen path afterward.
+- The full objective is still open: R60 distribution metadata/notices, R62 timeline/frame identities, R66 theme/localization, R67 device profiles, R68 recovery, and R69 extended release delivery remain to be finished and verified. Physical channel/latency testing belongs to the user's later device check.

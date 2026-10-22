@@ -19,10 +19,16 @@ if(Python3_FOUND)
         "${CMAKE_CURRENT_SOURCE_DIR}/verify_wave.py" "$<TARGET_FILE:vibmory_wave_fixture>")
 endif()
 
+foreach(core_target vibmory_core_tests vibmory_codec_properties vibmory_wave_fixture)
+    if(TARGET ${core_target})
+        set_target_properties(${core_target} PROPERTIES AUTOMOC OFF AUTOUIC OFF AUTORCC OFF CXX_EXTENSIONS OFF)
+    endif()
+endforeach()
+
 if(VIBMORY_BUILD_GUI)
     find_package(Qt6 6.8 REQUIRED COMPONENTS Test)
     qt_add_executable(vibmory_ui_tests ui_tests.cpp)
-    set_target_properties(vibmory_ui_tests PROPERTIES WIN32_EXECUTABLE FALSE)
+    set_target_properties(vibmory_ui_tests PROPERTIES WIN32_EXECUTABLE FALSE AUTOMOC ON AUTOUIC OFF CXX_EXTENSIONS OFF)
     target_link_libraries(vibmory_ui_tests PRIVATE vibmory_ui vibmory_platform Qt6::Test vibmory_options)
     add_test(NAME ui COMMAND vibmory_ui_tests -platform offscreen
         -o "${CMAKE_CURRENT_BINARY_DIR}/ui-results.xml,junitxml" -o -,txt)
