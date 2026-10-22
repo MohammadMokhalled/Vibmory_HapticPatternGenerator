@@ -81,5 +81,15 @@ CMakeLists.txt.user
 
 .vscode/
 out/
-CMakePresets.json
 CMakeUserPresets.json
+
+/build/
+/stage/
+/artifacts/
+/CMakeCache.txt
+/CMakeFiles/
+/Testing/
+/docs/html/
+/docs/latex/
+/compile_commands.json
+__pycache__/

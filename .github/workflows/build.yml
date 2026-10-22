@@ -1,0 +1,87 @@
+name: Build, test and package
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  core:
+    name: Core / Linux / sanitizers
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Configure without Qt
+        run: cmake --preset sanitized
+      - name: Build
+        run: cmake --build --preset sanitized --parallel 2
+      - name: Test
+        run: ctest --preset sanitized
+        env:
+          ASAN_OPTIONS: detect_leaks=1:strict_string_checks=1
+          UBSAN_OPTIONS: print_stacktrace=1:halt_on_error=1
+
+  windows:
+    name: Windows desktop and portable executable
+    runs-on: windows-2022
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1
+        with:
+          arch: x64
+      - name: Install Qt 6.8.3
+        uses: jurplel/install-qt-action@a9c63c7c123f3069cff414e7e482d95dfa9d8125 # v4.4.1
+        with:
+          version: '6.8.3'
+          arch: win64_msvc2022_64
+          modules: qtmultimedia
+          cache: true
+      - name: Configure
+        run: cmake --preset desktop
+      - name: Build
+        run: cmake --build --preset desktop --parallel 2
+      - name: Core and offscreen UI tests
+        run: ctest --preset desktop
+      - name: Install runtime and plugins
+        run: cmake --install out/desktop --prefix stage/Vibmory
+      - name: Verify portable package
+        shell: pwsh
+        run: |
+          $env:QT_QPA_PLATFORM = 'offscreen'
+          $env:QT_PLUGIN_PATH = ''
+          $env:QT_QPA_PLATFORM_PLUGIN_PATH = ''
+          $env:PATH = "$env:WINDIR\System32;$env:WINDIR"
+          $process = Start-Process -FilePath "$pwd/stage/Vibmory/Vibmory.exe" -ArgumentList '--smoke-test' -PassThru -WindowStyle Hidden
+          if (-not $process.WaitForExit(30000)) { $process.Kill(); throw 'Packaged application did not exit.' }
+          if ($process.ExitCode -ne 0) { throw "Packaged application failed: $($process.ExitCode)" }
+          if (-not (Test-Path 'stage/Vibmory/platforms/qwindows.dll')) { throw 'Qt Windows platform plugin is missing.' }
+          if (-not (Test-Path 'stage/Vibmory/multimedia')) { throw 'Qt Multimedia plugins are missing.' }
+      - name: Create ZIP and checksum
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory artifacts -Force | Out-Null
+          Compress-Archive -Path stage/Vibmory -DestinationPath artifacts/Vibmory-windows-x64.zip
+          (Get-FileHash artifacts/Vibmory-windows-x64.zip -Algorithm SHA256).Hash | Set-Content artifacts/Vibmory-windows-x64.zip.sha256
+      - name: Upload downloadable Windows application
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: Vibmory-windows-x64
+          path: artifacts/*
+          if-no-files-found: error
+          retention-days: 30
+      - name: Upload test diagnostics
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: windows-test-diagnostics
+          path: out/desktop/Testing/Temporary/
+          if-no-files-found: ignore

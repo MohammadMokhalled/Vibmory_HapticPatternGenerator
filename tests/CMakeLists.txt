@@ -1,21 +1,15 @@
-set(gtest_force_shared_crt on)
+# Core regressions need neither Qt nor downloaded test frameworks.
+add_executable(vibmory_core_tests core_tests.cpp)
+target_link_libraries(vibmory_core_tests PRIVATE vibmory_application vibmory_audio vibmory_persistence vibmory_options)
+target_compile_definitions(vibmory_core_tests PRIVATE VIBMORY_TEST_RESOURCES="${CMAKE_CURRENT_SOURCE_DIR}/resources")
+foreach(suite domain codec audio session playback)
+    add_test(NAME ${suite} COMMAND vibmory_core_tests ${suite})
+endforeach()
 
-# Add Google Test as a subdirectory
-add_subdirectory(googletest)
-
-add_definitions(-DCMAKE_TESTS_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
-
-# Define the source files for the test executable
-set(TEST_SOURCES
-    test_main.cpp
-    test_frame.cpp
-    test_animation.cpp
-)
-
-# Create test executable using the sources and link it with necessary libraries
-add_executable(${PROJECT_NAME}_test ${TEST_SOURCES} $<TARGET_OBJECTS:${PROJECT_NAME}Objs>)
-target_link_libraries(${PROJECT_NAME}_test PRIVATE gtest_main Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Gui Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Multimedia)
-target_include_directories(${PROJECT_NAME}_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../include) # Adjusted the path to include
-
-# Register the tests
-add_test(NAME ${PROJECT_NAME}_test COMMAND ${PROJECT_NAME}_test)
+if(VIBMORY_BUILD_GUI)
+    find_package(Qt6 6.8 REQUIRED COMPONENTS Test)
+    qt_add_executable(vibmory_ui_tests ui_tests.cpp)
+    target_link_libraries(vibmory_ui_tests PRIVATE vibmory_ui vibmory_platform Qt6::Test vibmory_options)
+    add_test(NAME ui COMMAND vibmory_ui_tests -platform offscreen)
+    set_tests_properties(ui PROPERTIES ENVIRONMENT "QT_LOGGING_RULES=qt.multimedia.*=false")
+endif()
