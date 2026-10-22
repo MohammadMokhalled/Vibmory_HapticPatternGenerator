@@ -23,6 +23,8 @@ jobs:
         run: python3 -m pip install clang-format==21.1.0
       - name: Formatting and module boundaries
         run: python3 tools/check_quality.py
+      - name: Install documentation tool
+        run: sudo apt-get update -qq && sudo apt-get install -y doxygen
       - name: Configure without Qt
         run: cmake --preset sanitized
       - name: Build
@@ -32,6 +34,8 @@ jobs:
         env:
           ASAN_OPTIONS: detect_leaks=1:strict_string_checks=1
           UBSAN_OPTIONS: print_stacktrace=1:halt_on_error=1
+      - name: Generate API and architecture documentation
+        run: cmake --build out/sanitized --target docs
 
   windows:
     name: Windows desktop and portable executable
@@ -94,5 +98,6 @@ jobs:
           name: windows-test-diagnostics
           path: |
             out/desktop/Testing/Temporary/
+            out/desktop/tests/ui-results.xml
             artifacts/*.log
           if-no-files-found: ignore

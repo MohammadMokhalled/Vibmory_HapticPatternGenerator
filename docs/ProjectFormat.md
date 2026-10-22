@@ -25,6 +25,8 @@ Amplitude is a nonnegative signed-PCM peak, capped at 32767. Frequency is 0-2200
 
 Continuous phase advances an oscillator accumulator per physical channel. Legacy phase uses frequency times absolute sample time; it can be discontinuous when a frame changes frequency. Channel order and gains are explicit and preserved on round-trip. Waveform transitions are not silently smoothed.
 
+Continuous mode rounds samples to the nearest integer. Legacy mode truncates toward zero, matching the old renderer's conversion for valid amplitude values. Both modes bound the final signed PCM peak to 32767.
+
 Mono/stereo WAV export uses ordinary PCM RIFF. More than two channels use WAVEFORMATEXTENSIBLE with the PCM GUID and zero channel mask (unassigned channel positions). RIFF chunk sizes exclude their own 8-byte header. Raw preview does not include a container header. Output budgets keep files below classic RIFF's limit.
 
 ## Legacy CSV import

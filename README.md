@@ -82,6 +82,10 @@ Keep document rules in `domain`, editor/playback coordination in `application`, 
 
 Use clang-format 21.1.0 for project C++; keep semantic changes separate from large mechanical changes. Add behavioral regressions for changed invariants and error paths. Do not silently change channel order, file interpretation, timing, or waveform semantics in a cleanup commit.
 
+Run `python tools/check_quality.py` to check formatting and module boundaries. If Doxygen is installed when configuring, `cmake --build out/core-preset --target docs` generates API/architecture HTML beneath the build directory. The Linux CI job verifies this target.
+
+The `codec_properties` test runs 500 generated complete round trips and 10,000 reproducible parser mutations. `independent_wave_decode` uses Python 3.12+ to independently verify stereo and multichannel exports. For an informational renderer benchmark, configure with `VIBMORY_BUILD_BENCHMARKS=ON` and run `vibmory_render_benchmark`; speed is not a hardware-independent pass/fail gate.
+
 Current limits: 256 logical cells/channels, 1024 frames, 262144 stored cells, 16 MiB project input, 512 MiB rendered PCM, 1-240 frames/s, 1 ms-10 minutes, 8-192 kHz sample rate, and frequencies strictly below Nyquist (also capped at 22000 Hz). These are allocation/output budgets, not a claim that an audio device supports every configuration.
 
 See [third-party notices](THIRD_PARTY_NOTICES.md) for retained Qt example attribution and dependency information.

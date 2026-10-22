@@ -80,6 +80,11 @@ class UiTests final : public QObject
 {
     Q_OBJECT
 private slots:
+    void initTestCase()
+    {
+        QApplication::setQuitOnLastWindowClosed(false);
+    }
+
     void rectangularGeometry()
     {
         const QRectF bounds(0, 0, 301, 203);
@@ -210,7 +215,7 @@ private slots:
         QTimer::singleShot(10, [] {
             if (auto* box = qobject_cast<QMessageBox*>(
                     QApplication::activeModalWidget()))
-                box->done(QMessageBox::Cancel);
+                box->button(QMessageBox::Cancel)->click();
         });
         QVERIFY(!window.close());
         QVERIFY(window.isVisible());
@@ -234,11 +239,11 @@ private slots:
         QTimer::singleShot(10, [] {
             if (auto* box = qobject_cast<QMessageBox*>(
                     QApplication::activeModalWidget()))
-                box->done(QMessageBox::Save);
+                box->button(QMessageBox::Save)->click();
             QTimer::singleShot(10, [] {
                 if (auto* box = qobject_cast<QMessageBox*>(
                         QApplication::activeModalWidget()))
-                    box->done(QMessageBox::Ok);
+                    box->button(QMessageBox::Ok)->click();
             });
         });
         QVERIFY(!window.close());
@@ -256,7 +261,7 @@ private slots:
         QTimer::singleShot(10, [] {
             if (auto* box = qobject_cast<QMessageBox*>(
                     QApplication::activeModalWidget()))
-                box->done(QMessageBox::Ok);
+                box->button(QMessageBox::Ok)->click();
         });
         window.findChild<QPushButton*>("playButton")->click();
         QCOMPARE(window.findChild<QPushButton*>("playButton")->text(),
