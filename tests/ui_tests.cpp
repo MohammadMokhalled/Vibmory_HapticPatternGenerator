@@ -4,10 +4,12 @@
 #include "ui/editor_window.h"
 #include "ui/grid_widget.h"
 
+#include <QComboBox>
 #include <QFile>
 #include <QGroupBox>
 #include <QListWidget>
 #include <QMessageBox>
+#include <QPointer>
 #include <QPushButton>
 #include <QSpinBox>
 #include <QTemporaryDir>
@@ -58,6 +60,23 @@ class Backend final : public PlaybackBackend
 public:
     bool fail = false;
     int stops = 0;
+    int selections = 0;
+    std::string selected;
+    std::vector<AudioDeviceDescription> choices;
+    std::vector<AudioDeviceDescription> devices() const override
+    {
+        return choices;
+    }
+    std::string selectedDeviceId() const override
+    {
+        return selected;
+    }
+    Result<void> selectDeviceId(const std::string& id) override
+    {
+        selected = id;
+        ++selections;
+        return {};
+    }
     Result<void> start(const DocumentSnapshot&) override
     {
         if (fail)
@@ -146,6 +165,27 @@ private slots:
         QCOMPARE(selections.count(), count);
         QTest::keyClick(&grid, Qt::Key_Escape);
         QCOMPARE(cleared.count(), 1);
+    }
+
+    void deviceRefreshDoesNotSwitchThePhysicalOutput()
+    {
+        Store store;
+        Backend backend;
+        Clock clock;
+        WaveExportJob exporter;
+        backend.choices = {{"first", "First device"},
+                           {"second", "Chosen device"}};
+        backend.selected = "second";
+        EditorWindow window(store, backend, clock, exporter, document());
+        auto* devices = window.findChild<QComboBox*>("outputDeviceComboBox");
+        QCOMPARE(devices->currentData().toString(), QString("second"));
+        QCOMPARE(backend.selections, 0);
+        window.findChild<QPushButton*>("refreshDevicesButton")->click();
+        QCOMPARE(backend.selected, std::string("second"));
+        QCOMPARE(backend.selections, 0);
+        devices->setCurrentIndex(0);
+        QCOMPARE(backend.selected, std::string("first"));
+        QCOMPARE(backend.selections, 1);
     }
 
     void selectionRefreshDoesNotEdit()
@@ -408,6 +448,44 @@ private slots:
                  QString("Play"));
         QVERIFY(window.findChild<QListWidget*>("frameList")->isEnabled());
         QVERIFY(!window.session().dirty());
+    }
+
+    void closingWhileExportingCancelsAndJoinsTheWorker()
+    {
+        WaveExportJob exporter(
+            [](const std::filesystem::path&, PatternDocument,
+               const RenderProgress& progress) -> Result<void> {
+                while (progress(0, 1))
+                    std::this_thread::yield();
+                return Error{ErrorCode::Cancelled, "cancelled"};
+            });
+        Store store;
+        Backend backend;
+        Clock clock;
+        EditorWindow window(store, backend, clock, exporter, document());
+        QVERIFY(exporter.start("unused.wav", {document(), 1}));
+        window.show();
+        QVERIFY(window.close());
+        QVERIFY(!exporter.busy());
+    }
+
+    void repeatedWindowDestructionReleasesChildWidgets()
+    {
+        Store store;
+        Backend backend;
+        Clock clock;
+        WaveExportJob exporter;
+        for (int iteration = 0; iteration < 10; ++iteration)
+        {
+            auto window = std::make_unique<EditorWindow>(store, backend, clock,
+                                                         exporter, document());
+            QPointer<GridWidget> grid =
+                window->findChild<GridWidget*>("gridWidget");
+            QSignalSpy destroyed(window.get(), &QObject::destroyed);
+            window.reset();
+            QCOMPARE(destroyed.count(), 1);
+            QVERIFY(grid.isNull());
+        }
     }
 
     void playbackRestoresEditingWithoutMutatingSelection()

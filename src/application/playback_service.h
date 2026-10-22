@@ -25,6 +25,10 @@ public:
     {
         return {};
     }
+    [[nodiscard]] virtual std::string selectedDeviceId() const
+    {
+        return {};
+    }
     [[nodiscard]] virtual Result<void> selectDeviceId(const std::string&)
     {
         return Error{ErrorCode::Unsupported,

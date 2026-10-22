@@ -3,6 +3,7 @@
 #include "application/playback_service.h"
 
 #include <QAudioDevice>
+#include <QByteArray>
 #include <QElapsedTimer>
 #include <QMediaDevices>
 #include <QObject>
@@ -42,9 +43,9 @@ public:
     [[nodiscard]] std::optional<std::uint64_t> processedSampleFrames()
         const override;
     void selectDevice(QAudioDevice device);
-    [[nodiscard]] QAudioDevice selectedDevice() const
+    [[nodiscard]] std::string selectedDeviceId() const override
     {
-        return device_;
+        return device_.id().toHex().toStdString();
     }
     [[nodiscard]] std::vector<AudioDeviceDescription> devices() const override;
     [[nodiscard]] Result<void> selectDeviceId(const std::string& id) override;

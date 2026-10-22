@@ -197,10 +197,12 @@ void EditorWindow::buildEditor()
     form->addRow(tr("Oscillator"), phase_);
     side->addWidget(settings);
     devices_ = new QComboBox;
+    devices_->setObjectName("outputDeviceComboBox");
     devices_->setAccessibleName(tr("Audio output device"));
     side->addWidget(new QLabel(tr("Output device")));
     side->addWidget(devices_);
     auto* reload = new QPushButton(tr("Refresh devices"));
+    reload->setObjectName("refreshDevicesButton");
     side->addWidget(reload);
     side->addStretch();
     layout->addLayout(side);
@@ -480,21 +482,19 @@ void EditorWindow::playbackFinished()
 
 void EditorWindow::refreshDevices()
 {
-    const auto previous = devices_->currentData();
+    const auto selected = QString::fromStdString(backend_.selectedDeviceId());
     const QSignalBlocker blocker(devices_);
     devices_->clear();
     for (const auto& device : backend_.devices())
         devices_->addItem(QString::fromStdString(device.label),
                           QString::fromStdString(device.id));
-    const int index = devices_->findData(previous);
-    if (index >= 0)
-        devices_->setCurrentIndex(index);
+    const int index = devices_->findData(selected);
+    devices_->setCurrentIndex(index);
     if (devices_->count() == 0)
         devices_->setPlaceholderText(
             tr("No audio output (WAV export available)"));
-    else
-        apply(backend_.selectDeviceId(
-            devices_->currentData().toString().toStdString()));
+    else if (index < 0)
+        devices_->setPlaceholderText(tr("Select an output device"));
 }
 
 void EditorWindow::exportWave()
