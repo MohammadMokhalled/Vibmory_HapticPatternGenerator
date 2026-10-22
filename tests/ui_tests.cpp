@@ -29,6 +29,8 @@ class Store final : public DocumentStore
 {
         public:
     bool fail = false;
+    bool failWrite = false;
+    mutable int saves = 0;
     Result<PatternDocument> load(const std::filesystem::path &) const override
     {
         if(fail)
@@ -38,18 +40,26 @@ class Store final : public DocumentStore
     Result<void> save(const std::filesystem::path &,
                       const PatternDocument &) const override
     {
+        ++saves;
+        if(failWrite)
+            return Error{ErrorCode::Io, "test write failure"};
         return {};
     }
 };
 class Backend final : public PlaybackBackend
 {
         public:
+    bool fail = false;
+    int stops = 0;
     Result<void> start(const DocumentSnapshot &) override
     {
+        if(fail)
+            return Error{ErrorCode::Device, "unsupported test device"};
         return {};
     }
     void stop() noexcept override
     {
+        ++stops;
     }
     std::optional<std::uint64_t> processedSampleFrames() const override
     {
@@ -184,6 +194,76 @@ class UiTests final : public QObject
         QVERIFY(!cancelled && cancelled.error().code == ErrorCode::Cancelled);
         QVERIFY(previous.open(QIODevice::ReadOnly));
         QCOMPARE(previous.readAll(), QByteArray("previous"));
+    }
+
+    void cancelClosePreservesEdits()
+    {
+        Store store;
+        Backend backend;
+        Clock clock;
+        EditorWindow window(store, backend, clock, document());
+        window.show();
+        QCoreApplication::processEvents();
+        auto *grid = window.findChild<GridWidget *>("gridWidget");
+        QTest::mouseClick(grid, Qt::LeftButton, Qt::NoModifier, QPoint(5, 5));
+        window.findChild<QSpinBox *>("amplitudeSpinBox")->setValue(123);
+        QVERIFY(window.session().dirty());
+        QTimer::singleShot(10, [] {
+            if(auto *box = qobject_cast<QMessageBox *>(
+                   QApplication::activeModalWidget()))
+                box->done(QMessageBox::Cancel);
+        });
+        QVERIFY(!window.close());
+        QVERIFY(window.isVisible());
+        QCOMPARE(window.session().document().cell(0, {0, 0}).value().amplitude,
+                 123U);
+    }
+
+    void failedSavePreventsClose()
+    {
+        Store store;
+        Backend backend;
+        Clock clock;
+        EditorWindow window(store, backend, clock, document());
+        QVERIFY(window.loadProject("saved.vibmory"));
+        window.show();
+        QCoreApplication::processEvents();
+        auto *grid = window.findChild<GridWidget *>("gridWidget");
+        QTest::mouseClick(grid, Qt::LeftButton, Qt::NoModifier, QPoint(5, 5));
+        window.findChild<QSpinBox *>("amplitudeSpinBox")->setValue(123);
+        store.failWrite = true;
+        QTimer::singleShot(10, [] {
+            if(auto *box = qobject_cast<QMessageBox *>(
+                   QApplication::activeModalWidget()))
+                box->done(QMessageBox::Save);
+            QTimer::singleShot(10, [] {
+                if(auto *box = qobject_cast<QMessageBox *>(
+                       QApplication::activeModalWidget()))
+                    box->done(QMessageBox::Ok);
+            });
+        });
+        QVERIFY(!window.close());
+        QVERIFY(window.session().dirty());
+        QCOMPARE(store.saves, 1);
+    }
+
+    void failedPlaybackRestoresControls()
+    {
+        Store store;
+        Backend backend;
+        Clock clock;
+        backend.fail = true;
+        EditorWindow window(store, backend, clock, document());
+        QTimer::singleShot(10, [] {
+            if(auto *box = qobject_cast<QMessageBox *>(
+                   QApplication::activeModalWidget()))
+                box->done(QMessageBox::Ok);
+        });
+        window.findChild<QPushButton *>("playButton")->click();
+        QCOMPARE(window.findChild<QPushButton *>("playButton")->text(),
+                 QString("Play"));
+        QVERIFY(window.findChild<QListWidget *>("frameList")->isEnabled());
+        QVERIFY(!window.session().dirty());
     }
 
     void playbackRestoresEditingWithoutMutatingSelection()

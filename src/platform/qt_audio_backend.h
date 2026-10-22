@@ -48,10 +48,14 @@ class QtAudioBackend final : public QObject, public PlaybackBackend
     }
     [[nodiscard]] std::vector<AudioDeviceDescription> devices() const override;
     [[nodiscard]] Result<void> selectDeviceId(const std::string &id) override;
+    [[nodiscard]] quint64 generation() const
+    {
+        return generation_;
+    }
 
         signals:
-    void failed(const QString &message);
-    void finished();
+    void failed(const QString &message, quint64 generation);
+    void finished(quint64 generation);
 
         private:
     QMediaDevices devices_;
@@ -59,5 +63,6 @@ class QtAudioBackend final : public QObject, public PlaybackBackend
     std::unique_ptr<PcmStream> stream_;
     std::unique_ptr<QAudioSink> sink_;
     std::uint32_t sampleRate_ = 48000;
+    quint64 generation_ = 0;
 };
 } // namespace vibmory

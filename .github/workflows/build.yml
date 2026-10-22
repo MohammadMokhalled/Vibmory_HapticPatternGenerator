@@ -60,15 +60,20 @@ jobs:
       - name: Verify portable package
         shell: pwsh
         run: |
-          $env:QT_QPA_PLATFORM = 'offscreen'
+          $env:QT_QPA_PLATFORM = 'windows'
+          $env:QT_LOGGING_TO_CONSOLE = '1'
           $env:QT_PLUGIN_PATH = ''
           $env:QT_QPA_PLATFORM_PLUGIN_PATH = ''
           $env:PATH = "$env:WINDIR\System32;$env:WINDIR"
-          $process = Start-Process -FilePath "$pwd/stage/Vibmory/Vibmory.exe" -ArgumentList '--smoke-test' -PassThru -WindowStyle Hidden
+          New-Item -ItemType Directory artifacts -Force | Out-Null
+          $process = Start-Process -FilePath "$pwd/stage/Vibmory/Vibmory.exe" -ArgumentList '--smoke-test' -PassThru -WindowStyle Hidden -RedirectStandardOutput "$pwd/artifacts/smoke.stdout.log" -RedirectStandardError "$pwd/artifacts/smoke.stderr.log"
           if (-not $process.WaitForExit(30000)) { $process.Kill(); throw 'Packaged application did not exit.' }
           if ($process.ExitCode -ne 0) { throw "Packaged application failed: $($process.ExitCode)" }
           if (-not (Get-ChildItem stage/Vibmory -Filter qwindows.dll -Recurse)) { throw 'Qt Windows platform plugin is missing.' }
           if (-not (Get-ChildItem stage/Vibmory -Directory -Recurse | Where-Object Name -eq 'multimedia')) { throw 'Qt Multimedia plugins are missing.' }
+          $preview = Start-Process -FilePath "$pwd/stage/Vibmory/Vibmory.exe" -ArgumentList '--screenshot', "$pwd/artifacts/editor.png" -PassThru -WindowStyle Hidden -RedirectStandardOutput "$pwd/artifacts/preview.stdout.log" -RedirectStandardError "$pwd/artifacts/preview.stderr.log"
+          if (-not $preview.WaitForExit(30000)) { $preview.Kill(); throw 'Editor preview did not exit.' }
+          if ($preview.ExitCode -ne 0 -or -not (Test-Path artifacts/editor.png)) { throw 'Editor preview failed.' }
       - name: Create ZIP and checksum
         shell: pwsh
         run: |
@@ -87,5 +92,7 @@ jobs:
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: windows-test-diagnostics
-          path: out/desktop/Testing/Temporary/
+          path: |
+            out/desktop/Testing/Temporary/
+            artifacts/*.log
           if-no-files-found: ignore

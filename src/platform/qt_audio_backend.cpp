@@ -25,7 +25,8 @@ class PcmStream final : public QIODevice
     bool atEnd() const override
     {
         return offset_ == bytes_.size() &&
-               renderer_.position() == renderer_.totalFrames();
+               renderer_.position() == renderer_.totalFrames() &&
+               QIODevice::bytesAvailable() == 0;
     }
     qint64 bytesAvailable() const override
     {
@@ -88,7 +89,8 @@ QtAudioBackend::QtAudioBackend(QObject *parent)
             outputs.begin(), outputs.end(),
             [this](const auto &output) { return output.id() == device_.id(); });
         if(found == outputs.end())
-            emit failed(tr("The selected audio device was disconnected."));
+            emit failed(tr("The selected audio device was disconnected."),
+                        generation_);
     });
 }
 
@@ -151,16 +153,17 @@ Result<void> QtAudioBackend::start(const DocumentSnapshot &snapshot)
     sink_->setBufferSize(static_cast<qsizetype>(
         sampleRate_ * snapshot.document.shape().cellCount() * 2 / 10));
     connect(sink_.get(), &QAudioSink::stateChanged, this,
-            [this](QAudio::State state) {
-                if(!sink_)
+            [this, generation = generation_](QAudio::State state) {
+                if(!sink_ || generation != generation_)
                     return;
                 if(state == QAudio::StoppedState &&
                    sink_->error() != QAudio::NoError)
                     emit failed(tr("Audio output failed (backend error %1).")
-                                    .arg(static_cast<int>(sink_->error())));
+                                    .arg(static_cast<int>(sink_->error())),
+                                generation);
                 else if(state == QAudio::IdleState && stream_ &&
                         stream_->atEnd())
-                    emit finished();
+                    emit finished(generation);
             });
     sink_->start(stream_.get());
     if(sink_->error() != QAudio::NoError)
@@ -176,6 +179,7 @@ Result<void> QtAudioBackend::start(const DocumentSnapshot &snapshot)
 
 void QtAudioBackend::stop() noexcept
 {
+    ++generation_;
     if(sink_)
     {
         sink_->disconnect(this);

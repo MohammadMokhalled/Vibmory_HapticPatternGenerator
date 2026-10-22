@@ -5,6 +5,7 @@
 #include <QApplication>
 #include <QCommandLineParser>
 #include <QMessageBox>
+#include <QPixmap>
 #include <QTimer>
 
 int main(int argc, char **argv)
@@ -20,6 +21,9 @@ int main(int argc, char **argv)
     parser.addOption(
         {"smoke-test",
          "Launch the complete UI and exit automatically without audio."});
+    parser.addOption({"screenshot",
+                      "Save an editor preview and exit without audio.",
+                      "path"});
     parser.addPositionalArgument("project",
                                  "Optional .vibmory project to open.");
     parser.process(application);
@@ -31,12 +35,20 @@ int main(int argc, char **argv)
         return 1;
     vibmory::EditorWindow window(store, backend, clock,
                                  std::move(initial.value()));
-    QObject::connect(&backend, &vibmory::QtAudioBackend::failed, &window,
-                     &vibmory::EditorWindow::reportBackendFailure,
-                     Qt::QueuedConnection);
-    QObject::connect(&backend, &vibmory::QtAudioBackend::finished, &window,
-                     &vibmory::EditorWindow::playbackFinished,
-                     Qt::QueuedConnection);
+    QObject::connect(
+        &backend, &vibmory::QtAudioBackend::failed, &window,
+        [&backend, &window](const QString &message, quint64 generation) {
+            if(generation == backend.generation())
+                window.reportBackendFailure(message);
+        },
+        Qt::QueuedConnection);
+    QObject::connect(
+        &backend, &vibmory::QtAudioBackend::finished, &window,
+        [&backend, &window](quint64 generation) {
+            if(generation == backend.generation())
+                window.playbackFinished();
+        },
+        Qt::QueuedConnection);
     if(!parser.positionalArguments().isEmpty())
     {
         const auto result = window.loadProject(
@@ -52,5 +64,10 @@ int main(int argc, char **argv)
     window.show();
     if(parser.isSet("smoke-test"))
         QTimer::singleShot(300, &application, &QCoreApplication::quit);
+    else if(parser.isSet("screenshot"))
+        QTimer::singleShot(300, &application, [&] {
+            application.exit(
+                window.grab().save(parser.value("screenshot")) ? 0 : 1);
+        });
     return application.exec();
 }
