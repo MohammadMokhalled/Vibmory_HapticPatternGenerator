@@ -10,9 +10,9 @@ namespace vibmory
 {
 class EditorSession
 {
-        public:
+public:
     explicit EditorSession(PatternDocument document);
-    [[nodiscard]] const PatternDocument &document() const
+    [[nodiscard]] const PatternDocument& document() const
     {
         return state_.document;
     }
@@ -32,7 +32,7 @@ class EditorSession
     {
         return state_.id != savedState_;
     }
-    [[nodiscard]] const std::filesystem::path &path() const
+    [[nodiscard]] const std::filesystem::path& path() const
     {
         return path_;
     }
@@ -64,7 +64,7 @@ class EditorSession
     void markSaved(std::filesystem::path path);
     void replace(PatternDocument document, std::filesystem::path path = {});
 
-        private:
+private:
     struct State
     {
         PatternDocument document;
@@ -73,7 +73,7 @@ class EditorSession
         std::uint64_t id = 0;
     };
     [[nodiscard]] Result<void> change(
-        const std::function<Result<void>(State &)> &command);
+        const std::function<Result<void>(State&)>& command);
     void trimHistory();
     State state_;
     std::vector<State> undo_;

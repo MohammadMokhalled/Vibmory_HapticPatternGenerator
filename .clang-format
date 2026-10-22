@@ -1,13 +1,15 @@
 ---
 BasedOnStyle: Microsoft
-AccessModifierOffset: '4'
+AccessModifierOffset: '-4'
 AlignEscapedNewlines: Left
 ColumnLimit: '80'
 ObjCSpaceAfterProperty: 'false'
 ReflowComments: 'true'
-SortIncludes: 'false'
+SortIncludes: CaseSensitive
+PointerAlignment: Left
+ReferenceAlignment: Left
 SpaceAfterTemplateKeyword: 'false'
-SpaceBeforeParens: Never
+SpaceBeforeParens: ControlStatements
 SpaceBeforeRangeBasedForLoopColon: 'true'
 SpaceInEmptyParentheses: 'false'
 TabWidth: '4'

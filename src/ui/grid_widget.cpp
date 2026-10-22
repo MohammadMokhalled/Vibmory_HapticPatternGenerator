@@ -11,10 +11,10 @@ namespace vibmory
 std::optional<CellPosition> GridGeometry::cellAt(QRectF bounds, GridShape shape,
                                                  QPointF point)
 {
-    if(bounds.width() <= 0 || bounds.height() <= 0 || !shape.validate() ||
-       point.x() < bounds.x() || point.y() < bounds.y() ||
-       point.x() >= bounds.x() + bounds.width() ||
-       point.y() >= bounds.y() + bounds.height())
+    if (bounds.width() <= 0 || bounds.height() <= 0 || !shape.validate() ||
+        point.x() < bounds.x() || point.y() < bounds.y() ||
+        point.x() >= bounds.x() + bounds.width() ||
+        point.y() >= bounds.y() + bounds.height())
         return std::nullopt;
     return CellPosition{
         std::min(shape.rows - 1,
@@ -27,8 +27,8 @@ std::optional<CellPosition> GridGeometry::cellAt(QRectF bounds, GridShape shape,
 
 QRectF GridGeometry::cellRect(QRectF bounds, GridShape shape, CellPosition cell)
 {
-    if(!shape.validate() || bounds.width() <= 0 || bounds.height() <= 0 ||
-       cell.row >= shape.rows || cell.column >= shape.columns)
+    if (!shape.validate() || bounds.width() <= 0 || bounds.height() <= 0 ||
+        cell.row >= shape.rows || cell.column >= shape.columns)
         return {};
     const double width = bounds.width() / shape.columns;
     const double height = bounds.height() / shape.rows;
@@ -36,7 +36,7 @@ QRectF GridGeometry::cellRect(QRectF bounds, GridShape shape, CellPosition cell)
             width, height};
 }
 
-GridWidget::GridWidget(QWidget *parent) : QWidget(parent)
+GridWidget::GridWidget(QWidget* parent) : QWidget(parent)
 {
     setObjectName("gridWidget");
     setFocusPolicy(Qt::StrongFocus);
@@ -49,11 +49,11 @@ GridWidget::GridWidget(QWidget *parent) : QWidget(parent)
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 }
 
-void GridWidget::setFrame(const PatternDocument &document, std::size_t frame,
+void GridWidget::setFrame(const PatternDocument& document, std::size_t frame,
                           std::optional<CellPosition> selection)
 {
-    if(shape_ == document.shape() && values_ == document.frame(frame) &&
-       selection_ == selection)
+    if (shape_ == document.shape() && values_ == document.frame(frame) &&
+        selection_ == selection)
         return;
     shape_ = document.shape();
     values_ = document.frame(frame);
@@ -61,14 +61,14 @@ void GridWidget::setFrame(const PatternDocument &document, std::size_t frame,
     update();
 }
 
-void GridWidget::paintEvent(QPaintEvent *)
+void GridWidget::paintEvent(QPaintEvent*)
 {
     QPainter painter(this);
     painter.fillRect(rect(), palette().base());
-    if(values_.size() != shape_.cellCount())
+    if (values_.size() != shape_.cellCount())
         return;
-    for(std::uint32_t row = 0; row < shape_.rows; ++row)
-        for(std::uint32_t column = 0; column < shape_.columns; ++column)
+    for (std::uint32_t row = 0; row < shape_.rows; ++row)
+        for (std::uint32_t column = 0; column < shape_.columns; ++column)
         {
             const CellPosition position{row, column};
             const auto cell =
@@ -84,7 +84,7 @@ void GridWidget::paintEvent(QPaintEvent *)
             painter.fillRect(bounds.adjusted(1, 1, -1, -1), color);
             painter.setPen(palette().mid().color());
             painter.drawRect(bounds.adjusted(0, 0, -1, -1));
-            if(bounds.width() > 95 && bounds.height() > 55)
+            if (bounds.width() > 95 && bounds.height() > 55)
             {
                 painter.setPen(Qt::black);
                 painter.drawText(bounds.adjusted(5, 5, -5, -5), Qt::AlignCenter,
@@ -94,7 +94,7 @@ void GridWidget::paintEvent(QPaintEvent *)
                                      .arg(cell.frequencyHz)
                                      .arg(cell.amplitude));
             }
-            if(selection_ == position)
+            if (selection_ == position)
             {
                 painter.setPen(
                     QPen(palette().highlight().color(), hasFocus() ? 4 : 3));
@@ -103,13 +103,13 @@ void GridWidget::paintEvent(QPaintEvent *)
         }
 }
 
-void GridWidget::mousePressEvent(QMouseEvent *event)
+void GridWidget::mousePressEvent(QMouseEvent* event)
 {
-    if(event->button() != Qt::LeftButton || !isEnabled())
+    if (event->button() != Qt::LeftButton || !isEnabled())
         return;
     const auto cell =
         GridGeometry::cellAt(QRectF(rect()), shape_, event->position());
-    if(cell)
+    if (cell)
     {
         setFocus(Qt::MouseFocusReason);
         emit cellSelected(static_cast<int>(cell->row),
@@ -117,25 +117,25 @@ void GridWidget::mousePressEvent(QMouseEvent *event)
     }
 }
 
-void GridWidget::keyPressEvent(QKeyEvent *event)
+void GridWidget::keyPressEvent(QKeyEvent* event)
 {
     auto position = selection_.value_or(CellPosition{});
-    switch(event->key())
+    switch (event->key())
     {
     case Qt::Key_Left:
-        if(position.column > 0)
+        if (position.column > 0)
             --position.column;
         break;
     case Qt::Key_Right:
-        if(position.column + 1 < shape_.columns)
+        if (position.column + 1 < shape_.columns)
             ++position.column;
         break;
     case Qt::Key_Up:
-        if(position.row > 0)
+        if (position.row > 0)
             --position.row;
         break;
     case Qt::Key_Down:
-        if(position.row + 1 < shape_.rows)
+        if (position.row + 1 < shape_.rows)
             ++position.row;
         break;
     case Qt::Key_Return:

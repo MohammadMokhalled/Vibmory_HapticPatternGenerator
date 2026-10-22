@@ -21,21 +21,21 @@ struct GridShape
     std::uint32_t columns = 2;
     [[nodiscard]] std::size_t cellCount() const;
     [[nodiscard]] Result<void> validate() const;
-    bool operator==(const GridShape &) const = default;
+    bool operator==(const GridShape&) const = default;
 };
 
 struct CellPosition
 {
     std::uint32_t row = 0;
     std::uint32_t column = 0;
-    bool operator==(const CellPosition &) const = default;
+    bool operator==(const CellPosition&) const = default;
 };
 
 struct CellStimulus
 {
     std::uint32_t frequencyHz = 0;
     std::uint32_t amplitude = 0;
-    bool operator==(const CellStimulus &) const = default;
+    bool operator==(const CellStimulus&) const = default;
 };
 
 enum class PhasePolicy
@@ -52,7 +52,7 @@ struct PlaybackSettings
     PhasePolicy phase = PhasePolicy::Continuous;
     [[nodiscard]] Result<void> validate() const;
     [[nodiscard]] std::uint64_t sampleFrames() const;
-    bool operator==(const PlaybackSettings &) const = default;
+    bool operator==(const PlaybackSettings&) const = default;
 };
 
 // The permutation maps physical channel -> row-major logical cell index.
@@ -62,12 +62,12 @@ struct ChannelRouting
     std::vector<double> gains;
     [[nodiscard]] static ChannelRouting identity(std::size_t count);
     [[nodiscard]] Result<void> validate(std::size_t count) const;
-    bool operator==(const ChannelRouting &) const = default;
+    bool operator==(const ChannelRouting&) const = default;
 };
 
 class PatternDocument
 {
-        public:
+public:
     [[nodiscard]] static Result<PatternDocument> create(GridShape shape);
     [[nodiscard]] GridShape shape() const
     {
@@ -77,17 +77,17 @@ class PatternDocument
     {
         return frames_.size();
     }
-    [[nodiscard]] const PlaybackSettings &settings() const
+    [[nodiscard]] const PlaybackSettings& settings() const
     {
         return settings_;
     }
-    [[nodiscard]] const ChannelRouting &routing() const
+    [[nodiscard]] const ChannelRouting& routing() const
     {
         return routing_;
     }
     [[nodiscard]] Result<CellStimulus> cell(std::size_t frame,
                                             CellPosition pos) const;
-    [[nodiscard]] const std::vector<CellStimulus> &frame(
+    [[nodiscard]] const std::vector<CellStimulus>& frame(
         std::size_t index) const;
     [[nodiscard]] Result<void> setCell(std::size_t frame, CellPosition pos,
                                        CellStimulus value);
@@ -98,9 +98,9 @@ class PatternDocument
     [[nodiscard]] Result<void> removeFrame(std::size_t index);
     [[nodiscard]] Result<void> moveFrame(std::size_t from, std::size_t to);
     [[nodiscard]] Result<void> validateOutput() const;
-    bool operator==(const PatternDocument &) const = default;
+    bool operator==(const PatternDocument&) const = default;
 
-        private:
+private:
     explicit PatternDocument(GridShape shape);
     [[nodiscard]] bool contains(std::size_t frame, CellPosition pos) const;
     [[nodiscard]] Result<void> canInsertFrame() const;

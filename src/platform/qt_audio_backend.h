@@ -17,7 +17,7 @@ class PcmStream;
 
 class QtClock final : public MonotonicClock
 {
-        public:
+public:
     QtClock()
     {
         timer_.start();
@@ -27,17 +27,17 @@ class QtClock final : public MonotonicClock
         return static_cast<std::uint64_t>(timer_.nsecsElapsed() / 1000);
     }
 
-        private:
+private:
     QElapsedTimer timer_;
 };
 
 class QtAudioBackend final : public QObject, public PlaybackBackend
 {
     Q_OBJECT
-        public:
-    explicit QtAudioBackend(QObject *parent = nullptr);
+public:
+    explicit QtAudioBackend(QObject* parent = nullptr);
     ~QtAudioBackend() override;
-    [[nodiscard]] Result<void> start(const DocumentSnapshot &snapshot) override;
+    [[nodiscard]] Result<void> start(const DocumentSnapshot& snapshot) override;
     void stop() noexcept override;
     [[nodiscard]] std::optional<std::uint64_t> processedSampleFrames()
         const override;
@@ -47,17 +47,17 @@ class QtAudioBackend final : public QObject, public PlaybackBackend
         return device_;
     }
     [[nodiscard]] std::vector<AudioDeviceDescription> devices() const override;
-    [[nodiscard]] Result<void> selectDeviceId(const std::string &id) override;
+    [[nodiscard]] Result<void> selectDeviceId(const std::string& id) override;
     [[nodiscard]] quint64 generation() const
     {
         return generation_;
     }
 
-        signals:
-    void failed(const QString &message, quint64 generation);
+signals:
+    void failed(const QString& message, quint64 generation);
     void finished(quint64 generation);
 
-        private:
+private:
     QMediaDevices devices_;
     QAudioDevice device_;
     std::unique_ptr<PcmStream> stream_;

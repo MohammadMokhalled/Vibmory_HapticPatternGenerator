@@ -13,7 +13,7 @@ enum class LegacyOrientation
     ColumnsThenRows
 };
 
-[[nodiscard]] std::string encodeProject(const PatternDocument &document);
+[[nodiscard]] std::string encodeProject(const PatternDocument& document);
 [[nodiscard]] Result<PatternDocument> decodeProject(std::string_view text);
 // Explicit orientation is required: the original writer and reader disagreed.
 [[nodiscard]] Result<PatternDocument> decodeLegacyCsv(

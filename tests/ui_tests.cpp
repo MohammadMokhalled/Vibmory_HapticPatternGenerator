@@ -27,33 +27,33 @@ PatternDocument document()
 
 class Store final : public DocumentStore
 {
-        public:
+public:
     bool fail = false;
     bool failWrite = false;
     mutable int saves = 0;
-    Result<PatternDocument> load(const std::filesystem::path &) const override
+    Result<PatternDocument> load(const std::filesystem::path&) const override
     {
-        if(fail)
+        if (fail)
             return Error{ErrorCode::Io, "test read failure"};
         return document();
     }
-    Result<void> save(const std::filesystem::path &,
-                      const PatternDocument &) const override
+    Result<void> save(const std::filesystem::path&,
+                      const PatternDocument&) const override
     {
         ++saves;
-        if(failWrite)
+        if (failWrite)
             return Error{ErrorCode::Io, "test write failure"};
         return {};
     }
 };
 class Backend final : public PlaybackBackend
 {
-        public:
+public:
     bool fail = false;
     int stops = 0;
-    Result<void> start(const DocumentSnapshot &) override
+    Result<void> start(const DocumentSnapshot&) override
     {
-        if(fail)
+        if (fail)
             return Error{ErrorCode::Device, "unsupported test device"};
         return {};
     }
@@ -68,7 +68,7 @@ class Backend final : public PlaybackBackend
 };
 class Clock final : public MonotonicClock
 {
-        public:
+public:
     std::uint64_t microseconds() const override
     {
         return 0;
@@ -79,7 +79,7 @@ class Clock final : public MonotonicClock
 class UiTests final : public QObject
 {
     Q_OBJECT
-        private slots:
+private slots:
     void rectangularGeometry()
     {
         const QRectF bounds(0, 0, 301, 203);
@@ -102,23 +102,22 @@ class UiTests final : public QObject
         EditorWindow window(store, backend, clock, document());
         window.show();
         QCoreApplication::processEvents();
-        auto *inspector = window.findChild<QGroupBox *>("cellInspector");
+        auto* inspector = window.findChild<QGroupBox*>("cellInspector");
         QVERIFY(inspector && !inspector->isEnabled());
-        auto *grid = window.findChild<GridWidget *>("gridWidget");
+        auto* grid = window.findChild<GridWidget*>("gridWidget");
         const auto bounds =
             GridGeometry::cellRect(QRectF(grid->rect()), {2, 3}, {1, 2});
         QTest::mouseClick(grid, Qt::LeftButton, Qt::NoModifier,
                           bounds.center().toPoint());
         QVERIFY(window.session().selectedCell() == (CellPosition{1, 2}));
-        QCOMPARE(window.findChild<QSpinBox *>("frequencySpinBox")->value(),
-                 150);
+        QCOMPARE(window.findChild<QSpinBox*>("frequencySpinBox")->value(), 150);
         QCOMPARE(window.session().revision(), std::uint64_t{0});
         QVERIFY(!window.session().dirty());
-        auto *list = window.findChild<QListWidget *>("frameList");
+        auto* list = window.findChild<QListWidget*>("frameList");
         list->setCurrentRow(1);
         QVERIFY(!window.session().selectedCell());
         QCOMPARE(window.session().revision(), std::uint64_t{0});
-        QVERIFY(!window.findChild<QGroupBox *>("cellInspector")->isEnabled());
+        QVERIFY(!window.findChild<QGroupBox*>("cellInspector")->isEnabled());
     }
 
     void frameCommandsStaySynchronized()
@@ -127,14 +126,14 @@ class UiTests final : public QObject
         Backend backend;
         Clock clock;
         EditorWindow window(store, backend, clock, document());
-        auto *list = window.findChild<QListWidget *>("frameList");
-        window.findChild<QPushButton *>("duplicateFrameButton")->click();
+        auto* list = window.findChild<QListWidget*>("frameList");
+        window.findChild<QPushButton*>("duplicateFrameButton")->click();
         QCOMPARE(window.session().document().frameCount(), std::size_t{3});
         QCOMPARE(list->currentRow(), 1);
         QCOMPARE(
             window.session().document().cell(2, {1, 2}).value().frequencyHz,
             250U);
-        window.findChild<QPushButton *>("deleteFrameButton")->click();
+        window.findChild<QPushButton*>("deleteFrameButton")->click();
         QCOMPARE(window.session().document().frameCount(), std::size_t{2});
         QCOMPARE(list->count(), 2);
         QCOMPARE(
@@ -151,7 +150,7 @@ class UiTests final : public QObject
         window.show();
         QCoreApplication::processEvents();
         const auto before = window.session().document();
-        auto *grid = window.findChild<GridWidget *>("gridWidget");
+        auto* grid = window.findChild<GridWidget*>("gridWidget");
         const auto image = grid->grab();
         QVERIFY(!image.isNull());
         window.resize(900, 650);
@@ -204,13 +203,13 @@ class UiTests final : public QObject
         EditorWindow window(store, backend, clock, document());
         window.show();
         QCoreApplication::processEvents();
-        auto *grid = window.findChild<GridWidget *>("gridWidget");
+        auto* grid = window.findChild<GridWidget*>("gridWidget");
         QTest::mouseClick(grid, Qt::LeftButton, Qt::NoModifier, QPoint(5, 5));
-        window.findChild<QSpinBox *>("amplitudeSpinBox")->setValue(123);
+        window.findChild<QSpinBox*>("amplitudeSpinBox")->setValue(123);
         QVERIFY(window.session().dirty());
         QTimer::singleShot(10, [] {
-            if(auto *box = qobject_cast<QMessageBox *>(
-                   QApplication::activeModalWidget()))
+            if (auto* box = qobject_cast<QMessageBox*>(
+                    QApplication::activeModalWidget()))
                 box->done(QMessageBox::Cancel);
         });
         QVERIFY(!window.close());
@@ -228,17 +227,17 @@ class UiTests final : public QObject
         QVERIFY(window.loadProject("saved.vibmory"));
         window.show();
         QCoreApplication::processEvents();
-        auto *grid = window.findChild<GridWidget *>("gridWidget");
+        auto* grid = window.findChild<GridWidget*>("gridWidget");
         QTest::mouseClick(grid, Qt::LeftButton, Qt::NoModifier, QPoint(5, 5));
-        window.findChild<QSpinBox *>("amplitudeSpinBox")->setValue(123);
+        window.findChild<QSpinBox*>("amplitudeSpinBox")->setValue(123);
         store.failWrite = true;
         QTimer::singleShot(10, [] {
-            if(auto *box = qobject_cast<QMessageBox *>(
-                   QApplication::activeModalWidget()))
+            if (auto* box = qobject_cast<QMessageBox*>(
+                    QApplication::activeModalWidget()))
                 box->done(QMessageBox::Save);
             QTimer::singleShot(10, [] {
-                if(auto *box = qobject_cast<QMessageBox *>(
-                       QApplication::activeModalWidget()))
+                if (auto* box = qobject_cast<QMessageBox*>(
+                        QApplication::activeModalWidget()))
                     box->done(QMessageBox::Ok);
             });
         });
@@ -255,14 +254,14 @@ class UiTests final : public QObject
         backend.fail = true;
         EditorWindow window(store, backend, clock, document());
         QTimer::singleShot(10, [] {
-            if(auto *box = qobject_cast<QMessageBox *>(
-                   QApplication::activeModalWidget()))
+            if (auto* box = qobject_cast<QMessageBox*>(
+                    QApplication::activeModalWidget()))
                 box->done(QMessageBox::Ok);
         });
-        window.findChild<QPushButton *>("playButton")->click();
-        QCOMPARE(window.findChild<QPushButton *>("playButton")->text(),
+        window.findChild<QPushButton*>("playButton")->click();
+        QCOMPARE(window.findChild<QPushButton*>("playButton")->text(),
                  QString("Play"));
-        QVERIFY(window.findChild<QListWidget *>("frameList")->isEnabled());
+        QVERIFY(window.findChild<QListWidget*>("frameList")->isEnabled());
         QVERIFY(!window.session().dirty());
     }
 
@@ -272,9 +271,9 @@ class UiTests final : public QObject
         Backend backend;
         Clock clock;
         EditorWindow window(store, backend, clock, document());
-        auto *list = window.findChild<QListWidget *>("frameList");
+        auto* list = window.findChild<QListWidget*>("frameList");
         list->setCurrentRow(1);
-        auto *button = window.findChild<QPushButton *>("playButton");
+        auto* button = window.findChild<QPushButton*>("playButton");
         button->click();
         QCOMPARE(button->text(), QString("Stop"));
         QVERIFY(!list->isEnabled());

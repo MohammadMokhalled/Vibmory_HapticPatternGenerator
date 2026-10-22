@@ -26,7 +26,7 @@ struct Error
 
 template<class T> class [[nodiscard]] Result
 {
-        public:
+public:
     Result(T value) : data_(std::move(value))
     {
     }
@@ -37,26 +37,26 @@ template<class T> class [[nodiscard]] Result
     {
         return std::holds_alternative<T>(data_);
     }
-    T &value()
+    T& value()
     {
         return std::get<T>(data_);
     }
-    const T &value() const
+    const T& value() const
     {
         return std::get<T>(data_);
     }
-    const Error &error() const
+    const Error& error() const
     {
         return std::get<Error>(data_);
     }
 
-        private:
+private:
     std::variant<T, Error> data_;
 };
 
 template<> class [[nodiscard]] Result<void>
 {
-        public:
+public:
     Result() = default;
     Result(Error error) : error_(std::move(error))
     {
@@ -65,12 +65,12 @@ template<> class [[nodiscard]] Result<void>
     {
         return !error_;
     }
-    const Error &error() const
+    const Error& error() const
     {
         return error_.value();
     }
 
-        private:
+private:
     std::optional<Error> error_;
 };
 

@@ -8,7 +8,7 @@
 #include <QPixmap>
 #include <QTimer>
 
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
     QApplication application(argc, argv);
     QCoreApplication::setApplicationName("Vibmory");
@@ -31,29 +31,29 @@ int main(int argc, char **argv)
     vibmory::QtAudioBackend backend;
     vibmory::QtClock clock;
     auto initial = vibmory::PatternDocument::create({2, 2});
-    if(!initial)
+    if (!initial)
         return 1;
     vibmory::EditorWindow window(store, backend, clock,
                                  std::move(initial.value()));
     QObject::connect(
         &backend, &vibmory::QtAudioBackend::failed, &window,
-        [&backend, &window](const QString &message, quint64 generation) {
-            if(generation == backend.generation())
+        [&backend, &window](const QString& message, quint64 generation) {
+            if (generation == backend.generation())
                 window.reportBackendFailure(message);
         },
         Qt::QueuedConnection);
     QObject::connect(
         &backend, &vibmory::QtAudioBackend::finished, &window,
         [&backend, &window](quint64 generation) {
-            if(generation == backend.generation())
+            if (generation == backend.generation())
                 window.playbackFinished();
         },
         Qt::QueuedConnection);
-    if(!parser.positionalArguments().isEmpty())
+    if (!parser.positionalArguments().isEmpty())
     {
         const auto result = window.loadProject(
             vibmory::toPath(parser.positionalArguments().first()));
-        if(!result)
+        if (!result)
         {
             QMessageBox::critical(
                 &window, "Vibmory",
@@ -62,9 +62,9 @@ int main(int argc, char **argv)
         }
     }
     window.show();
-    if(parser.isSet("smoke-test"))
+    if (parser.isSet("smoke-test"))
         QTimer::singleShot(300, &application, &QCoreApplication::quit);
-    else if(parser.isSet("screenshot"))
+    else if (parser.isSet("screenshot"))
         QTimer::singleShot(300, &application, [&] {
             application.exit(
                 window.grab().save(parser.value("screenshot")) ? 0 : 1);

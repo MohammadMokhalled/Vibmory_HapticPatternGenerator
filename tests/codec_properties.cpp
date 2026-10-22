@@ -10,19 +10,19 @@ namespace
 void verify(std::string_view input)
 {
     auto decoded = vibmory::decodeProject(input);
-    if(decoded)
+    if (decoded)
     {
         const auto roundTrip =
             vibmory::decodeProject(vibmory::encodeProject(decoded.value()));
-        if(!roundTrip || roundTrip.value() != decoded.value())
+        if (!roundTrip || roundTrip.value() != decoded.value())
             throw std::runtime_error(
                 "Accepted project failed canonical round trip.");
     }
-    for(const auto orientation : {vibmory::LegacyOrientation::RowsThenColumns,
-                                  vibmory::LegacyOrientation::ColumnsThenRows})
+    for (const auto orientation : {vibmory::LegacyOrientation::RowsThenColumns,
+                                   vibmory::LegacyOrientation::ColumnsThenRows})
     {
         auto legacy = vibmory::decodeLegacyCsv(input, orientation);
-        if(legacy && !legacy.value().validateOutput())
+        if (legacy && !legacy.value().validateOutput())
             throw std::runtime_error(
                 "Accepted CSV violates document output invariants.");
     }
@@ -35,38 +35,38 @@ int main()
     const auto draw = [&random] {
         return static_cast<std::uint32_t>(random());
     };
-    for(unsigned iteration = 0; iteration < 500; ++iteration)
+    for (unsigned iteration = 0; iteration < 500; ++iteration)
     {
         const vibmory::GridShape shape{1 + draw() % 5, 1 + draw() % 7};
         auto created = vibmory::PatternDocument::create(shape);
-        if(!created)
+        if (!created)
             return 1;
         auto document = std::move(created.value());
-        for(unsigned index = 0; index < iteration % 5; ++index)
-            if(!document.addFrame())
+        for (unsigned index = 0; index < iteration % 5; ++index)
+            if (!document.addFrame())
                 return 1;
-        for(std::size_t frame = 0; frame < document.frameCount(); ++frame)
-            for(std::uint32_t row = 0; row < shape.rows; ++row)
-                for(std::uint32_t column = 0; column < shape.columns; ++column)
-                    if(!document.setCell(frame, {row, column},
-                                         {draw() % 22001, draw() % 32768}))
+        for (std::size_t frame = 0; frame < document.frameCount(); ++frame)
+            for (std::uint32_t row = 0; row < shape.rows; ++row)
+                for (std::uint32_t column = 0; column < shape.columns; ++column)
+                    if (!document.setCell(frame, {row, column},
+                                          {draw() % 22001, draw() % 32768}))
                         return 1;
         auto routing = document.routing();
         std::shuffle(routing.cells.begin(), routing.cells.end(), random);
-        for(auto &gain : routing.gains)
+        for (auto& gain : routing.gains)
             gain = static_cast<double>(random() % 10001) / 10000;
-        if(!document.setRouting(routing))
+        if (!document.setRouting(routing))
             return 1;
         const auto original = vibmory::encodeProject(document);
         auto parsed = vibmory::decodeProject(original);
-        if(!parsed || parsed.value() != document)
+        if (!parsed || parsed.value() != document)
             return 1;
         verify(original);
-        for(unsigned mutation = 0; mutation < 20; ++mutation)
+        for (unsigned mutation = 0; mutation < 20; ++mutation)
         {
             auto corrupted = original;
             const auto position = random() % corrupted.size();
-            switch(mutation % 4)
+            switch (mutation % 4)
             {
             case 0:
                 corrupted[position] = static_cast<char>(random() % 256);

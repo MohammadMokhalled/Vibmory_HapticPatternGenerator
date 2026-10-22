@@ -4,8 +4,8 @@
 
 namespace vibmory
 {
-PlaybackService::PlaybackService(PlaybackBackend &backend,
-                                 const MonotonicClock &clock)
+PlaybackService::PlaybackService(PlaybackBackend& backend,
+                                 const MonotonicClock& clock)
     : backend_(backend), clock_(clock)
 {
 }
@@ -17,16 +17,16 @@ PlaybackService::~PlaybackService()
 
 Result<void> PlaybackService::start(DocumentSnapshot snapshot)
 {
-    if(state_ == PlaybackState::Playing || state_ == PlaybackState::Starting)
+    if (state_ == PlaybackState::Playing || state_ == PlaybackState::Starting)
         return Error{ErrorCode::Busy, "Playback is already active."};
-    if(auto result = snapshot.document.validateOutput(); !result)
+    if (auto result = snapshot.document.validateOutput(); !result)
         return result;
     state_ = PlaybackState::Starting;
     error_.reset();
     snapshot_ = std::move(snapshot);
     visualFrame_ = 0;
     auto result = backend_.start(*snapshot_);
-    if(!result)
+    if (!result)
     {
         fail(result.error());
         return result;
@@ -38,7 +38,7 @@ Result<void> PlaybackService::start(DocumentSnapshot snapshot)
 
 void PlaybackService::stop() noexcept
 {
-    if(state_ == PlaybackState::Playing || state_ == PlaybackState::Starting)
+    if (state_ == PlaybackState::Playing || state_ == PlaybackState::Starting)
     {
         state_ = PlaybackState::Stopping;
         backend_.stop();
@@ -59,12 +59,12 @@ void PlaybackService::fail(Error error)
 
 void PlaybackService::tick()
 {
-    if(state_ != PlaybackState::Playing || !snapshot_)
+    if (state_ != PlaybackState::Playing || !snapshot_)
         return;
-    const auto &document = snapshot_->document;
-    const auto &settings = document.settings();
+    const auto& document = snapshot_->document;
+    const auto& settings = document.settings();
     auto position = backend_.processedSampleFrames();
-    if(!position)
+    if (!position)
     {
         const auto now = clock_.microseconds();
         const auto elapsed = now >= startedAt_ ? now - startedAt_ : 0;
@@ -72,7 +72,7 @@ void PlaybackService::tick()
             elapsed, static_cast<std::uint64_t>(settings.durationMs) * 1000);
         position = bounded * settings.sampleRate / 1000000;
     }
-    if(*position >= settings.sampleFrames())
+    if (*position >= settings.sampleFrames())
     {
         stop();
         return;

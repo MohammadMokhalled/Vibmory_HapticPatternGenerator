@@ -15,17 +15,17 @@ namespace
 {
 struct Test
 {
-    const char *name;
+    const char* name;
     void (*function)();
 };
-std::vector<Test> &tests()
+std::vector<Test>& tests()
 {
     static std::vector<Test> value;
     return value;
 }
 struct Register
 {
-    Register(const char *name, void (*function)())
+    Register(const char* name, void (*function)())
     {
         tests().push_back({name, function});
     }
@@ -37,11 +37,11 @@ struct Register
 #define CHECK(...)                                                     \
     do                                                                 \
     {                                                                  \
-        if(!(__VA_ARGS__))                                             \
+        if (!(__VA_ARGS__))                                            \
             throw std::runtime_error(std::string(__FILE__) + ":" +     \
                                      std::to_string(__LINE__) + ": " + \
                                      #__VA_ARGS__);                    \
-    } while(false)
+    } while (false)
 
 PatternDocument makeDocument(GridShape shape = {2, 3})
 {
@@ -54,9 +54,9 @@ PatternDocument distinctDocument()
 {
     auto document = makeDocument();
     CHECK(document.addFrame());
-    for(std::size_t frame = 0; frame < 2; ++frame)
-        for(std::uint32_t row = 0; row < 2; ++row)
-            for(std::uint32_t column = 0; column < 3; ++column)
+    for (std::size_t frame = 0; frame < 2; ++frame)
+        for (std::uint32_t row = 0; row < 2; ++row)
+            for (std::uint32_t column = 0; column < 3; ++column)
                 CHECK(document.setCell(
                     frame, {row, column},
                     {100 + static_cast<std::uint32_t>(frame * 100) + row * 10 +
@@ -66,10 +66,10 @@ PatternDocument distinctDocument()
     return document;
 }
 
-std::uint32_t read32(const std::vector<std::byte> &bytes, std::size_t offset)
+std::uint32_t read32(const std::vector<std::byte>& bytes, std::size_t offset)
 {
     std::uint32_t result = 0;
-    for(unsigned i = 0; i < 4; ++i)
+    for (unsigned i = 0; i < 4; ++i)
         result |= std::to_integer<std::uint32_t>(bytes.at(offset + i))
                   << (i * 8);
     return result;
@@ -175,7 +175,7 @@ TEST(codec_legacy_orientation_and_channel_compatibility)
 
 TEST(codec_legacy_bad_numbers_never_become_zero)
 {
-    for(const std::string token : {"abc", "-1", "4294967296", "1x", ""})
+    for (const std::string token : {"abc", "-1", "4294967296", "1x", ""})
         CHECK(!decodeLegacyCsv("1,1,1\n" + token + ",100,\n",
                                LegacyOrientation::RowsThenColumns));
     CHECK(!decodeLegacyCsv("0,1,1\n", LegacyOrientation::RowsThenColumns));
@@ -216,8 +216,8 @@ TEST(audio_known_samples_and_little_endian)
 
 TEST(audio_rational_timing_and_phase_policy)
 {
-    for(const auto phase :
-        {PhasePolicy::Continuous, PhasePolicy::LegacyAbsolute})
+    for (const auto phase :
+         {PhasePolicy::Continuous, PhasePolicy::LegacyAbsolute})
     {
         auto document = makeDocument({1, 1});
         CHECK(document.setSettings({7, 300, 8000, phase}));
@@ -264,7 +264,7 @@ TEST(audio_block_size_does_not_change_output)
     CHECK(all.render(expected));
     std::vector<std::int16_t> actual;
     std::vector<std::int16_t> block(13 * all.channelCount());
-    while(blocks.position() < blocks.totalFrames())
+    while (blocks.position() < blocks.totalFrames())
     {
         const auto count = blocks.render(block).value() * all.channelCount();
         actual.insert(actual.end(), block.begin(),
@@ -276,7 +276,7 @@ TEST(audio_block_size_does_not_change_output)
 
 TEST(audio_wave_header_sizes_errors_and_cancellation)
 {
-    for(const auto shape : {GridShape{1, 1}, GridShape{1, 2}, GridShape{2, 3}})
+    for (const auto shape : {GridShape{1, 1}, GridShape{1, 2}, GridShape{2, 3}})
     {
         auto document = makeDocument(shape);
         CHECK(document.setSettings({7, 1, 8000}));
@@ -289,7 +289,7 @@ TEST(audio_wave_header_sizes_errors_and_cancellation)
         CHECK(file.size() == headerSize + 8 * shape.cellCount() * 2);
         CHECK(read32(file, 4) == file.size() - 8);
         CHECK(read32(file, headerSize - 4) == 8 * shape.cellCount() * 2);
-        if(shape.cellCount() > 2)
+        if (shape.cellCount() > 2)
             CHECK(read32(file, 16) == 40);
     }
     const auto failed = renderWave(makeDocument(), [](auto) -> Result<void> {
@@ -352,15 +352,15 @@ TEST(session_saved_revision_and_edit_groups)
 
 class FakeBackend final : public PlaybackBackend
 {
-        public:
+public:
     bool failStart = false;
     int starts = 0;
     int stops = 0;
     std::optional<std::uint64_t> position;
-    Result<void> start(const DocumentSnapshot &) override
+    Result<void> start(const DocumentSnapshot&) override
     {
         ++starts;
-        if(failStart)
+        if (failStart)
             return Error{ErrorCode::Device, "unsupported channels"};
         return {};
     }
@@ -375,7 +375,7 @@ class FakeBackend final : public PlaybackBackend
 };
 class FakeClock final : public MonotonicClock
 {
-        public:
+public:
     std::uint64_t now = 0;
     std::uint64_t microseconds() const override
     {
@@ -436,14 +436,14 @@ TEST(playback_start_failure_and_snapshot_isolation)
 }
 } // namespace
 
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
     const std::string prefix = argc > 1 ? std::string(argv[1]) + "_" : "";
     int failures = 0;
     int count = 0;
-    for(const auto &test : tests())
+    for (const auto& test : tests())
     {
-        if(!std::string_view(test.name).starts_with(prefix))
+        if (!std::string_view(test.name).starts_with(prefix))
             continue;
         ++count;
         try
@@ -451,7 +451,7 @@ int main(int argc, char **argv)
             test.function();
             std::cout << "PASS " << test.name << '\n';
         }
-        catch(const std::exception &error)
+        catch (const std::exception& error)
         {
             ++failures;
             std::cerr << "FAIL " << test.name << ": " << error.what() << '\n';
