@@ -20,6 +20,10 @@ enum class ErrorCode
 
 struct Error
 {
+    Error(ErrorCode errorCode, std::string description)
+        : code(errorCode), message(std::move(description))
+    {
+    }
     ErrorCode code;
     std::string message;
 };
