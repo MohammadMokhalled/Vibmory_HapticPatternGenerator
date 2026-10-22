@@ -44,7 +44,7 @@ Use **File > Import legacy CSV** for old files. The original writer used `frame 
 Requirements for the desktop build:
 
 - CMake 3.24+, Ninja, and a C++20 compiler.
-- Qt 6.8+ with Core, Gui, Widgets, Concurrent, Multimedia, and Qt Test when testing is enabled. CI pins Qt 6.8.3 and MSVC 2022 x64.
+- Qt 6.8+ with Core, Gui, Widgets, Concurrent, Multimedia, and Qt Test when testing is enabled. CI pins Qt 6.8.3's `msvc2022_64` package and uses the Windows 2025 hosted MSVC x64 toolchain.
 - A matching compiler/architecture for Qt's binaries. On Windows, use a developer command prompt and set `CMAKE_PREFIX_PATH` to the Qt compiler-specific installation directory.
 
 ```powershell

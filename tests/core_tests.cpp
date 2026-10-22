@@ -330,6 +330,25 @@ TEST(session_frame_transactions_and_undo)
     CHECK(session.document().frameCount() == 2);
 }
 
+TEST(session_deletes_first_middle_and_last_by_identity)
+{
+    for (std::size_t removed = 0; removed < 3; ++removed)
+    {
+        auto document = distinctDocument();
+        CHECK(document.addFrame());
+        CHECK(document.setCell(2, {0, 0}, {300, 3000}));
+        EditorSession session(document);
+        CHECK(session.selectFrame(removed));
+        CHECK(session.removeFrame());
+        CHECK(session.selectedFrame() < session.document().frameCount());
+        std::size_t actual = 0;
+        for (std::size_t old = 0; old < 3; ++old)
+            if (old != removed)
+                CHECK(session.document().frame(actual++) ==
+                      document.frame(old));
+    }
+}
+
 TEST(session_saved_revision_and_edit_groups)
 {
     EditorSession session(makeDocument());

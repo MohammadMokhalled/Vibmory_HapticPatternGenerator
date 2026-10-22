@@ -150,9 +150,9 @@ void EditorWindow::buildEditor()
     addFrameButton(tr("Duplicate"), [this] {
         apply(session_.duplicateFrame());
     })->setObjectName("duplicateFrameButton");
-    addFrameButton(tr("Delete"), [this] {
-        apply(session_.removeFrame());
-    })->setObjectName("deleteFrameButton");
+    deleteFrame_ =
+        addFrameButton(tr("Delete"), [this] { apply(session_.removeFrame()); });
+    deleteFrame_->setObjectName("deleteFrameButton");
     addFrameButton(tr("Move earlier"), [this] {
         const auto index = session_.selectedFrame();
         if (index > 0)
@@ -286,6 +286,7 @@ void EditorWindow::refresh()
     const bool playing = playback_.state() == PlaybackState::Playing;
     const bool busy = playing || exportState_ != nullptr;
     editControls_->setEnabled(!busy);
+    deleteFrame_->setEnabled(!busy && session_.document().frameCount() > 1);
     for (auto* action : {new_, open_, import_, export_, routing_})
         action->setEnabled(!busy);
     undo_->setEnabled(!busy && session_.canUndo());

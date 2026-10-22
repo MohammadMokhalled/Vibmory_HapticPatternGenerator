@@ -5,8 +5,8 @@ This tracks the full 69-item audit, including optional items requested in the fo
 ## Delivery stages
 
 1. **Core contracts and regression tests:** validated standard C++ domain, transactional editor session, bounded undo/redo, deterministic PCM/WAV rendering, strict versioned project codec, explicit legacy CSV orientation/routing. Local MSVC Debug core suites currently pass with warnings as errors.
-2. **Qt 6 desktop integration:** one owned editor window, pure grid projection, signal-blocked inspector, state-based streamed playback, atomic file store, cancellable asynchronous export, explicit routing/gains/device selection. Source implemented; remote compilation/UI verification pending.
-3. **Build/test/package delivery:** pinned GitHub Actions, Linux sanitizer core tests, Windows Qt 6.8.3 build/UI tests/deployed ZIP/smoke test. Must verify the actual pushed run and download/inspect its artifact.
+2. **Qt 6 desktop integration:** one owned editor window, pure grid projection, signal-blocked inspector, state-based streamed playback, atomic file store, cancellable asynchronous export, explicit routing/gains/device selection. Windows Qt 6.8.3 compilation and UI suites passed in run 39806088336; remaining component extraction/lifecycle tests are listed below.
+3. **Build/test/package delivery:** pinned GitHub Actions, Linux sanitizer core tests, Windows Qt 6.8.3 build/UI tests/deployed ZIP/smoke test. Windows job passed in run 39806088336. Its ZIP checksum, contents, screenshot, and local packaged launch were verified. The overall run still failed the new Doxygen gate; app-local CRT deployment and the input fix are pending another run.
 4. **Polish and extended scope:** finish all remaining documentation, diagnostics, lifecycle/UI regressions, stable timeline identities, profiles, localization/theme, recovery, fuzz/benchmark tooling, and release automation. Items remain open until evidenced.
 
 ## Decisions
@@ -19,83 +19,100 @@ This tracks the full 69-item audit, including optional items requested in the fo
 - Frequency must remain below Nyquist, amplitude is signed-PCM peak 0-32767, maximum 256 channels/1024 frames/262144 stored cells/512 MiB rendered audio.
 - Existing third-party notices are preserved. Distribution/license metadata and bundled Qt notices still require completion.
 
+## Status meaning
+
+Verified (software) means the implemented behavior has supporting current source/build/test evidence; it does not assert physical actuator/driver/latency validation. Partial items still have acceptance work. Pending items remain in the full objective, including the requested extensions. This is not a claim that the entire refactor is complete.
+
 ## Item status
 
 | ID | Priority | Requirement | Status |
 | --- | --- | --- | --- |
-| R01 | P0 | — Eliminate project-window initialization undefined behavior | In progress |
-| R02 | P0 | — Initialize a loaded document's current frame | In progress |
-| R03 | P0 | — Establish one grid-coordinate convention end to end | In progress |
-| R04 | P0 | — Enforce document, frame, and numeric invariants at the boundary | In progress |
-| R05 | P0 | — Make frame edits transactional across the model and selector | In progress |
-| R06 | P0 | — Resolve unsupported frame-tab dragging | In progress |
-| R07 | P0 | — Repair the generated-audio/Play contract | In progress |
-| R08 | P0 | — Make project saves atomic and failure-aware | In progress |
-| R09 | P0 | — Stop reporting successful audio work after failure | In progress |
-| R10 | P0 | — Separate raw PCM preview data from valid WAV export | In progress |
-| R11 | P0 | — Make supported Qt versions and dependencies truthful | In progress |
-| R12 | P1 | — Introduce enforceable module boundaries | In progress |
-| R13 | P1 | — Make frames and documents data models | In progress |
-| R14 | P1 | — Make ownership explicit and construction exception-safe | In progress |
-| R15 | P1 | — Give polymorphic backend contracts safe destruction | In progress |
-| R16 | P1 | — Define project close, replacement, and application shutdown | In progress |
-| R17 | P1 | — Choose one recoverable error model | In progress |
-| R18 | P1 | — Centralize editor selection and remove sentinel-driven APIs | In progress |
-| R19 | P1 | — Replace button text and boolean fragments with playback state | In progress |
-| R20 | P1 | — Make painting a side-effect-free projection | In progress |
-| R21 | P1 | — Use one elapsed-time model for audiovisual playback | In progress |
-| R22 | P1 | — Render immutable snapshots and track preparation validity | In progress |
-| R23 | P1 | — Prevent view refreshes from editing the document | In progress |
-| R24 | P1 | — Remove initialization-event counting and signal-order workarounds | In progress |
-| R25 | P1 | — Adopt and document a real thread-safety policy | In progress |
-| R26 | P1 | — Separate deterministic synthesis from devices and files | In progress |
-| R27 | P1 | — Correct and bound audio timing/arithmetic | In progress |
-| R28 | P1 | — Make device capabilities and physical channel mapping explicit | In progress |
-| R29 | P1 | — Specify waveform transitions instead of inheriting accidental phase behavior | In progress |
-| R30 | P1 | — Give temporary audio a session-scoped lifetime | In progress |
-| R31 | P1 | — Define a versioned project format and a strict legacy reader | In progress |
-| R32 | P1 | — Persist the complete reproducible project configuration | In progress |
-| R33 | P1 | — Track unsaved changes and document identity | In progress |
-| R34 | P1 | — Bound rendering work and keep the GUI responsive | In progress |
-| R35 | P1 | — Introduce useful error context and deliberate logging | In progress |
-| R36 | P1 | — Replace the all-purpose object collection with target-scoped build rules | In progress |
-| R37 | P1 | — Make tests optional to build and dependencies reproducible | In progress |
-| R38 | P1 | — Standardize build presets and compiler/runtime settings | In progress |
-| R39 | P1 | — Add meaningful domain, persistence, and sample regressions | In progress |
-| R40 | P1 | — Test application workflows with fake playback, storage, and time | In progress |
-| R41 | P1 | — Add a small high-value Qt UI integration suite | In progress |
-| R42 | P1 | — Add repeatable CI and diagnostic builds | In progress |
-| R43 | P2 | — Replace idle repaint polling with explicit updates | In progress |
-| R44 | P2 | — Finish grid geometry and accessibility behavior | In progress |
-| R45 | P2 | — Simplify startup and new-project navigation | In progress |
-| R46 | P2 | — Make Designer forms and action wiring deliberate | In progress |
-| R47 | P2 | — Adopt a precise naming and vocabulary guide | In progress |
-| R48 | P2 | — Apply and enforce one formatter configuration | In progress |
-| R49 | P2 | — Clean include dependencies, constants, and ordinary C++ contracts | In progress |
-| R50 | P2 | — Consolidate cell storage if it improves invariants | In progress |
-| R51 | P2 | — Remove dead state, APIs, and boilerplate | In progress |
-| R52 | P2 | — Consolidate repeated UI construction and view-state updates | In progress |
-| R53 | P2 | — Make existing tests small, isolated, and informative | In progress |
-| R54 | P2 | — Add lightweight style and dependency guardrails | In progress |
-| R55 | P2 | — Replace README onboarding TODO with verified instructions | In progress |
-| R56 | P2 | — Keep architecture, decisions, and diagrams current | In progress |
-| R57 | P2 | — Fix Doxygen input and output configuration | In progress |
-| R58 | P2 | — Verify an installable, runnable application artifact | In progress |
-| R59 | P2 | — Make repository hygiene intentional | In progress |
-| R60 | P2 | — Align project metadata and preserve third-party notices | In progress |
-| R61 | P3 | — Undo/redo through editor commands | In progress |
+| R01 | P0 | — Eliminate project-window initialization undefined behavior | Verified (software) |
+| R02 | P0 | — Initialize a loaded document's current frame | Verified (software) |
+| R03 | P0 | — Establish one grid-coordinate convention end to end | Verified (software) |
+| R04 | P0 | — Enforce document, frame, and numeric invariants at the boundary | Verified (software) |
+| R05 | P0 | — Make frame edits transactional across the model and selector | Partial / acceptance gaps |
+| R06 | P0 | — Resolve unsupported frame-tab dragging | Verified (software) |
+| R07 | P0 | — Repair the generated-audio/Play contract | Verified (software) |
+| R08 | P0 | — Make project saves atomic and failure-aware | Verified (software) |
+| R09 | P0 | — Stop reporting successful audio work after failure | Verified (software) |
+| R10 | P0 | — Separate raw PCM preview data from valid WAV export | Verified (software) |
+| R11 | P0 | — Make supported Qt versions and dependencies truthful | Verified (software) |
+| R12 | P1 | — Introduce enforceable module boundaries | Verified (software) |
+| R13 | P1 | — Make frames and documents data models | Verified (software) |
+| R14 | P1 | — Make ownership explicit and construction exception-safe | Partial / acceptance gaps |
+| R15 | P1 | — Give polymorphic backend contracts safe destruction | Verified (software) |
+| R16 | P1 | — Define project close, replacement, and application shutdown | Partial / acceptance gaps |
+| R17 | P1 | — Choose one recoverable error model | Partial / acceptance gaps |
+| R18 | P1 | — Centralize editor selection and remove sentinel-driven APIs | Verified (software) |
+| R19 | P1 | — Replace button text and boolean fragments with playback state | Verified (software) |
+| R20 | P1 | — Make painting a side-effect-free projection | Verified (software) |
+| R21 | P1 | — Use one elapsed-time model for audiovisual playback | Verified (software) |
+| R22 | P1 | — Render immutable snapshots and track preparation validity | Verified (software) |
+| R23 | P1 | — Prevent view refreshes from editing the document | Verified (software) |
+| R24 | P1 | — Remove initialization-event counting and signal-order workarounds | Verified (software) |
+| R25 | P1 | — Adopt and document a real thread-safety policy | Partial / acceptance gaps |
+| R26 | P1 | — Separate deterministic synthesis from devices and files | Verified (software) |
+| R27 | P1 | — Correct and bound audio timing/arithmetic | Verified (software) |
+| R28 | P1 | — Make device capabilities and physical channel mapping explicit | Partial / acceptance gaps |
+| R29 | P1 | — Specify waveform transitions instead of inheriting accidental phase behavior | Verified (software) |
+| R30 | P1 | — Give temporary audio a session-scoped lifetime | Verified (software) |
+| R31 | P1 | — Define a versioned project format and a strict legacy reader | Verified (software) |
+| R32 | P1 | — Persist the complete reproducible project configuration | Verified (software) |
+| R33 | P1 | — Track unsaved changes and document identity | Verified (software) |
+| R34 | P1 | — Bound rendering work and keep the GUI responsive | Partial / acceptance gaps |
+| R35 | P1 | — Introduce useful error context and deliberate logging | Partial / acceptance gaps |
+| R36 | P1 | — Replace the all-purpose object collection with target-scoped build rules | Verified (software) |
+| R37 | P1 | — Make tests optional to build and dependencies reproducible | Verified (software) |
+| R38 | P1 | — Standardize build presets and compiler/runtime settings | Verified (software) |
+| R39 | P1 | — Add meaningful domain, persistence, and sample regressions | Verified (software) |
+| R40 | P1 | — Test application workflows with fake playback, storage, and time | Partial / acceptance gaps |
+| R41 | P1 | — Add a small high-value Qt UI integration suite | Partial / acceptance gaps |
+| R42 | P1 | — Add repeatable CI and diagnostic builds | Partial / acceptance gaps |
+| R43 | P2 | — Replace idle repaint polling with explicit updates | Verified (software) |
+| R44 | P2 | — Finish grid geometry and accessibility behavior | Partial / acceptance gaps |
+| R45 | P2 | — Simplify startup and new-project navigation | Verified (software) |
+| R46 | P2 | — Make Designer forms and action wiring deliberate | Verified (software) |
+| R47 | P2 | — Adopt a precise naming and vocabulary guide | Verified (software) |
+| R48 | P2 | — Apply and enforce one formatter configuration | Verified (software) |
+| R49 | P2 | — Clean include dependencies, constants, and ordinary C++ contracts | Verified (software) |
+| R50 | P2 | — Consolidate cell storage if it improves invariants | Verified (software) |
+| R51 | P2 | — Remove dead state, APIs, and boilerplate | Verified (software) |
+| R52 | P2 | — Consolidate repeated UI construction and view-state updates | Partial / acceptance gaps |
+| R53 | P2 | — Make existing tests small, isolated, and informative | Verified (software) |
+| R54 | P2 | — Add lightweight style and dependency guardrails | Verified (software) |
+| R55 | P2 | — Replace README onboarding TODO with verified instructions | Verified (software) |
+| R56 | P2 | — Keep architecture, decisions, and diagrams current | Verified (software) |
+| R57 | P2 | — Fix Doxygen input and output configuration | Partial / acceptance gaps |
+| R58 | P2 | — Verify an installable, runnable application artifact | Partial / acceptance gaps |
+| R59 | P2 | — Make repository hygiene intentional | Verified (software) |
+| R60 | P2 | — Align project metadata and preserve third-party notices | Partial / acceptance gaps |
+| R61 | P3 | — Undo/redo through editor commands | Verified (software) |
 | R62 | P3 | — Advanced timeline and stable frame identities | Pending |
-| R63 | P3 | — Real-time streaming and low-latency synthesis | In progress |
-| R64 | P3 | — Extended fuzzing, property testing, and benchmark infrastructure | Pending |
-| R65 | P3 | — Remove all Qt dependencies from the domain | In progress |
+| R63 | P3 | — Real-time streaming and low-latency synthesis | Verified (software) |
+| R64 | P3 | — Extended fuzzing, property testing, and benchmark infrastructure | Verified (software) |
+| R65 | P3 | — Remove all Qt dependencies from the domain | Verified (software) |
 | R66 | P3 | — Introduce a custom visual theme, icons, and richer localization | Pending |
-| R67 | P3 | — Add actuator backends, calibration, and device profiles | In progress |
+| R67 | P3 | — Add actuator backends, calibration, and device profiles | Partial / acceptance gaps |
 | R68 | P3 | — Autosave and crash recovery | Pending |
-| R69 | P3 | — Broaden release automation and platform coverage | In progress |
+| R69 | P3 | — Broaden release automation and platform coverage | Pending |
 
 ## Verification log
 
 - Local: `cmake -S . -B out/core -DVIBMORY_BUILD_GUI=OFF -DVIBMORY_WARNINGS_AS_ERRORS=ON`; MSVC 19.50.
 - Local: `cmake --build out/core --config Debug --parallel 4`; passed.
 - Local: `ctest --test-dir out/core -C Debug --output-on-failure`; 5/5 suites passed.
-- GitHub: access verified; workflow execution and artifact verification pending first push.
+- GitHub run 39806088336 / commit 2e224cc: Windows Qt build, 8 CTest suites, expanded Qt modal tests, install, native package smoke test, screenshot and ZIP upload passed. Linux sanitizer/quality/tests passed; Doxygen stopped on missing planning-document inputs.
+- Downloaded artifact 12437962351 (Vibmory-windows-x64); verified SHA-256 4c4447846d6afedb3bb80a7ef0215a1fa2e847a8b92bf8be347863972300cfde and 65 archive entries.
+- Actual downloaded executable launched locally with Qt removed from PATH and exited 0 using --smoke-test. Reviewed editor.png; controls and grid fit at the default size. Local files: artifacts/39806088336/ (ignored build evidence).
+- Local current core: 7/7 CTest suites pass, including 500 generated project round trips, 10000 parser mutations and independent stereo/multichannel WAV decoding. First/middle/last deletion regression added; corresponding new UI case awaits CI.
+- Test-disabled Release configuration built successfully without Qt or test dependencies.
+- Informational local Debug renderer benchmark: 16 channels x 48 kHz x 10 seconds rendered in approximately 0.25 wall seconds. This is not a latency or physical-output measurement.
+
+## Next implementation stages (still required)
+
+1. Finish the entirely green workflow after adding planning docs to Doxygen and copying the C++ runtime DLLs beside the executable. Download/check the new artifact; preserve diagnostic and screenshot evidence.
+2. Extract inspector/settings/frame-selector/dialog/export-job responsibilities from EditorWindow. Put document I/O orchestration behind an application service, handle worker exceptions, and expand keyboard/async-close/lifetime tests.
+3. Finish categorized diagnostics, focused static analysis, deployment licenses/notices, and item-by-item acceptance gaps. Keep the historical audit unchanged except for links to this tracker.
+4. Implement the remaining requested extensions: stable frame identities/model-backed timeline, device profiles, autosave/recovery, theme/localization, and tagged release/installer/signing configuration where credentials are available. Existing undo, bounded streaming, property tests/benchmark and standard C++ core already provide the other extended items.
+5. Audit every requirement against current source and test/artifact evidence. Only then mark the goal complete. Physical routing and latency checks remain for the user's intended device, as requested.

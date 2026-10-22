@@ -943,7 +943,7 @@ WARN_LOGFILE           =
 # spaces. See also FILE_PATTERNS and EXTENSION_MAPPING
 # Note: If this tag is empty the current directory is searched.
 
-INPUT = "@PROJECT_SOURCE_DIR@/src" "@PROJECT_SOURCE_DIR@/README.md" "@PROJECT_SOURCE_DIR@/docs/Architecture.md" "@PROJECT_SOURCE_DIR@/docs/ProjectFormat.md"
+INPUT = "@PROJECT_SOURCE_DIR@/src" "@PROJECT_SOURCE_DIR@/README.md" "@PROJECT_SOURCE_DIR@/docs" "@PROJECT_SOURCE_DIR@/TodoPlanning" "@PROJECT_SOURCE_DIR@/THIRD_PARTY_NOTICES.md"
 
 # This tag can be used to specify the character encoding of the source files
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding. Doxygen uses

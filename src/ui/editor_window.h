@@ -89,6 +89,7 @@ private:
     QComboBox* phase_ = nullptr;
     QComboBox* devices_ = nullptr;
     QPushButton* play_ = nullptr;
+    QPushButton* deleteFrame_ = nullptr;
     QAction* undo_ = nullptr;
     QAction* redo_ = nullptr;
     QAction* new_ = nullptr;

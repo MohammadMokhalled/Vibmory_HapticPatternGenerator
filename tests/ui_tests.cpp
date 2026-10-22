@@ -146,6 +146,25 @@ private slots:
             250U);
     }
 
+    void removingFirstOrLastKeepsTheIntendedFrame()
+    {
+        for (int removed : {0, 1})
+        {
+            Store store;
+            Backend backend;
+            Clock clock;
+            EditorWindow window(store, backend, clock, document());
+            window.findChild<QListWidget*>("frameList")->setCurrentRow(removed);
+            auto* remove = window.findChild<QPushButton*>("deleteFrameButton");
+            remove->click();
+            QCOMPARE(window.session().document().frameCount(), std::size_t{1});
+            QCOMPARE(
+                window.session().document().cell(0, {1, 2}).value().frequencyHz,
+                removed == 0 ? 250U : 150U);
+            QVERIFY(!remove->isEnabled());
+        }
+    }
+
     void paintingIsPure()
     {
         Store store;

@@ -61,6 +61,15 @@ jobs:
         run: ctest --preset desktop
       - name: Install runtime and plugins
         run: cmake --install out/desktop --prefix "$pwd/stage/Vibmory"
+      - name: Deploy app-local C++ runtime
+        shell: pwsh
+        run: |
+          $runtimeFiles = Get-ChildItem "$env:VCToolsRedistDir/x64/Microsoft.VC*.CRT/*.dll"
+          if (-not $runtimeFiles) { throw 'MSVC redistributable DLLs were not found.' }
+          $runtimeFiles | Copy-Item -Destination stage/Vibmory -Force
+          foreach ($runtime in @('msvcp140.dll', 'vcruntime140.dll', 'vcruntime140_1.dll')) {
+            if (-not (Test-Path "stage/Vibmory/$runtime")) { throw "Missing app-local runtime: $runtime" }
+          }
       - name: Verify portable package
         shell: pwsh
         run: |
