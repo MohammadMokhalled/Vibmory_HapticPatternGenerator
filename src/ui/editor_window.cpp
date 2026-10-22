@@ -1,6 +1,7 @@
 #include "ui/editor_window.h"
 
 #include "platform/project_store.h"
+#include "ui/cell_inspector.h"
 #include "ui/grid_widget.h"
 
 #include <QAction>
@@ -22,7 +23,6 @@
 #include <QProgressDialog>
 #include <QPushButton>
 #include <QSignalBlocker>
-#include <QSlider>
 #include <QSpinBox>
 #include <QStatusBar>
 #include <QTableWidget>
@@ -167,55 +167,13 @@ void EditorWindow::buildEditor()
     grid_ = new GridWidget;
     layout->addWidget(grid_, 1);
     auto* side = new QVBoxLayout;
-    inspector_ = new QGroupBox(tr("Selected cell"));
-    inspector_->setObjectName("cellInspector");
-    auto* inspectorLayout = new QVBoxLayout(inspector_);
-    auto valueEditor = [this, inspectorLayout](
-                           const QString& label, const char* name, int maximum,
-                           QSpinBox*& spin, QSlider*& slider) {
-        auto* caption = new QLabel(label);
-        spin = new QSpinBox;
-        spin->setObjectName(name);
-        spin->setRange(0, maximum);
-        spin->setKeyboardTracking(false);
-        caption->setBuddy(spin);
-        slider = new QSlider(Qt::Horizontal);
-        slider->setRange(0, maximum);
-        slider->setAccessibleName(label);
-        auto* row = new QHBoxLayout;
-        auto* minimum = new QPushButton(tr("Min"));
-        auto* maxButton = new QPushButton(tr("Max"));
-        minimum->setAccessibleName(tr("Minimum %1").arg(label));
-        maxButton->setAccessibleName(tr("Maximum %1").arg(label));
-        row->addWidget(minimum);
-        row->addWidget(spin);
-        row->addWidget(maxButton);
-        inspectorLayout->addWidget(caption);
-        inspectorLayout->addLayout(row);
-        inspectorLayout->addWidget(slider);
-        connect(minimum, &QPushButton::clicked, spin,
-                [spin] { spin->setValue(spin->minimum()); });
-        connect(maxButton, &QPushButton::clicked, spin,
-                [spin] { spin->setValue(spin->maximum()); });
-        connect(spin, &QSpinBox::valueChanged, this, [this, slider](int value) {
-            const QSignalBlocker blocker(slider);
-            slider->setValue(value);
-            editStimulus();
-        });
-        connect(slider, &QSlider::valueChanged, this, [this, spin](int value) {
-            const QSignalBlocker blocker(spin);
-            spin->setValue(value);
-            editStimulus();
-        });
-        connect(slider, &QSlider::sliderPressed, this,
-                [this] { session_.beginEditGroup(); });
-        connect(slider, &QSlider::sliderReleased, this,
-                [this] { session_.endEditGroup(); });
-    };
-    valueEditor(tr("&Frequency (Hz)"), "frequencySpinBox",
-                static_cast<int>(maxFrequencyHz), frequency_, frequencySlider_);
-    valueEditor(tr("&Amplitude (signed PCM peak)"), "amplitudeSpinBox",
-                static_cast<int>(maxAmplitude), amplitude_, amplitudeSlider_);
+    inspector_ = new CellInspector;
+    connect(inspector_, &CellInspector::stimulusEdited, this,
+            [this] { apply(session_.editCell(inspector_->stimulus())); });
+    connect(inspector_, &CellInspector::editGroupStarted, this,
+            [this] { session_.beginEditGroup(); });
+    connect(inspector_, &CellInspector::editGroupFinished, this,
+            [this] { session_.endEditGroup(); });
     side->addWidget(inspector_);
     auto* settings = new QGroupBox(tr("Playback settings"));
     auto* form = new QFormLayout(settings);
@@ -317,29 +275,14 @@ void EditorWindow::refresh()
     }
     sampleRate_->setCurrentIndex(sampleIndex);
     phase_->setCurrentIndex(phase_->findData(static_cast<int>(settings.phase)));
-    inspector_->setEnabled(session_.selectedCell().has_value() && !busy);
+    std::optional<CellStimulus> selectedValue;
     if (session_.selectedCell())
-    {
-        const auto value =
+        selectedValue =
             session_.document()
                 .cell(session_.selectedFrame(), *session_.selectedCell())
                 .value();
-        const QSignalBlocker f(frequency_), a(amplitude_), fs(frequencySlider_),
-            as(amplitudeSlider_);
-        const auto frequencyLimit = static_cast<int>(
-            std::min(maxFrequencyHz, settings.sampleRate / 2 - 1));
-        frequency_->setMaximum(frequencyLimit);
-        frequencySlider_->setMaximum(frequencyLimit);
-        frequency_->setValue(static_cast<int>(value.frequencyHz));
-        amplitude_->setValue(static_cast<int>(value.amplitude));
-        frequencySlider_->setValue(static_cast<int>(value.frequencyHz));
-        amplitudeSlider_->setValue(static_cast<int>(value.amplitude));
-        inspector_->setTitle(tr("Cell R%1 C%2")
-                                 .arg(session_.selectedCell()->row + 1)
-                                 .arg(session_.selectedCell()->column + 1));
-    }
-    else
-        inspector_->setTitle(tr("Select a cell"));
+    inspector_->setCell(session_.selectedCell(), selectedValue,
+                        std::min(maxFrequencyHz, settings.sampleRate / 2 - 1));
     if (playing && playback_.snapshot())
         grid_->setFrame(playback_.snapshot()->document, playback_.visualFrame(),
                         std::nullopt);
@@ -370,14 +313,6 @@ void EditorWindow::showError(const Error& error)
 {
     QMessageBox::critical(this, tr("Vibmory"),
                           QString::fromStdString(error.message));
-}
-
-void EditorWindow::editStimulus()
-{
-    if (!session_.selectedCell())
-        return;
-    apply(session_.editCell({static_cast<std::uint32_t>(frequency_->value()),
-                             static_cast<std::uint32_t>(amplitude_->value())}));
 }
 
 void EditorWindow::updateSettings()

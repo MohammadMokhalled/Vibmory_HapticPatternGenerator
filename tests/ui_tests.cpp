@@ -1,4 +1,5 @@
 #include "platform/project_store.h"
+#include "ui/cell_inspector.h"
 #include "ui/editor_window.h"
 #include "ui/grid_widget.h"
 
@@ -97,6 +98,48 @@ private slots:
         QVERIFY(!GridGeometry::cellAt({}, shape, {0, 0}));
         QCOMPARE(GridGeometry::cellAt({0, 0, 1, 1}, shape, {0.9, 0.9}).value(),
                  (CellPosition{1, 2}));
+    }
+
+    void inspectorRefreshDoesNotEmitCommands()
+    {
+        CellInspector inspector;
+        QSignalSpy edits(&inspector, &CellInspector::stimulusEdited);
+        inspector.setCell(CellPosition{0, 0}, CellStimulus{150, 1000},
+                          maxFrequencyHz);
+        inspector.setCell(CellPosition{1, 2}, CellStimulus{0, 0},
+                          maxFrequencyHz);
+        QCOMPARE(edits.count(), 0);
+        inspector.findChild<QSpinBox*>("amplitudeSpinBox")->setValue(123);
+        QCOMPARE(edits.count(), 1);
+        QVERIFY(inspector.stimulus() == (CellStimulus{0, 123}));
+    }
+
+    void keyboardAndMouseSelectionRespectBounds()
+    {
+        const auto source = document();
+        GridWidget grid;
+        grid.setFrame(source, 0, {});
+        QSignalSpy selections(&grid, &GridWidget::cellSelected);
+        QSignalSpy cleared(&grid, &GridWidget::selectionCleared);
+        connect(
+            &grid, &GridWidget::cellSelected, &grid, [&](int row, int column) {
+                grid.setFrame(source, 0,
+                              CellPosition{static_cast<std::uint32_t>(row),
+                                           static_cast<std::uint32_t>(column)});
+            });
+        grid.show();
+        grid.setFocus();
+        QTest::keyClick(&grid, Qt::Key_Right);
+        QTest::keyClick(&grid, Qt::Key_Down);
+        QTest::keyClick(&grid, Qt::Key_Right);
+        QTest::keyClick(&grid, Qt::Key_Right);
+        QCOMPARE(selections.last().at(0).toInt(), 1);
+        QCOMPARE(selections.last().at(1).toInt(), 2);
+        const auto count = selections.count();
+        QTest::mouseClick(&grid, Qt::RightButton, Qt::NoModifier, QPoint(1, 1));
+        QCOMPARE(selections.count(), count);
+        QTest::keyClick(&grid, Qt::Key_Escape);
+        QCOMPARE(cleared.count(), 1);
     }
 
     void selectionRefreshDoesNotEdit()

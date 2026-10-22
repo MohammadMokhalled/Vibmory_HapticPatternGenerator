@@ -14,16 +14,15 @@
 class QAction;
 class QComboBox;
 class QDoubleSpinBox;
-class QGroupBox;
 class QListWidget;
 class QProgressDialog;
 class QPushButton;
-class QSlider;
 class QSpinBox;
 
 namespace vibmory
 {
 class GridWidget;
+class CellInspector;
 
 class EditorWindow final : public QMainWindow
 {
@@ -60,7 +59,6 @@ private:
     void openProject(bool legacy = false);
     [[nodiscard]] bool saveProject(bool saveAs = false);
     [[nodiscard]] bool confirmDiscard();
-    void editStimulus();
     void updateSettings();
     void togglePlayback();
     void exportWave();
@@ -78,11 +76,7 @@ private:
     GridWidget* grid_ = nullptr;
     QListWidget* frames_ = nullptr;
     QWidget* editControls_ = nullptr;
-    QGroupBox* inspector_ = nullptr;
-    QSpinBox* frequency_ = nullptr;
-    QSpinBox* amplitude_ = nullptr;
-    QSlider* frequencySlider_ = nullptr;
-    QSlider* amplitudeSlider_ = nullptr;
+    CellInspector* inspector_ = nullptr;
     QSpinBox* frameRate_ = nullptr;
     QDoubleSpinBox* duration_ = nullptr;
     QComboBox* sampleRate_ = nullptr;
