@@ -85,39 +85,30 @@ EditorWindow::~EditorWindow()
 void EditorWindow::buildMenus()
 {
     auto *file = menuBar()->addMenu(tr("&File"));
-    new_ = file->addAction(tr("&New project…"), this, &EditorWindow::newProject,
-                           QKeySequence::New);
-    open_ = file->addAction(
-        tr("&Open project…"), this, [this] { openProject(); },
-        QKeySequence::Open);
+    new_ = file->addAction(tr("&New project…"), QKeySequence::New, this,
+                           &EditorWindow::newProject);
+    open_ = file->addAction(tr("&Open project…"), QKeySequence::Open, this,
+                            [this] { openProject(); });
     import_ = file->addAction(tr("Import legacy &CSV…"), this,
                               [this] { openProject(true); });
     file->addSeparator();
-    file->addAction(
-        tr("&Save"), this, [this] { (void)saveProject(); }, QKeySequence::Save);
-    file->addAction(
-        tr("Save &as…"), this, [this] { (void)saveProject(true); },
-        QKeySequence::SaveAs);
-    export_ =
-        file->addAction(tr("Export &WAV…"), this, &EditorWindow::exportWave,
-                        QKeySequence(tr("Ctrl+E")));
+    file->addAction(tr("&Save"), QKeySequence::Save, this,
+                    [this] { (void)saveProject(); });
+    file->addAction(tr("Save &as…"), QKeySequence::SaveAs, this,
+                    [this] { (void)saveProject(true); });
+    export_ = file->addAction(tr("Export &WAV…"), QKeySequence(tr("Ctrl+E")),
+                              this, &EditorWindow::exportWave);
     file->addSeparator();
-    file->addAction(tr("E&xit"), this, &QWidget::close, QKeySequence::Quit);
+    file->addAction(tr("E&xit"), QKeySequence::Quit, this, &QWidget::close);
     auto *edit = menuBar()->addMenu(tr("&Edit"));
-    undo_ = edit->addAction(
-        tr("&Undo"), this,
-        [this] {
-            session_.undo();
-            refresh();
-        },
-        QKeySequence::Undo);
-    redo_ = edit->addAction(
-        tr("&Redo"), this,
-        [this] {
-            session_.redo();
-            refresh();
-        },
-        QKeySequence::Redo);
+    undo_ = edit->addAction(tr("&Undo"), QKeySequence::Undo, this, [this] {
+        session_.undo();
+        refresh();
+    });
+    redo_ = edit->addAction(tr("&Redo"), QKeySequence::Redo, this, [this] {
+        session_.redo();
+        refresh();
+    });
     routing_ = edit->addAction(tr("Channel &routing and gains…"), this,
                                &EditorWindow::configureRouting);
     auto *help = menuBar()->addMenu(tr("&Help"));

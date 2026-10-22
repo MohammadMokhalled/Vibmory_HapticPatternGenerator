@@ -19,6 +19,10 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Install pinned formatter
+        run: python3 -m pip install clang-format==21.1.0
+      - name: Formatting and module boundaries
+        run: python3 tools/check_quality.py
       - name: Configure without Qt
         run: cmake --preset sanitized
       - name: Build
