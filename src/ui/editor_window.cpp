@@ -3,6 +3,7 @@
 #include "platform/project_store.h"
 #include "platform/wave_export_job.h"
 #include "ui/cell_inspector.h"
+#include "ui/file_dialogs.h"
 #include "ui/grid_widget.h"
 
 #include <QAction>
@@ -339,13 +340,11 @@ bool EditorWindow::saveProject(bool saveAs)
     auto path = session_.path();
     if (saveAs || path.empty())
     {
-        auto selected = QFileDialog::getSaveFileName(
-            this, tr("Save project"), toQString(path),
-            tr("Vibmory project (*.vibmory)"));
+        const auto selected = chooseSavePath(this, tr("Save project"),
+                                             tr("Vibmory project (*.vibmory)"),
+                                             "vibmory", toQString(path));
         if (selected.isEmpty())
             return false;
-        if (!selected.endsWith(".vibmory", Qt::CaseInsensitive))
-            selected += ".vibmory";
         path = toPath(selected);
     }
     const auto result = documents_.save(path);
@@ -390,7 +389,8 @@ void EditorWindow::openProject(bool legacy)
 {
     const auto selected = QFileDialog::getOpenFileName(
         this, legacy ? tr("Import legacy CSV") : tr("Open project"), {},
-        legacy ? tr("Legacy CSV (*.csv)") : tr("Vibmory project (*.vibmory)"));
+        legacy ? tr("Legacy CSV (*.csv);;All files (*)")
+               : tr("Vibmory project (*.vibmory);;All files (*)"));
     if (selected.isEmpty())
         return;
     Result<PatternDocument> loaded = Error{ErrorCode::Cancelled, "Cancelled"};
@@ -508,12 +508,10 @@ void EditorWindow::refreshDevices()
 
 void EditorWindow::exportWave()
 {
-    auto selected = QFileDialog::getSaveFileName(this, tr("Export WAV"), {},
-                                                 tr("WAV audio (*.wav)"));
+    const auto selected =
+        chooseSavePath(this, tr("Export WAV"), tr("WAV audio (*.wav)"), "wav");
     if (selected.isEmpty())
         return;
-    if (!selected.endsWith(".wav", Qt::CaseInsensitive))
-        selected += ".wav";
     exportDialog_ = new QProgressDialog(tr("Rendering audio..."), tr("Cancel"),
                                         0, 100, this);
     exportDialog_->setWindowModality(Qt::WindowModal);
