@@ -1,0 +1,4 @@
+Checks: '-*,clang-analyzer-core.*,clang-analyzer-cplusplus.*,bugprone-use-after-move'
+WarningsAsErrors: '*'
+HeaderFilterRegex: '.*[/\\]src[/\\](domain|application|audio|persistence)[/\\].*'
+FormatStyle: file

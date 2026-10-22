@@ -9,6 +9,7 @@
 #include <QCloseEvent>
 #include <QComboBox>
 #include <QCoreApplication>
+#include <QDebug>
 #include <QDialog>
 #include <QDialogButtonBox>
 #include <QDoubleSpinBox>
@@ -19,6 +20,7 @@
 #include <QInputDialog>
 #include <QLabel>
 #include <QListWidget>
+#include <QLoggingCategory>
 #include <QMenuBar>
 #include <QMessageBox>
 #include <QProgressDialog>
@@ -33,6 +35,11 @@
 
 namespace vibmory
 {
+namespace
+{
+Q_LOGGING_CATEGORY(uiLog, "vibmory.ui")
+}
+
 EditorWindow::EditorWindow(DocumentStore& store, PlaybackBackend& backend,
                            const MonotonicClock& clock, WaveExportJob& exporter,
                            PatternDocument document, QWidget* parent)
@@ -312,6 +319,8 @@ void EditorWindow::apply(Result<void> result)
 }
 void EditorWindow::showError(const Error& error)
 {
+    qCWarning(uiLog).noquote() << static_cast<int>(error.code)
+                               << QString::fromStdString(error.message);
     QMessageBox::critical(this, tr("Vibmory"),
                           QString::fromStdString(error.message));
 }

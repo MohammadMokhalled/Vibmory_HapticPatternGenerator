@@ -1,11 +1,18 @@
 #include "platform/wave_export_job.h"
 
+#include <QDebug>
+#include <QLoggingCategory>
 #include <QtConcurrentRun>
 
 #include <exception>
 
 namespace vibmory
 {
+namespace
+{
+Q_LOGGING_CATEGORY(exportLog, "vibmory.export")
+}
+
 WaveExportJob::WaveExportJob(ExportOperation operation, QObject* parent)
     : QObject(parent), operation_(std::move(operation))
 {
@@ -54,12 +61,14 @@ Result<void> WaveExportJob::start(std::filesystem::path path,
             }
             catch (const std::exception& error)
             {
+                qCWarning(exportLog) << "Worker exception:" << error.what();
                 return Error{ErrorCode::Io,
                              std::string("Audio export failed: ") +
                                  error.what()};
             }
             catch (...)
             {
+                qCWarning(exportLog) << "Unknown worker exception";
                 return Error{ErrorCode::Io,
                              "Audio export failed unexpectedly."};
             }

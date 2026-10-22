@@ -24,11 +24,13 @@ jobs:
       - name: Formatting and module boundaries
         run: python3 tools/check_quality.py
       - name: Install documentation tool
-        run: sudo apt-get update -qq && sudo apt-get install -y doxygen
+        run: sudo apt-get update -qq && sudo apt-get install -y doxygen clang-tidy
       - name: Configure without Qt
         run: cmake --preset sanitized
       - name: Build
         run: cmake --build --preset sanitized --parallel 2
+      - name: Analyze core C++ contracts
+        run: python3 tools/run_static_analysis.py out/sanitized
       - name: Test
         run: ctest --preset sanitized
         env:

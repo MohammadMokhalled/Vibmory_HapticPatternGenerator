@@ -2,15 +2,20 @@
 
 #include "persistence/project_codec.h"
 
+#include <QDebug>
 #include <QFile>
+#include <QLoggingCategory>
 #include <QSaveFile>
 
 namespace vibmory
 {
 namespace
 {
+Q_LOGGING_CATEGORY(storageLog, "vibmory.storage")
+
 Error fileError(const QFileDevice& file)
 {
+    qCWarning(storageLog).noquote() << file.fileName() << file.errorString();
     return {ErrorCode::Io,
             (file.fileName() + ": " + file.errorString()).toStdString()};
 }
@@ -71,7 +76,12 @@ Result<PatternDocument> importLegacy(const std::filesystem::path& path,
     auto text = readProjectText(path);
     if (!text)
         return text.error();
-    return decodeLegacyCsv(text.value(), orientation);
+    auto document = decodeLegacyCsv(text.value(), orientation);
+    if (!document)
+        return Error{document.error().code, toQString(path).toStdString() +
+                                                ": " +
+                                                document.error().message};
+    return document;
 }
 
 Result<void> QtProjectStore::save(const std::filesystem::path& path,
