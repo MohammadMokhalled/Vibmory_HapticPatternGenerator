@@ -1,5 +1,6 @@
 #include "platform/project_store.h"
 #include "platform/qt_audio_backend.h"
+#include "platform/wave_export_job.h"
 #include "ui/editor_window.h"
 
 #include <QApplication>
@@ -30,10 +31,11 @@ int main(int argc, char** argv)
     vibmory::QtProjectStore store;
     vibmory::QtAudioBackend backend;
     vibmory::QtClock clock;
+    vibmory::WaveExportJob exporter;
     auto initial = vibmory::PatternDocument::create({2, 2});
     if (!initial)
         return 1;
-    vibmory::EditorWindow window(store, backend, clock,
+    vibmory::EditorWindow window(store, backend, clock, exporter,
                                  std::move(initial.value()));
     QObject::connect(
         &backend, &vibmory::QtAudioBackend::failed, &window,

@@ -4,12 +4,8 @@
 #include "application/editor_session.h"
 #include "application/playback_service.h"
 
-#include <QFutureWatcher>
 #include <QMainWindow>
 #include <QTimer>
-
-#include <atomic>
-#include <memory>
 
 class QAction;
 class QComboBox;
@@ -23,14 +19,15 @@ namespace vibmory
 {
 class GridWidget;
 class CellInspector;
+class WaveExportJob;
 
 class EditorWindow final : public QMainWindow
 {
     Q_OBJECT
 public:
     EditorWindow(DocumentStore& store, PlaybackBackend& backend,
-                 const MonotonicClock& clock, PatternDocument document,
-                 QWidget* parent = nullptr);
+                 const MonotonicClock& clock, WaveExportJob& exporter,
+                 PatternDocument document, QWidget* parent = nullptr);
     ~EditorWindow() override;
     [[nodiscard]] const EditorSession& session() const
     {
@@ -44,12 +41,6 @@ protected:
     void closeEvent(QCloseEvent* event) override;
 
 private:
-    struct ExportState
-    {
-        std::atomic<bool> cancel{false};
-        std::atomic<std::uint64_t> done{0};
-        std::atomic<std::uint64_t> total{1};
-    };
     void buildMenus();
     void buildEditor();
     void refresh();
@@ -69,9 +60,8 @@ private:
     DocumentStore& store_;
     PlaybackBackend& backend_;
     PlaybackService playback_;
+    WaveExportJob& exporter_;
     QTimer refreshTimer_;
-    QFutureWatcher<Result<void>> exportWatcher_;
-    std::shared_ptr<ExportState> exportState_;
     QProgressDialog* exportDialog_ = nullptr;
     GridWidget* grid_ = nullptr;
     QListWidget* frames_ = nullptr;

@@ -1,6 +1,7 @@
 #include "ui/editor_window.h"
 
 #include "platform/project_store.h"
+#include "platform/wave_export_job.h"
 #include "ui/cell_inspector.h"
 #include "ui/grid_widget.h"
 
@@ -27,17 +28,16 @@
 #include <QStatusBar>
 #include <QTableWidget>
 #include <QVBoxLayout>
-#include <QtConcurrentRun>
 
 #include <algorithm>
 
 namespace vibmory
 {
 EditorWindow::EditorWindow(DocumentStore& store, PlaybackBackend& backend,
-                           const MonotonicClock& clock,
+                           const MonotonicClock& clock, WaveExportJob& exporter,
                            PatternDocument document, QWidget* parent)
     : QMainWindow(parent), session_(std::move(document)), store_(store),
-      backend_(backend), playback_(backend, clock)
+      backend_(backend), playback_(backend, clock), exporter_(exporter)
 {
     setObjectName("editorWindow");
     resize(1100, 720);
@@ -46,21 +46,21 @@ EditorWindow::EditorWindow(DocumentStore& store, PlaybackBackend& backend,
     refreshTimer_.setInterval(25);
     connect(&refreshTimer_, &QTimer::timeout, this, [this] {
         playback_.tick();
-        if (exportDialog_ && exportState_)
-            exportDialog_->setValue(static_cast<int>(
-                exportState_->done.load() * 100 / exportState_->total.load()));
         refresh();
     });
-    connect(&exportWatcher_, &QFutureWatcher<Result<void>>::finished, this,
-            [this] {
-                const auto result = exportWatcher_.result();
+    connect(&exporter_, &WaveExportJob::progressChanged, this,
+            [this](int value) {
+                if (exportDialog_)
+                    exportDialog_->setValue(value);
+            });
+    connect(&exporter_, &WaveExportJob::finished, this,
+            [this](const Result<void>& result) {
                 if (exportDialog_)
                 {
                     exportDialog_->close();
                     exportDialog_->deleteLater();
                     exportDialog_ = nullptr;
                 }
-                exportState_.reset();
                 if (!result && result.error().code != ErrorCode::Cancelled)
                     showError(result.error());
                 else
@@ -77,9 +77,7 @@ EditorWindow::~EditorWindow()
 {
     refreshTimer_.stop();
     playback_.stop();
-    if (exportState_)
-        exportState_->cancel = true;
-    exportWatcher_.waitForFinished();
+    exporter_.cancelAndWait();
 }
 
 void EditorWindow::buildMenus()
@@ -242,14 +240,14 @@ void EditorWindow::buildEditor()
 void EditorWindow::refresh()
 {
     const bool playing = playback_.state() == PlaybackState::Playing;
-    const bool busy = playing || exportState_ != nullptr;
+    const bool busy = playing || exporter_.busy();
     editControls_->setEnabled(!busy);
     deleteFrame_->setEnabled(!busy && session_.document().frameCount() > 1);
     for (auto* action : {new_, open_, import_, export_, routing_})
         action->setEnabled(!busy);
     undo_->setEnabled(!busy && session_.canUndo());
     redo_->setEnabled(!busy && session_.canRedo());
-    play_->setEnabled(!exportState_);
+    play_->setEnabled(!exporter_.busy());
     play_->setText(playing ? tr("Stop") : tr("Play"));
     const QSignalBlocker frameBlocker(frames_);
     if (static_cast<std::size_t>(frames_->count()) !=
@@ -294,7 +292,7 @@ void EditorWindow::refresh()
                                 ? tr("Untitled")
                                 : toQString(session_.path().filename())));
     setWindowModified(session_.dirty());
-    if (playing || exportState_)
+    if (playing)
     {
         if (!refreshTimer_.isActive())
             refreshTimer_.start();
@@ -503,25 +501,20 @@ void EditorWindow::exportWave()
         return;
     if (!selected.endsWith(".wav", Qt::CaseInsensitive))
         selected += ".wav";
-    exportState_ = std::make_shared<ExportState>();
-    const auto state = exportState_;
-    exportDialog_ =
-        new QProgressDialog(tr("Rendering audio…"), tr("Cancel"), 0, 100, this);
+    exportDialog_ = new QProgressDialog(tr("Rendering audio..."), tr("Cancel"),
+                                        0, 100, this);
     exportDialog_->setWindowModality(Qt::WindowModal);
     exportDialog_->setAutoClose(false);
-    connect(exportDialog_, &QProgressDialog::canceled, this,
-            [state] { state->cancel = true; });
-    auto snapshot = session_.snapshot();
-    exportWatcher_.setFuture(
-        QtConcurrent::run([state, path = toPath(selected),
-                           document = std::move(snapshot.document)]() mutable {
-            return exportWaveFile(path, std::move(document),
-                                  [state](auto done, auto total) {
-                                      state->done = done;
-                                      state->total = total;
-                                      return !state->cancel.load();
-                                  });
-        }));
+    exportDialog_->setAutoReset(false);
+    connect(exportDialog_, &QProgressDialog::canceled, &exporter_,
+            &WaveExportJob::cancel);
+    const auto result = exporter_.start(toPath(selected), session_.snapshot());
+    if (!result)
+    {
+        exportDialog_->deleteLater();
+        exportDialog_ = nullptr;
+        showError(result.error());
+    }
     refresh();
 }
 
@@ -596,9 +589,7 @@ void EditorWindow::closeEvent(QCloseEvent* event)
     }
     playback_.stop();
     refreshTimer_.stop();
-    if (exportState_)
-        exportState_->cancel = true;
-    exportWatcher_.waitForFinished();
+    exporter_.cancelAndWait();
     event->accept();
 }
 } // namespace vibmory

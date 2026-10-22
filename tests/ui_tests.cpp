@@ -1,4 +1,5 @@
 #include "platform/project_store.h"
+#include "platform/wave_export_job.h"
 #include "ui/cell_inspector.h"
 #include "ui/editor_window.h"
 #include "ui/grid_widget.h"
@@ -11,6 +12,11 @@
 #include <QSpinBox>
 #include <QTemporaryDir>
 #include <QtTest>
+
+#include <atomic>
+#include <memory>
+#include <stdexcept>
+#include <thread>
 
 using namespace vibmory;
 
@@ -147,7 +153,8 @@ private slots:
         Store store;
         Backend backend;
         Clock clock;
-        EditorWindow window(store, backend, clock, document());
+        WaveExportJob exporter;
+        EditorWindow window(store, backend, clock, exporter, document());
         window.show();
         QCoreApplication::processEvents();
         auto* inspector = window.findChild<QGroupBox*>("cellInspector");
@@ -173,7 +180,8 @@ private slots:
         Store store;
         Backend backend;
         Clock clock;
-        EditorWindow window(store, backend, clock, document());
+        WaveExportJob exporter;
+        EditorWindow window(store, backend, clock, exporter, document());
         auto* list = window.findChild<QListWidget*>("frameList");
         window.findChild<QPushButton*>("duplicateFrameButton")->click();
         QCOMPARE(window.session().document().frameCount(), std::size_t{3});
@@ -196,7 +204,8 @@ private slots:
             Store store;
             Backend backend;
             Clock clock;
-            EditorWindow window(store, backend, clock, document());
+            WaveExportJob exporter;
+            EditorWindow window(store, backend, clock, exporter, document());
             window.findChild<QListWidget*>("frameList")->setCurrentRow(removed);
             auto* remove = window.findChild<QPushButton*>("deleteFrameButton");
             remove->click();
@@ -213,7 +222,8 @@ private slots:
         Store store;
         Backend backend;
         Clock clock;
-        EditorWindow window(store, backend, clock, document());
+        WaveExportJob exporter;
+        EditorWindow window(store, backend, clock, exporter, document());
         window.show();
         QCoreApplication::processEvents();
         const auto before = window.session().document();
@@ -232,7 +242,8 @@ private slots:
         Store store;
         Backend backend;
         Clock clock;
-        EditorWindow window(store, backend, clock, document());
+        WaveExportJob exporter;
+        EditorWindow window(store, backend, clock, exporter, document());
         const auto before = window.session().document();
         store.fail = true;
         QVERIFY(!window.loadProject("missing.vibmory"));
@@ -262,12 +273,77 @@ private slots:
         QCOMPARE(previous.readAll(), QByteArray("previous"));
     }
 
+    void asyncCancellationPreservesTheExistingFile()
+    {
+        QTemporaryDir temporary;
+        QVERIFY(temporary.isValid());
+        const auto output = temporary.filePath("cancelled.wav");
+        QFile previous(output);
+        QVERIFY(previous.open(QIODevice::WriteOnly));
+        QCOMPARE(previous.write("previous"), qint64{8});
+        previous.close();
+        auto source = document();
+        QVERIFY(source.setSettings({10, 600000, 48000}));
+        WaveExportJob job;
+        QSignalSpy completed(&job, &WaveExportJob::finished);
+        QVERIFY(job.start(toPath(output), {source, 1}));
+        QVERIFY(job.busy());
+        job.cancel();
+        QTRY_COMPARE_WITH_TIMEOUT(completed.count(), 1, 5000);
+        const auto result = completed.takeFirst().at(0).value<Result<void>>();
+        QVERIFY(!result && result.error().code == ErrorCode::Cancelled);
+        QVERIFY(!job.busy());
+        QVERIFY(previous.open(QIODevice::ReadOnly));
+        QCOMPARE(previous.readAll(), QByteArray("previous"));
+    }
+
+    void workerExceptionsBecomeRecoverableErrors()
+    {
+        WaveExportJob job([](const std::filesystem::path&, PatternDocument,
+                             const RenderProgress&) -> Result<void> {
+            throw std::runtime_error("test worker failure");
+        });
+        QSignalSpy completed(&job, &WaveExportJob::finished);
+        QVERIFY(job.start("unused.wav", {document(), 1}));
+        QTRY_COMPARE_WITH_TIMEOUT(completed.count(), 1, 5000);
+        const auto result = completed.takeFirst().at(0).value<Result<void>>();
+        QVERIFY(!result && result.error().code == ErrorCode::Io);
+        QVERIFY(result.error().message.find("test worker failure") !=
+                std::string::npos);
+        QVERIFY(!job.busy());
+    }
+
+    void aCancelledJobCanRestartWithoutStaleCompletion()
+    {
+        const auto gate = std::make_shared<std::atomic<bool>>(false);
+        WaveExportJob job(
+            [gate](const std::filesystem::path&, PatternDocument,
+                   const RenderProgress& progress) -> Result<void> {
+                while (!gate->load())
+                {
+                    if (!progress(0, 1))
+                        return Error{ErrorCode::Cancelled, "cancelled"};
+                    std::this_thread::yield();
+                }
+                return {};
+            });
+        QSignalSpy completed(&job, &WaveExportJob::finished);
+        QVERIFY(job.start("unused.wav", {document(), 1}));
+        job.cancelAndWait();
+        gate->store(true);
+        QVERIFY(job.start("unused.wav", {document(), 2}));
+        QTRY_COMPARE_WITH_TIMEOUT(completed.count(), 1, 5000);
+        QVERIFY(completed.takeFirst().at(0).value<Result<void>>());
+        QVERIFY(!job.busy());
+    }
+
     void cancelClosePreservesEdits()
     {
         Store store;
         Backend backend;
         Clock clock;
-        EditorWindow window(store, backend, clock, document());
+        WaveExportJob exporter;
+        EditorWindow window(store, backend, clock, exporter, document());
         window.show();
         QCoreApplication::processEvents();
         auto* grid = window.findChild<GridWidget*>("gridWidget");
@@ -290,7 +366,8 @@ private slots:
         Store store;
         Backend backend;
         Clock clock;
-        EditorWindow window(store, backend, clock, document());
+        WaveExportJob exporter;
+        EditorWindow window(store, backend, clock, exporter, document());
         QVERIFY(window.loadProject("saved.vibmory"));
         window.show();
         QCoreApplication::processEvents();
@@ -319,7 +396,8 @@ private slots:
         Backend backend;
         Clock clock;
         backend.fail = true;
-        EditorWindow window(store, backend, clock, document());
+        WaveExportJob exporter;
+        EditorWindow window(store, backend, clock, exporter, document());
         QTimer::singleShot(10, [] {
             if (auto* box = qobject_cast<QMessageBox*>(
                     QApplication::activeModalWidget()))
@@ -337,7 +415,8 @@ private slots:
         Store store;
         Backend backend;
         Clock clock;
-        EditorWindow window(store, backend, clock, document());
+        WaveExportJob exporter;
+        EditorWindow window(store, backend, clock, exporter, document());
         auto* list = window.findChild<QListWidget*>("frameList");
         list->setCurrentRow(1);
         auto* button = window.findChild<QPushButton*>("playButton");
