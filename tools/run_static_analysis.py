@@ -10,7 +10,10 @@ ROOT = Path(__file__).resolve().parents[1]
 build = Path(sys.argv[1] if len(sys.argv) > 1 else ROOT / "out/core-preset").resolve()
 tool = shutil.which("clang-tidy")
 if tool is None:
-    raise SystemExit("clang-tidy is required (on Ubuntu: apt install clang-tidy).")
+    raise SystemExit("Install clang-tidy 21.1.0: python -m pip install clang-tidy==21.1.0")
+version = subprocess.check_output([tool, "--version"], text=True)
+if "21.1.0" not in version:
+    raise SystemExit(f"Expected clang-tidy 21.1.0; found {version.strip()}")
 database = build / "compile_commands.json"
 if not database.is_file():
     raise SystemExit("Configure a Ninja preset with CMAKE_EXPORT_COMPILE_COMMANDS=ON first.")
