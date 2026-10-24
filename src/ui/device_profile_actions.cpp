@@ -93,11 +93,28 @@ void DeviceProfileActions::loadProfile()
                                  .arg(profile.shape.columns));
         return;
     }
+    const auto decision = reviewProfile(profile, backend_.devices(), window_);
+    if (!decision)
+        return;
+    const auto result =
+        applyDeviceProfile(session_, backend_, profile, *decision);
+    if (!result)
+        QMessageBox::critical(window_, tr("Device profile"),
+                              QString::fromStdString(result.error().message));
+    changed_();
+}
+
+std::optional<bool> DeviceProfileActions::reviewProfile(
+    const DeviceProfile& profile,
+    const std::vector<AudioDeviceDescription>& devices, QWidget* parent)
+{
+    if (!profile.validate())
+        return std::nullopt;
     QMessageBox review(
         QMessageBox::Question, tr("Apply device profile"),
         tr("Apply “%1” to this project's channel routing and gains?")
             .arg(QString::fromStdString(profile.name)),
-        QMessageBox::Apply | QMessageBox::Cancel, window_);
+        QMessageBox::Apply | QMessageBox::Cancel, parent);
     review.setObjectName("deviceProfileReviewDialog");
     review.setTextFormat(Qt::PlainText);
     review.setDefaultButton(QMessageBox::Cancel);
@@ -116,7 +133,6 @@ void DeviceProfileActions::loadProfile()
                         .arg(profile.routing.gains[channel], 0, 'g', 8);
     }
     review.setDetailedText(channels.join('\n'));
-    const auto devices = backend_.devices();
     const auto device =
         std::find_if(devices.begin(), devices.end(), [&](const auto& item) {
             return item.id == profile.outputDeviceId;
@@ -131,13 +147,7 @@ void DeviceProfileActions::loadProfile()
             tr("The profile's preferred device is unavailable or unspecified. "
                "The current output device will be retained."));
     if (review.exec() != QMessageBox::Apply)
-        return;
-    const auto result =
-        applyDeviceProfile(session_, backend_, profile,
-                           review.checkBox() && review.checkBox()->isChecked());
-    if (!result)
-        QMessageBox::critical(window_, tr("Device profile"),
-                              QString::fromStdString(result.error().message));
-    changed_();
+        return std::nullopt;
+    return review.checkBox() && review.checkBox()->isChecked();
 }
 } // namespace vibmory

@@ -94,7 +94,7 @@ Verified (software) means the implemented behavior has supporting current source
 | R65 | P3 | — Remove all Qt dependencies from the domain | Verified (software) |
 | R66 | P3 | — Introduce a custom visual theme, icons, and richer localization | Pending |
 | R67 | P3 | — Add actuator backends, calibration, and device profiles | Verified (software) |
-| R68 | P3 | — Autosave and crash recovery | Implemented / CI verification pending |
+| R68 | P3 | — Autosave and crash recovery | Verified (software) |
 | R69 | P3 | — Broaden release automation and platform coverage | Pending |
 
 ## Verification log
@@ -124,10 +124,11 @@ Verified (software) means the implemented behavior has supporting current source
 - The distribution with app-local C++ runtime was downloaded from 39807471809 and verified: SHA-256 1a25e084cd93563e87fa94bd4b45970258bf191f2e75e60f313c1d78aa306466; 75 entries, including msvcp140.dll, vcruntime140.dll and vcruntime140_1.dll.
 - No analysis checks were suppressed. LLVM 18's variant error-copy diagnostic was not reproduced under the pinned 21.1.0 analyzer; Error construction additionally requires an explicit code/message.
 - Save/export filenames now receive their default suffix inside QFileDialog before overwrite confirmation; the application does not rewrite the chosen path afterward.
-- The full objective is still open: R60 distribution metadata/notices, R66 theme/localization, R68 recovery verification, and R69 extended release delivery remain to be finished and verified. Physical channel/latency testing belongs to the user's later device check.
+- The full objective is still open: R60 distribution metadata/notices, R66 theme/localization, and R69 extended release delivery remain to be finished and verified. Physical channel/latency testing belongs to the user's later device check.
 
 ## Timeline and profile checkpoints
 
 - Run 40126245946 / c08e39c passed both jobs: durable frame IDs, version 2 save/load with version 1 migration, identical-frame reorder/undo regression, exact saved playback order, Qt model contract checks, stale/foreign drag rejection, cached thumbnail refresh, and packaged Windows launch. Windows artifact: 12573746813.
 - Device profiles passed run 40126595002 / cb5929b, including both full jobs, validated application behavior, bounded JSON corruption cases, Unicode round trip, atomic-save preservation, Doxygen, and packaged Windows launch. Windows artifact: 12573367624.
-- Recovery adds a document generation/dirty restore contract, separate atomic versioned snapshots, process leases/retention, cancellable background writes, explicit startup choices, and accepted-close cleanup. New tests exercise terminated-child stale locks, active-instance exclusion, retention, snapshot isolation, cancellation/restart, exceptions, replacement, and startup restore/discard/keep. Local core suites pass; Qt/CI verification is pending.
+- Recovery passed run 40127308000 / b46928d: both jobs, nine Windows suites, seven Linux suites, static analysis, Doxygen, and packaged launch. Tests exercise a terminated child leaving a stale process lock, active-instance exclusion, retention, immutable background snapshots, cancellation/restart, worker exceptions, project replacement, startup restore/discard/keep, and accepted window-close cleanup.
+- Downloaded profile artifact 12573367624 from 40126595002; SHA-256 9b8d021807d1cc7ae13f45a067ec6efed7d0dbd8b0e87b65e8298ac25b813b7a; 75 ZIP entries with app-local runtime/plugins. It launched locally with Qt removed from PATH (exit 0). Reviewed its editor screenshot and thumbnail timeline layout.

@@ -5,12 +5,14 @@
 #include "platform/text_file.h"
 #include "platform/wave_export_job.h"
 #include "ui/cell_inspector.h"
+#include "ui/device_profile_actions.h"
 #include "ui/editor_window.h"
 #include "ui/frame_list_model.h"
 #include "ui/grid_widget.h"
 
 #include <QAbstractItemModelTester>
 #include <QAction>
+#include <QCheckBox>
 #include <QComboBox>
 #include <QDialog>
 #include <QFile>
@@ -469,6 +471,49 @@ private slots:
         QVERIFY(!cancelled && cancelled.error().code == ErrorCode::Cancelled);
         QVERIFY(previous.open(QIODevice::ReadOnly));
         QCOMPARE(previous.readAll(), QByteArray("previous"));
+    }
+
+    void deviceProfileReviewRequiresExplicitOutputSelection()
+    {
+        const auto source = document();
+        DeviceProfile profile{"<b>Calibration</b>", source.shape(),
+                              source.routing(), "preferred"};
+        const std::vector<AudioDeviceDescription> devices{
+            {"preferred", "Preferred output"}};
+        QTimer::singleShot(0, [] {
+            auto* dialog =
+                qobject_cast<QMessageBox*>(QApplication::activeModalWidget());
+            QVERIFY(dialog);
+            QCOMPARE(dialog->objectName(),
+                     QString("deviceProfileReviewDialog"));
+            QCOMPARE(dialog->textFormat(), Qt::PlainText);
+            QCOMPARE(dialog->defaultButton(),
+                     dialog->button(QMessageBox::Cancel));
+            QVERIFY(dialog->checkBox() && !dialog->checkBox()->isChecked());
+            QVERIFY(dialog->detailedText().contains("Channel 1"));
+            dialog->checkBox()->setChecked(true);
+            dialog->button(QMessageBox::Apply)->click();
+        });
+        const auto selected =
+            DeviceProfileActions::reviewProfile(profile, devices, nullptr);
+        QVERIFY(selected && *selected);
+        QTimer::singleShot(0, [] {
+            auto* dialog =
+                qobject_cast<QMessageBox*>(QApplication::activeModalWidget());
+            QVERIFY(dialog);
+            dialog->button(QMessageBox::Cancel)->click();
+        });
+        QVERIFY(
+            !DeviceProfileActions::reviewProfile(profile, devices, nullptr));
+        QTimer::singleShot(0, [] {
+            auto* dialog =
+                qobject_cast<QMessageBox*>(QApplication::activeModalWidget());
+            QVERIFY(dialog && !dialog->checkBox());
+            dialog->button(QMessageBox::Apply)->click();
+        });
+        const auto retained =
+            DeviceProfileActions::reviewProfile(profile, {}, nullptr);
+        QVERIFY(retained && !*retained);
     }
 
     void deviceProfileRoundTripAndRejectedSavePreserveExistingFile()

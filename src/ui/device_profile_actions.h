@@ -2,10 +2,12 @@
 
 #include "application/editor_session.h"
 #include "application/playback_service.h"
+#include "domain/device_profile.h"
 
 #include <QObject>
 
 #include <functional>
+#include <optional>
 
 class QAction;
 class QMenu;
@@ -21,6 +23,9 @@ public:
                          QMenu& menu, std::function<void()> changed,
                          QWidget* parent);
     void setEnabled(bool enabled);
+    [[nodiscard]] static std::optional<bool> reviewProfile(
+        const DeviceProfile& profile,
+        const std::vector<AudioDeviceDescription>& devices, QWidget* parent);
 
 private:
     void saveProfile();

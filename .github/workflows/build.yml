@@ -32,12 +32,22 @@ jobs:
       - name: Analyze core C++ contracts
         run: python3 tools/run_static_analysis.py out/sanitized
       - name: Test
-        run: ctest --preset sanitized
+        run: ctest --preset sanitized --output-junit test-results.xml
         env:
           ASAN_OPTIONS: detect_leaks=1:strict_string_checks=1
           UBSAN_OPTIONS: print_stacktrace=1:halt_on_error=1
       - name: Generate API and architecture documentation
         run: cmake --build out/sanitized --target docs
+      - name: Upload core test results
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: linux-test-results
+          path: |
+            out/sanitized/test-results.xml
+            out/sanitized/Testing/Temporary/
+          retention-days: 14
+          if-no-files-found: ignore
 
   windows:
     name: Windows desktop and portable executable
@@ -60,7 +70,7 @@ jobs:
       - name: Build
         run: cmake --build --preset desktop --parallel 2
       - name: Core and offscreen UI tests
-        run: ctest --preset desktop
+        run: ctest --preset desktop --output-junit test-results.xml
       - name: Install runtime and plugins
         run: cmake --install out/desktop --prefix "$pwd/stage/Vibmory"
       - name: Deploy app-local C++ runtime
@@ -102,13 +112,15 @@ jobs:
           path: artifacts/*
           if-no-files-found: error
           retention-days: 30
-      - name: Upload test diagnostics
-        if: failure()
+      - name: Upload Windows test results and diagnostics
+        if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: windows-test-diagnostics
           path: |
             out/desktop/Testing/Temporary/
+            out/desktop/test-results.xml
             out/desktop/tests/*-results.xml
             artifacts/*.log
           if-no-files-found: ignore
+          retention-days: 14
