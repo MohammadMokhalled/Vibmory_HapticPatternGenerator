@@ -8,6 +8,8 @@
 #include <QMainWindow>
 #include <QTimer>
 
+#include <memory>
+
 class QAction;
 class QComboBox;
 class QDoubleSpinBox;
@@ -22,6 +24,7 @@ class GridWidget;
 class CellInspector;
 class FrameListModel;
 class DeviceProfileActions;
+class RecoveryController;
 class WaveExportJob;
 
 class EditorWindow final : public QMainWindow
@@ -39,6 +42,7 @@ public:
     [[nodiscard]] Result<void> loadProject(const std::filesystem::path& path);
     void reportBackendFailure(const QString& message);
     void playbackFinished();
+    void enableRecovery(const QString& directory, bool offerRestore);
 
 protected:
     void closeEvent(QCloseEvent* event) override;
@@ -64,6 +68,7 @@ private:
     PlaybackBackend& backend_;
     PlaybackService playback_;
     WaveExportJob& exporter_;
+    std::unique_ptr<RecoveryController> recovery_;
     QTimer refreshTimer_;
     QProgressDialog* exportDialog_ = nullptr;
     GridWidget* grid_ = nullptr;

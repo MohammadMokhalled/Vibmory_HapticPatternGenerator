@@ -192,5 +192,15 @@ void EditorSession::replace(PatternDocument document,
     savedState_ = state_.id;
     path_ = std::move(path);
     ++revision_;
+    ++documentGeneration_;
+}
+
+void EditorSession::restore(PatternDocument document,
+                            std::filesystem::path originalPath)
+{
+    replace(std::move(document), std::move(originalPath));
+    // replace() allocates a nonzero state identity. Recovery has never been
+    // explicitly saved, even when its original filename is available.
+    savedState_ = 0;
 }
 } // namespace vibmory

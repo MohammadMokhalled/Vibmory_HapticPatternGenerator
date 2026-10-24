@@ -31,6 +31,7 @@ gh run download RUN_ID --name Vibmory-windows-x64 --dir artifacts
 - Select a compatible output device and press **Play**. Playback streams a fixed snapshot; editing is locked until Stop/completion. The exact channel count/sample rate must be supported; channels are never silently downmixed.
 - **File > Export WAV** renders the same snapshot to a valid multichannel WAV without requiring an audio device. Export runs in the background, reports progress, and can be canceled.
 - Save a `.vibmory` project to preserve all reproducible settings. Save/close failures preserve the working document; ordinary saves and WAV exports publish only after successful completion.
+- Unsaved changes receive a separate recovery snapshot every 30 seconds. After an abnormal exit, startup offers Restore, Discard, or Keep. Restored work remains unsaved. See [Recovery](docs/Recovery.md) for retention and lifecycle behavior.
 
 A 2x3 grid requires six physical output channels for preview. A stereo device can preview a 1x2 grid. A larger project can still be exported on a machine without a matching audio device. Actual physical actuator/channel routing and latency must be verified on the intended device; CI uses fake audio and does not exercise physical outputs.
 

@@ -28,6 +28,10 @@ public:
     {
         return revision_;
     }
+    [[nodiscard]] std::uint64_t documentGeneration() const
+    {
+        return documentGeneration_;
+    }
     [[nodiscard]] bool dirty() const
     {
         return state_.id != savedState_;
@@ -63,6 +67,8 @@ public:
     void redo();
     void markSaved(std::filesystem::path path);
     void replace(PatternDocument document, std::filesystem::path path = {});
+    void restore(PatternDocument document,
+                 std::filesystem::path originalPath = {});
 
 private:
     struct State
@@ -79,6 +85,7 @@ private:
     std::vector<State> undo_;
     std::vector<State> redo_;
     std::uint64_t revision_ = 0;
+    std::uint64_t documentGeneration_ = 0;
     std::uint64_t nextState_ = 1;
     std::uint64_t savedState_ = 0;
     std::filesystem::path path_;

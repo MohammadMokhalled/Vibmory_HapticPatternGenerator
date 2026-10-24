@@ -7,6 +7,7 @@
 #include <QCommandLineParser>
 #include <QMessageBox>
 #include <QPixmap>
+#include <QStandardPaths>
 #include <QTimer>
 
 int main(int argc, char** argv)
@@ -25,6 +26,9 @@ int main(int argc, char** argv)
     parser.addOption({"screenshot",
                       "Save an editor preview and exit without audio.",
                       "path"});
+    parser.addOption(
+        {"no-recovery",
+         "Disable recovery snapshots and startup recovery prompts."});
     parser.addPositionalArgument("project",
                                  "Optional .vibmory project to open.");
     parser.process(application);
@@ -62,6 +66,15 @@ int main(int argc, char** argv)
                 QString::fromStdString(result.error().message));
             return 1;
         }
+    }
+    if (!parser.isSet("smoke-test") && !parser.isSet("screenshot") &&
+        !parser.isSet("no-recovery"))
+    {
+        const auto data = QStandardPaths::writableLocation(
+            QStandardPaths::AppLocalDataLocation);
+        if (!data.isEmpty())
+            window.enableRecovery(data + "/recovery",
+                                  parser.positionalArguments().isEmpty());
     }
     window.show();
     if (parser.isSet("smoke-test"))

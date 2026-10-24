@@ -1,6 +1,7 @@
 #include "persistence/project_codec.h"
 #include "platform/device_profile_store.h"
 #include "platform/project_store.h"
+#include "platform/recovery_store.h"
 #include "platform/text_file.h"
 #include "platform/wave_export_job.h"
 #include "ui/cell_inspector.h"
@@ -11,6 +12,7 @@
 #include <QAbstractItemModelTester>
 #include <QAction>
 #include <QComboBox>
+#include <QDialog>
 #include <QFile>
 #include <QGroupBox>
 #include <QJsonArray>
@@ -406,6 +408,44 @@ private slots:
         store.fail = true;
         QVERIFY(!window.loadProject("missing.vibmory"));
         QVERIFY(window.session().document() == before);
+    }
+
+    void restoredWindowCloseClearsItsOwnRecoveryFile()
+    {
+        QTemporaryDir temporary;
+        QVERIFY(temporary.isValid());
+        auto created = RecoveryFile::create(temporary.path());
+        QVERIFY(created);
+        auto file = std::move(created.value());
+        const auto path = file->path();
+        QVERIFY(writeRecoveryFile(
+            toPath(path), {document(), {}, QDateTime::currentDateTimeUtc()},
+            {}));
+        file.reset();
+        Store store;
+        Backend backend;
+        Clock clock;
+        WaveExportJob exporter;
+        EditorWindow window(store, backend, clock, exporter, document());
+        QTimer::singleShot(0, [] {
+            auto* dialog =
+                qobject_cast<QDialog*>(QApplication::activeModalWidget());
+            QVERIFY(dialog);
+            auto* restore =
+                dialog->findChild<QPushButton*>("restoreRecoveryButton");
+            QVERIFY(restore);
+            restore->click();
+        });
+        window.enableRecovery(temporary.path(), true);
+        QVERIFY(window.session().dirty());
+        QTimer::singleShot(0, [] {
+            auto* dialog =
+                qobject_cast<QMessageBox*>(QApplication::activeModalWidget());
+            QVERIFY(dialog);
+            dialog->button(QMessageBox::Discard)->click();
+        });
+        QVERIFY(window.close());
+        QVERIFY(!QFile::exists(path));
     }
 
     void atomicSaveAndCancelledExport()

@@ -7,6 +7,7 @@
 #include "ui/file_dialogs.h"
 #include "ui/frame_list_model.h"
 #include "ui/grid_widget.h"
+#include "ui/recovery_controller.h"
 
 #include <QAction>
 #include <QCloseEvent>
@@ -86,9 +87,23 @@ EditorWindow::EditorWindow(DocumentStore& store, PlaybackBackend& backend,
 
 EditorWindow::~EditorWindow()
 {
+    recovery_.reset();
     refreshTimer_.stop();
     playback_.stop();
     exporter_.cancelAndWait();
+}
+
+void EditorWindow::enableRecovery(const QString& directory, bool offerRestore)
+{
+    recovery_ = std::make_unique<RecoveryController>(session_, directory);
+    connect(recovery_.get(), &RecoveryController::warningOccurred, this,
+            [this](const QString& message) {
+                statusBar()->showMessage(tr("Recovery: %1").arg(message),
+                                         10000);
+            });
+    if (offerRestore)
+        (void)recovery_->offerRestore(this);
+    refresh();
 }
 
 void EditorWindow::buildMenus()
@@ -284,6 +299,8 @@ void EditorWindow::buildEditor()
 
 void EditorWindow::refresh()
 {
+    if (recovery_)
+        recovery_->observe();
     const bool playing = playback_.state() == PlaybackState::Playing;
     const bool busy = playing || exporter_.busy();
     profileActions_->setEnabled(!busy);
@@ -631,6 +648,8 @@ void EditorWindow::closeEvent(QCloseEvent* event)
     playback_.stop();
     refreshTimer_.stop();
     exporter_.cancelAndWait();
+    if (recovery_)
+        recovery_->clear();
     event->accept();
 }
 } // namespace vibmory

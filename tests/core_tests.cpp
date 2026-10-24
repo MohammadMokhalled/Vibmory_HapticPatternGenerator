@@ -493,6 +493,28 @@ TEST(session_saved_revision_and_edit_groups)
     CHECK(session.revision() == revision);
 }
 
+TEST(session_recovery_is_unsaved_and_replacement_has_a_distinct_generation)
+{
+    EditorSession session(makeDocument());
+    CHECK(session.selectFrame(0));
+    CHECK(session.selectCell(CellPosition{0, 0}));
+    CHECK(session.editCell({100, 500}));
+    const auto generation = session.documentGeneration();
+    const auto revision = session.revision();
+    session.restore(distinctDocument(), "original.vibmory");
+    CHECK(session.documentGeneration() == generation + 1);
+    CHECK(session.revision() > revision);
+    CHECK(session.dirty() && !session.canUndo() && !session.canRedo());
+    CHECK(session.path() == "original.vibmory");
+    CHECK(session.selectedFrame() == 0 && !session.selectedCell());
+    session.markSaved("original.vibmory");
+    CHECK(!session.dirty());
+    CHECK(session.documentGeneration() == generation + 1);
+    session.replace(makeDocument());
+    CHECK(session.documentGeneration() == generation + 2);
+    CHECK(!session.dirty() && session.path().empty());
+}
+
 class MemoryStore final : public DocumentStore
 {
 public:

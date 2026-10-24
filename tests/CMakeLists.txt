@@ -27,10 +27,12 @@ endforeach()
 
 if(VIBMORY_BUILD_GUI)
     find_package(Qt6 6.8 REQUIRED COMPONENTS Test)
-    qt_add_executable(vibmory_ui_tests ui_tests.cpp)
-    set_target_properties(vibmory_ui_tests PROPERTIES WIN32_EXECUTABLE FALSE AUTOMOC ON AUTOUIC OFF CXX_EXTENSIONS OFF)
-    target_link_libraries(vibmory_ui_tests PRIVATE vibmory_ui vibmory_platform Qt6::Test vibmory_options)
-    add_test(NAME ui COMMAND vibmory_ui_tests -platform offscreen
-        -o "${CMAKE_CURRENT_BINARY_DIR}/ui-results.xml,junitxml" -o -,txt)
-    set_tests_properties(ui PROPERTIES TIMEOUT 60 ENVIRONMENT "QT_LOGGING_RULES=qt.multimedia.*=false")
+    foreach(suite ui recovery)
+        qt_add_executable(vibmory_${suite}_tests ${suite}_tests.cpp)
+        set_target_properties(vibmory_${suite}_tests PROPERTIES WIN32_EXECUTABLE FALSE AUTOMOC ON AUTOUIC OFF CXX_EXTENSIONS OFF)
+        target_link_libraries(vibmory_${suite}_tests PRIVATE vibmory_ui vibmory_platform Qt6::Test vibmory_options)
+        add_test(NAME ${suite} COMMAND vibmory_${suite}_tests -platform offscreen
+            -o "${CMAKE_CURRENT_BINARY_DIR}/${suite}-results.xml,junitxml" -o -,txt)
+        set_tests_properties(${suite} PROPERTIES TIMEOUT 60 ENVIRONMENT "QT_LOGGING_RULES=qt.multimedia.*=false")
+    endforeach()
 endif()

@@ -7,6 +7,7 @@
 #include <QLoggingCategory>
 #include <QSaveFile>
 
+#include <algorithm>
 #include <limits>
 
 namespace vibmory
@@ -44,8 +45,9 @@ Result<std::string> readTextFile(const std::filesystem::path& path,
     return data.toStdString();
 }
 
-Result<void> writeTextFileAtomically(const std::filesystem::path& path,
-                                     std::string_view text)
+Result<void> writeTextFileAtomically(
+    const std::filesystem::path& path, std::string_view text,
+    const std::function<bool()>& continueWriting)
 {
     if (text.size() >
         static_cast<std::size_t>(std::numeric_limits<qint64>::max()))
@@ -54,8 +56,19 @@ Result<void> writeTextFileAtomically(const std::filesystem::path& path,
     file.setDirectWriteFallback(false);
     if (!file.open(QIODevice::WriteOnly))
         return fileError(file);
-    const auto size = static_cast<qint64>(text.size());
-    if (file.write(text.data(), size) != size || !file.commit())
+    for (std::size_t offset = 0; offset < text.size();)
+    {
+        if (continueWriting && !continueWriting())
+            return Error{ErrorCode::Cancelled, "File write cancelled."};
+        const auto size = std::min<std::size_t>(65536, text.size() - offset);
+        if (file.write(text.data() + offset, static_cast<qint64>(size)) !=
+            static_cast<qint64>(size))
+            return fileError(file);
+        offset += size;
+    }
+    if (continueWriting && !continueWriting())
+        return Error{ErrorCode::Cancelled, "File write cancelled."};
+    if (!file.commit())
         return fileError(file);
     return {};
 }

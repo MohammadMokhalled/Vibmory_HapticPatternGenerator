@@ -109,6 +109,6 @@ jobs:
           name: windows-test-diagnostics
           path: |
             out/desktop/Testing/Temporary/
-            out/desktop/tests/ui-results.xml
+            out/desktop/tests/*-results.xml
             artifacts/*.log
           if-no-files-found: ignore
