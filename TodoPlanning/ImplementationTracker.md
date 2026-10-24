@@ -88,12 +88,12 @@ Verified (software) means the implemented behavior has supporting current source
 | R59 | P2 | — Make repository hygiene intentional | Verified (software) |
 | R60 | P2 | — Align project metadata and preserve third-party notices | Partial / acceptance gaps |
 | R61 | P3 | — Undo/redo through editor commands | Verified (software) |
-| R62 | P3 | — Advanced timeline and stable frame identities | Implemented / CI verification pending |
+| R62 | P3 | — Advanced timeline and stable frame identities | Verified (software) |
 | R63 | P3 | — Real-time streaming and low-latency synthesis | Verified (software) |
 | R64 | P3 | — Extended fuzzing, property testing, and benchmark infrastructure | Verified (software) |
 | R65 | P3 | — Remove all Qt dependencies from the domain | Verified (software) |
 | R66 | P3 | — Introduce a custom visual theme, icons, and richer localization | Pending |
-| R67 | P3 | — Add actuator backends, calibration, and device profiles | Partial / acceptance gaps |
+| R67 | P3 | — Add actuator backends, calibration, and device profiles | Implemented / CI verification pending |
 | R68 | P3 | — Autosave and crash recovery | Pending |
 | R69 | P3 | — Broaden release automation and platform coverage | Pending |
 
@@ -114,7 +114,7 @@ Verified (software) means the implemented behavior has supporting current source
 1. Keep the final branch head green after each change and refresh the checked artifact/evidence before the completion audit.
 2. Inspector, asynchronous export job, save-path dialog policy, and document workflow have been extracted. Continue component extraction where the upcoming timeline/profile/recovery features introduce a coherent responsibility; avoid wrappers for trivial slots.
 3. Categorized diagnostics and focused Clang analysis are implemented and passed with LLVM 21.1.0. Finish the deployment license/attribution inventory and remaining item acceptance gaps. Preserve existing project rights while documenting distribution terms.
-4. Implement the remaining requested extensions: stable frame identities/model-backed timeline, device profiles, autosave/recovery, theme/localization, and tagged release/installer/signing configuration where credentials are available. Existing undo, bounded streaming, property tests/benchmark and standard C++ core already provide the other extended items.
+4. Verify device profiles and implement the remaining requested extensions: autosave/recovery, theme/localization, and tagged release/installer/signing configuration where credentials are available. Existing timeline, undo, bounded streaming, property tests/benchmark and standard C++ core provide the other extended items.
 5. Audit every requirement against current source and test/artifact evidence. Only then mark the goal complete. Physical routing and latency checks remain for the user's intended device, as requested.
 
 ## Verified foundation checkpoint
@@ -124,4 +124,9 @@ Verified (software) means the implemented behavior has supporting current source
 - The distribution with app-local C++ runtime was downloaded from 39807471809 and verified: SHA-256 1a25e084cd93563e87fa94bd4b45970258bf191f2e75e60f313c1d78aa306466; 75 entries, including msvcp140.dll, vcruntime140.dll and vcruntime140_1.dll.
 - No analysis checks were suppressed. LLVM 18's variant error-copy diagnostic was not reproduced under the pinned 21.1.0 analyzer; Error construction additionally requires an explicit code/message.
 - Save/export filenames now receive their default suffix inside QFileDialog before overwrite confirmation; the application does not rewrite the chosen path afterward.
-- The full objective is still open: R60 distribution metadata/notices, R62 timeline/frame identities, R66 theme/localization, R67 device profiles, R68 recovery, and R69 extended release delivery remain to be finished and verified. Physical channel/latency testing belongs to the user's later device check.
+- The full objective is still open: R60 distribution metadata/notices, R66 theme/localization, R67 profile verification, R68 recovery, and R69 extended release delivery remain to be finished and verified. Physical channel/latency testing belongs to the user's later device check.
+
+## Timeline and profile checkpoints
+
+- Run 40126245946 / c08e39c passed both jobs: durable frame IDs, version 2 save/load with version 1 migration, identical-frame reorder/undo regression, exact saved playback order, Qt model contract checks, stale/foreign drag rejection, cached thumbnail refresh, and packaged Windows launch. Windows artifact: 12573746813.
+- Device profiles now have validated standard C++ values/application behavior, a bounded versioned JSON adapter, atomic save, and a separate UI review/action component. Local warnings-as-errors build, seven core suites, and formatting/dependency checks pass. Qt adapter/build/package evidence is pending for this checkpoint.

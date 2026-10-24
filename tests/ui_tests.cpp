@@ -1,5 +1,7 @@
 #include "persistence/project_codec.h"
+#include "platform/device_profile_store.h"
 #include "platform/project_store.h"
+#include "platform/text_file.h"
 #include "platform/wave_export_job.h"
 #include "ui/cell_inspector.h"
 #include "ui/editor_window.h"
@@ -11,6 +13,9 @@
 #include <QComboBox>
 #include <QFile>
 #include <QGroupBox>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <QListView>
 #include <QMessageBox>
 #include <QMimeData>
@@ -424,6 +429,83 @@ private slots:
         QVERIFY(!cancelled && cancelled.error().code == ErrorCode::Cancelled);
         QVERIFY(previous.open(QIODevice::ReadOnly));
         QCOMPARE(previous.readAll(), QByteArray("previous"));
+    }
+
+    void deviceProfileRoundTripAndRejectedSavePreserveExistingFile()
+    {
+        QTemporaryDir temporary;
+        QVERIFY(temporary.isValid());
+        const auto path =
+            toPath(temporary.filePath("calibration-ä.vibprofile"));
+        const auto source = document();
+        DeviceProfile profile{"Kuue kanaliga – kalibreeritud", source.shape(),
+                              source.routing(), "aabbcc"};
+        profile.routing.gains[2] = 0.123456789012345;
+        std::swap(profile.routing.cells[0], profile.routing.cells[5]);
+        QVERIFY(saveDeviceProfile(path, profile));
+        const auto loaded = loadDeviceProfile(path);
+        QVERIFY(loaded && loaded.value() == profile);
+        const auto original = readTextFile(path, maxDeviceProfileBytes).value();
+        profile.routing.gains[2] = 2;
+        QVERIFY(!saveDeviceProfile(path, profile));
+        QCOMPARE(readTextFile(path, maxDeviceProfileBytes).value(), original);
+        profile.routing.gains[2] = 0.5;
+        profile.name = std::string(1, static_cast<char>(0xff));
+        QVERIFY(!saveDeviceProfile(path, profile));
+        QCOMPARE(readTextFile(path, maxDeviceProfileBytes).value(), original);
+        QVERIFY(!saveDeviceProfile(toPath(temporary.path()), loaded.value()));
+    }
+
+    void deviceProfileReaderRejectsMalformedSchemaAndOversizedInput()
+    {
+        QTemporaryDir temporary;
+        QVERIFY(temporary.isValid());
+        const auto path = toPath(temporary.filePath("profile.vibprofile"));
+        const auto source = document();
+        QVERIFY(saveDeviceProfile(
+            path, {"Calibration", source.shape(), source.routing(), {}}));
+        const auto original =
+            QJsonDocument::fromJson(
+                QByteArray::fromStdString(
+                    readTextFile(path, maxDeviceProfileBytes).value()))
+                .object();
+        auto rejects = [&](const QJsonObject& object) {
+            return writeTextFileAtomically(
+                       path, QJsonDocument(object).toJson().toStdString()) &&
+                   !loadDeviceProfile(path);
+        };
+        for (const auto& version :
+             {QJsonValue(2), QJsonValue(true), QJsonValue("1")})
+        {
+            auto object = original;
+            object["version"] = version;
+            QVERIFY(rejects(object));
+        }
+        auto object = original;
+        object["extra"] = 1;
+        QVERIFY(rejects(object));
+        object = original;
+        object["grid"] = QJsonObject{{"rows", 2.5}, {"columns", 3}};
+        QVERIFY(rejects(object));
+        for (const auto& cell : {QJsonValue(-1), QJsonValue(1.5),
+                                 QJsonValue(true), QJsonValue(500)})
+        {
+            object = original;
+            auto channels = object["channels"].toArray();
+            channels[0] = QJsonObject{{"cell", cell}, {"gain", 1}};
+            object["channels"] = channels;
+            QVERIFY(rejects(object));
+        }
+        object = original;
+        auto channels = object["channels"].toArray();
+        channels[0] = channels[1];
+        object["channels"] = channels;
+        QVERIFY(rejects(object));
+        QVERIFY(writeTextFileAtomically(
+            path, std::string(maxDeviceProfileBytes + 1, 'x')));
+        QVERIFY(!loadDeviceProfile(path));
+        QVERIFY(writeTextFileAtomically(path, "{truncated"));
+        QVERIFY(!loadDeviceProfile(path));
     }
 
     void asyncCancellationPreservesTheExistingFile()

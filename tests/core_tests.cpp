@@ -1,3 +1,4 @@
+#include "application/device_profiles.h"
 #include "application/document_workflow.h"
 #include "application/editor_session.h"
 #include "application/playback_service.h"
@@ -569,7 +570,28 @@ public:
     bool failStart = false;
     int starts = 0;
     int stops = 0;
+    bool failSelection = false;
+    int selections = 0;
+    std::string selected = "original";
+    std::vector<AudioDeviceDescription> choices{
+        {"original", "Original"}, {"profile-device", "Profile device"}};
     std::optional<std::uint64_t> position;
+    std::vector<AudioDeviceDescription> devices() const override
+    {
+        return choices;
+    }
+    std::string selectedDeviceId() const override
+    {
+        return selected;
+    }
+    Result<void> selectDeviceId(const std::string& id) override
+    {
+        ++selections;
+        if (failSelection)
+            return Error{ErrorCode::Device, "selection failed"};
+        selected = id;
+        return {};
+    }
     Result<void> start(const DocumentSnapshot&) override
     {
         ++starts;
@@ -595,6 +617,74 @@ public:
         return now;
     }
 };
+
+TEST(
+    session_device_profile_routing_is_undoable_and_output_selection_is_explicit)
+{
+    EditorSession session(distinctDocument());
+    FakeBackend backend;
+    const auto before = session.document();
+    auto routing = before.routing();
+    std::swap(routing.cells[0], routing.cells[5]);
+    routing.gains[2] = 0.25;
+    DeviceProfile profile{"Six channel calibration", before.shape(), routing,
+                          "profile-device"};
+    CHECK(applyDeviceProfile(session, backend, profile, false));
+    CHECK(session.document().routing() == routing);
+    CHECK(session.document().frame(0) == before.frame(0));
+    CHECK(session.document().settings() == before.settings());
+    CHECK(session.dirty());
+    CHECK(backend.selected == "original" && backend.selections == 0);
+    session.undo();
+    CHECK(session.document() == before && !session.dirty());
+    CHECK(applyDeviceProfile(session, backend, profile, true));
+    CHECK(backend.selected == "profile-device" && backend.selections == 1);
+    session.undo();
+    CHECK(session.document() == before);
+    CHECK(backend.selected == "profile-device");
+}
+
+TEST(session_invalid_or_unavailable_device_profile_never_changes_the_document)
+{
+    EditorSession session(distinctDocument());
+    FakeBackend backend;
+    const auto before = session.document();
+    DeviceProfile profile{"Calibration", before.shape(), before.routing(),
+                          "profile-device"};
+    profile.routing.gains[0] = 0.5;
+    backend.failSelection = true;
+    CHECK(!applyDeviceProfile(session, backend, profile, true));
+    CHECK(session.document() == before && !session.dirty());
+    CHECK(backend.selected == "original");
+    profile.outputDeviceId = "missing";
+    CHECK(!applyDeviceProfile(session, backend, profile, true));
+    CHECK(backend.selections == 1);
+    profile.shape = {3, 2};
+    CHECK(!applyDeviceProfile(session, backend, profile, false));
+    profile.shape = before.shape();
+    profile.routing.cells[1] = profile.routing.cells[0];
+    CHECK(!applyDeviceProfile(session, backend, profile, false));
+    CHECK(session.document() == before && session.revision() == 0);
+}
+
+TEST(domain_device_profile_rejects_invalid_metadata)
+{
+    const auto document = makeDocument();
+    DeviceProfile profile{
+        "Calibration", document.shape(), document.routing(), {}};
+    CHECK(profile.validate());
+    for (const auto& name : {std::string{}, std::string("  "),
+                             std::string("Tab\tname"), std::string(129, 'x')})
+    {
+        profile.name = name;
+        CHECK(!profile.validate());
+    }
+    profile.name = "Calibration";
+    profile.outputDeviceId = std::string(1025, 'x');
+    CHECK(!profile.validate());
+    profile.outputDeviceId = std::string("a\0b", 3);
+    CHECK(!profile.validate());
+}
 
 TEST(playback_delayed_ticks_and_exact_completion)
 {

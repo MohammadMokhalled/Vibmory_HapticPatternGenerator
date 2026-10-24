@@ -21,6 +21,7 @@ namespace vibmory
 class GridWidget;
 class CellInspector;
 class FrameListModel;
+class DeviceProfileActions;
 class WaveExportJob;
 
 class EditorWindow final : public QMainWindow
@@ -68,6 +69,7 @@ private:
     GridWidget* grid_ = nullptr;
     QListView* frames_ = nullptr;
     FrameListModel* frameModel_ = nullptr;
+    DeviceProfileActions* profileActions_ = nullptr;
     QWidget* editControls_ = nullptr;
     CellInspector* inspector_ = nullptr;
     QSpinBox* frameRate_ = nullptr;

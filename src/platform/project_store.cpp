@@ -1,6 +1,7 @@
 #include "platform/project_store.h"
 
 #include "persistence/project_codec.h"
+#include "platform/text_file.h"
 
 #include <QDebug>
 #include <QFile>
@@ -41,19 +42,7 @@ std::filesystem::path toPath(const QString& path)
 
 Result<std::string> readProjectText(const std::filesystem::path& path)
 {
-    QFile file(toQString(path));
-    if (!file.open(QIODevice::ReadOnly))
-        return fileError(file);
-    if (file.size() < 0 || file.size() > static_cast<qint64>(maxProjectBytes))
-        return Error{ErrorCode::Validation,
-                     "Project exceeds the 16 MiB input limit."};
-    const auto data = file.read(static_cast<qint64>(maxProjectBytes) + 1);
-    if (file.error() != QFileDevice::NoError)
-        return fileError(file);
-    if (data.size() > static_cast<qsizetype>(maxProjectBytes))
-        return Error{ErrorCode::Validation,
-                     "Project exceeds the 16 MiB input limit."};
-    return data.toStdString();
+    return readTextFile(path, maxProjectBytes);
 }
 
 Result<PatternDocument> QtProjectStore::load(
@@ -87,17 +76,8 @@ Result<PatternDocument> importLegacy(const std::filesystem::path& path,
 Result<void> QtProjectStore::save(const std::filesystem::path& path,
                                   const PatternDocument& document) const
 {
-    QSaveFile file(toQString(path));
-    file.setDirectWriteFallback(false);
-    if (!file.open(QIODevice::WriteOnly))
-        return fileError(file);
     const auto text = encodeProject(document);
-    if (file.write(text.data(), static_cast<qint64>(text.size())) !=
-        static_cast<qint64>(text.size()))
-        return fileError(file);
-    if (!file.commit())
-        return fileError(file);
-    return {};
+    return writeTextFileAtomically(path, text);
 }
 
 Result<void> exportWaveFile(const std::filesystem::path& path,

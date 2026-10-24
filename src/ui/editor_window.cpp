@@ -3,6 +3,7 @@
 #include "platform/project_store.h"
 #include "platform/wave_export_job.h"
 #include "ui/cell_inspector.h"
+#include "ui/device_profile_actions.h"
 #include "ui/file_dialogs.h"
 #include "ui/frame_list_model.h"
 #include "ui/grid_widget.h"
@@ -119,6 +120,14 @@ void EditorWindow::buildMenus()
     });
     routing_ = edit->addAction(tr("Channel &routing and gains…"), this,
                                &EditorWindow::configureRouting);
+    edit->addSeparator();
+    profileActions_ = new DeviceProfileActions(
+        session_, backend_, *edit,
+        [this] {
+            refreshDevices();
+            refresh();
+        },
+        this);
     auto* help = menuBar()->addMenu(tr("&Help"));
     help->addAction(tr("&About Vibmory"), this, [this] {
         QMessageBox::about(
@@ -277,6 +286,7 @@ void EditorWindow::refresh()
 {
     const bool playing = playback_.state() == PlaybackState::Playing;
     const bool busy = playing || exporter_.busy();
+    profileActions_->setEnabled(!busy);
     editControls_->setEnabled(!busy);
     deleteFrame_->setEnabled(!busy && session_.document().frameCount() > 1);
     for (auto* action : {new_, open_, import_, export_, routing_})
