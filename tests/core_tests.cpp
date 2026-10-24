@@ -135,6 +135,42 @@ TEST(domain_channel_map_and_budget_validation)
     CHECK(!document.setRouting(routing));
 }
 
+TEST(domain_frame_identities_follow_frames)
+{
+    auto document = makeDocument();
+    const auto first = document.frameId(0);
+    CHECK(document.duplicateFrame(0));
+    const auto second = document.frameId(1);
+    CHECK(first != second);
+    CHECK(document.frame(0) == document.frame(1));
+    CHECK(document.moveFrame(0, 1));
+    CHECK(document.frameId(0) == second && document.frameId(1) == first);
+    CHECK(document.removeFrame(0));
+    CHECK(document.addFrame());
+    CHECK(document.frameId(0) == first);
+    CHECK(document.frameId(1) > second);
+}
+
+TEST(domain_frame_identity_validation_is_atomic)
+{
+    auto document = distinctDocument();
+    const auto before = document;
+    for (const auto& ids :
+         {std::vector<std::uint64_t>{}, {1}, {0, 2}, {1, 1}, {1, 3}})
+    {
+        CHECK(!document.restoreFrameIds(ids, 3));
+        CHECK(document == before);
+    }
+    CHECK(!document.restoreFrameIds({std::vector<std::uint64_t>{1, 2}}, 0));
+    const auto maximum = std::numeric_limits<std::uint64_t>::max();
+    CHECK(
+        document.restoreFrameIds({std::vector<std::uint64_t>{9, 7}}, maximum));
+    const auto exhausted = document;
+    CHECK(!document.addFrame());
+    CHECK(!document.duplicateFrame(0));
+    CHECK(document == exhausted);
+}
+
 TEST(codec_complete_round_trip)
 {
     auto document = distinctDocument();
@@ -159,6 +195,48 @@ TEST(codec_rejects_corruption_and_trailing_data)
     negative.replace(negative.find("GRID 2"), 6, "GRID -2");
     CHECK(!decodeProject(negative));
     CHECK(!decodeProject(std::string(maxProjectBytes + 1, 'x')));
+}
+
+TEST(codec_frame_identity_round_trip_and_version_one_migration)
+{
+    auto document = distinctDocument();
+    CHECK(document.duplicateFrame(0));
+    CHECK(document.removeFrame(1));
+    CHECK(document.moveFrame(0, 1));
+    const auto decoded = decodeProject(encodeProject(document));
+    CHECK(decoded && decoded.value() == document);
+    auto restored = decoded.value();
+    CHECK(restored.addFrame());
+    CHECK(restored.frameId(2) == document.nextFrameId());
+
+    const auto versionOne = decodeProject(
+        "VIBMORY 1\nGRID 1 1 2\nPLAYBACK 10 1000 48000 continuous\n"
+        "ROUTING 1\n0 1\nFRAMES\n100 2000\n200 3000\nEND\n");
+    CHECK(versionOne);
+    CHECK(versionOne.value().frameId(0) == 1);
+    CHECK(versionOne.value().frameId(1) == 2);
+    CHECK(versionOne.value().nextFrameId() == 3);
+    CHECK(decodeProject(encodeProject(versionOne.value())).value() ==
+          versionOne.value());
+}
+
+TEST(codec_rejects_invalid_frame_identities)
+{
+    const auto text = encodeProject(distinctDocument());
+    for (const auto& replacement :
+         {"FRAME 0", "FRAME 1", "FRAME -1", "FRAME 18446744073709551616"})
+    {
+        auto corrupted = text;
+        corrupted.replace(corrupted.find("FRAME 2"), 7, replacement);
+        CHECK(!decodeProject(corrupted));
+    }
+    for (const auto& replacement :
+         {"NEXT_FRAME_ID 0", "NEXT_FRAME_ID 2", "NEXT_FRAME_ID -1"})
+    {
+        auto corrupted = text;
+        corrupted.replace(corrupted.find("NEXT_FRAME_ID 3"), 15, replacement);
+        CHECK(!decodeProject(corrupted));
+    }
 }
 
 TEST(codec_legacy_orientation_and_channel_compatibility)
@@ -241,6 +319,26 @@ TEST(audio_rational_timing_and_phase_policy)
     CHECK(renderer.render(samples));
     CHECK(samples[1] ==
           707); // Legacy quantization truncates rather than rounds.
+}
+
+TEST(audio_reordered_and_saved_sequence_uses_document_order)
+{
+    auto document = makeDocument({1, 1});
+    CHECK(document.setSettings({10, 200, 8000}));
+    CHECK(document.setCell(0, {0, 0}, {2000, 1000}));
+    CHECK(document.addFrame());
+    CHECK(document.setCell(1, {0, 0}, {1000, 2000}));
+    CHECK(document.moveFrame(1, 0));
+    const auto loaded = decodeProject(encodeProject(document));
+    CHECK(loaded);
+    for (const auto& source : {document, loaded.value()})
+    {
+        auto renderer = PcmRenderer::create(source).value();
+        std::vector<std::int16_t> samples(1600);
+        CHECK(renderer.render(samples).value() == samples.size());
+        CHECK(samples[1] == 1414);
+        CHECK(samples[801] == 1000);
+    }
 }
 
 TEST(audio_channel_mapping_and_calibration)
@@ -331,6 +429,28 @@ TEST(session_frame_transactions_and_undo)
     CHECK(session.document().frameCount() == 3);
     session.redo();
     CHECK(session.document().frameCount() == 2);
+}
+
+TEST(session_reordering_identical_frames_is_a_real_undoable_edit)
+{
+    auto document = makeDocument();
+    CHECK(document.addFrame());
+    EditorSession session(document);
+    const auto selectedId = session.document().frameId(0);
+    CHECK(session.selectCell(CellPosition{1, 2}));
+    CHECK(session.moveFrame(0, 1));
+    CHECK(session.dirty());
+    CHECK(session.revision() == 1);
+    CHECK(session.selectedFrame() == 1);
+    CHECK(session.document().frameId(1) == selectedId);
+    CHECK(session.selectedCell() == CellPosition{1, 2});
+    session.undo();
+    CHECK(session.selectedFrame() == 0);
+    CHECK(session.document() == document);
+    CHECK(!session.dirty());
+    session.redo();
+    CHECK(session.selectedFrame() == 1);
+    CHECK(session.document().frameId(1) == selectedId);
 }
 
 TEST(session_deletes_first_middle_and_last_by_identity)

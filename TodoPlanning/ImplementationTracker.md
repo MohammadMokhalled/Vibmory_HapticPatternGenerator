@@ -88,7 +88,7 @@ Verified (software) means the implemented behavior has supporting current source
 | R59 | P2 | — Make repository hygiene intentional | Verified (software) |
 | R60 | P2 | — Align project metadata and preserve third-party notices | Partial / acceptance gaps |
 | R61 | P3 | — Undo/redo through editor commands | Verified (software) |
-| R62 | P3 | — Advanced timeline and stable frame identities | Pending |
+| R62 | P3 | — Advanced timeline and stable frame identities | Implemented / CI verification pending |
 | R63 | P3 | — Real-time streaming and low-latency synthesis | Verified (software) |
 | R64 | P3 | — Extended fuzzing, property testing, and benchmark infrastructure | Verified (software) |
 | R65 | P3 | — Remove all Qt dependencies from the domain | Verified (software) |

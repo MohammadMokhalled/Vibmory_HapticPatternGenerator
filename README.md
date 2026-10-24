@@ -24,7 +24,7 @@ gh run download RUN_ID --name Vibmory-windows-x64 --dir artifacts
 
 - **File > New project** creates a grid with named rows and columns.
 - Select a cell with the mouse or arrow keys, then set frequency in Hz and amplitude from 0 to 32767. Escape clears selection. Zero frequency produces silence.
-- Add/duplicate/delete frames or move them earlier/later. Undo/redo applies to document changes, including routing and settings. Dragging is disabled until a model-backed drag operation is implemented.
+- Add/duplicate/delete frames, move them earlier/later, or drag them between rows in the thumbnail timeline. Undo/redo applies to document changes, including reordering, routing, and settings. Frame identity and selection follow the moved frame.
 - Set frame rate, total duration, sample rate, and phase policy. The sequence repeats for the specified total duration; duration is not a repeat count.
 - **Edit > Channel routing and gains** maps each physical output channel to a logical cell. New documents use row-major order. Gains are multiplicative values between 0 and 1.
 - Select a compatible output device and press **Play**. Playback streams a fixed snapshot; editing is locked until Stop/completion. The exact channel count/sample rate must be supported; channels are never silently downmixed.
@@ -35,7 +35,7 @@ A 2x3 grid requires six physical output channels for preview. A stereo device ca
 
 ## Project and legacy formats
 
-New `.vibmory` files use the bounded, versioned [project format](docs/ProjectFormat.md). They store every cell, frame ordering, frame rate, duration, sample rate, phase mode, channel permutation, and gains. Device identity is machine-specific and is not stored in a project.
+New `.vibmory` files use the bounded, versioned [project format](docs/ProjectFormat.md). Version 2 stores every cell, stable frame identities and ordering, frame rate, duration, sample rate, phase mode, channel permutation, and gains. Version 1 projects remain readable and are upgraded when saved. Device identity is machine-specific and is not stored in a project.
 
 Use **File > Import legacy CSV** for old files. The original writer used `frame count, rows, columns`, while the original loader interpreted dimensions differently. Import requires an explicit orientation rather than silently transposing rectangular grids. Legacy imports retain column-major physical channel routing and the legacy absolute-phase policy. Save imported documents as `.vibmory` to make these choices explicit.
 

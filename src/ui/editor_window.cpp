@@ -4,6 +4,7 @@
 #include "platform/wave_export_job.h"
 #include "ui/cell_inspector.h"
 #include "ui/file_dialogs.h"
+#include "ui/frame_list_model.h"
 #include "ui/grid_widget.h"
 
 #include <QAction>
@@ -20,7 +21,7 @@
 #include <QHeaderView>
 #include <QInputDialog>
 #include <QLabel>
-#include <QListWidget>
+#include <QListView>
 #include <QLoggingCategory>
 #include <QMenuBar>
 #include <QMessageBox>
@@ -138,11 +139,31 @@ void EditorWindow::buildEditor()
     layout->setContentsMargins(0, 0, 0, 0);
     auto* sequence = new QVBoxLayout;
     auto* frameLabel = new QLabel(tr("Frames"));
-    frames_ = new QListWidget;
+    frames_ = new QListView;
+    frameModel_ = new FrameListModel(
+        [this](std::uint64_t id, int target, std::uint64_t revision) {
+            if (revision != session_.revision() || exporter_.busy() ||
+                (playback_.state() != PlaybackState::Idle &&
+                 playback_.state() != PlaybackState::Error))
+                return false;
+            const auto& document = session_.document();
+            for (std::size_t index = 0; index < document.frameCount(); ++index)
+                if (document.frameId(index) == id)
+                    return static_cast<bool>(session_.moveFrame(
+                        index, static_cast<std::size_t>(target)));
+            return false;
+        },
+        frames_);
+    frames_->setModel(frameModel_);
     frames_->setObjectName("frameList");
     frames_->setAccessibleName(tr("Frame sequence"));
-    frames_->setDragDropMode(QAbstractItemView::NoDragDrop);
-    frames_->setMaximumWidth(160);
+    frames_->setDragDropMode(QAbstractItemView::InternalMove);
+    frames_->setDefaultDropAction(Qt::MoveAction);
+    frames_->setDragDropOverwriteMode(false);
+    frames_->setSelectionMode(QAbstractItemView::SingleSelection);
+    frames_->setIconSize({80, 48});
+    frames_->setSpacing(3);
+    frames_->setMaximumWidth(200);
     sequence->addWidget(frameLabel);
     sequence->addWidget(frames_);
     auto addFrameButton = [this, sequence](const QString& text, auto command) {
@@ -221,10 +242,14 @@ void EditorWindow::buildEditor()
     setCentralWidget(central);
     connect(play_, &QPushButton::clicked, this, &EditorWindow::togglePlayback);
     connect(reload, &QPushButton::clicked, this, &EditorWindow::refreshDevices);
-    connect(frames_, &QListWidget::currentRowChanged, this, [this](int row) {
-        if (row >= 0)
-            apply(session_.selectFrame(static_cast<std::size_t>(row)));
-    });
+    connect(frameModel_, &FrameListModel::documentReordered, this,
+            &EditorWindow::refresh);
+    connect(frames_->selectionModel(), &QItemSelectionModel::currentChanged,
+            this, [this](const QModelIndex& current) {
+                if (current.isValid() && !frameModel_->moving())
+                    apply(session_.selectFrame(
+                        static_cast<std::size_t>(current.row())));
+            });
     connect(grid_, &GridWidget::cellSelected, this,
             [this](int row, int column) {
                 apply(session_.selectCell(
@@ -260,15 +285,10 @@ void EditorWindow::refresh()
     redo_->setEnabled(!busy && session_.canRedo());
     play_->setEnabled(!exporter_.busy());
     play_->setText(playing ? tr("Stop") : tr("Play"));
-    const QSignalBlocker frameBlocker(frames_);
-    if (static_cast<std::size_t>(frames_->count()) !=
-        session_.document().frameCount())
-    {
-        frames_->clear();
-        for (std::size_t i = 0; i < session_.document().frameCount(); ++i)
-            frames_->addItem(tr("Frame %1").arg(i + 1));
-    }
-    frames_->setCurrentRow(static_cast<int>(session_.selectedFrame()));
+    const QSignalBlocker frameBlocker(frames_->selectionModel());
+    frameModel_->setDocument(session_.document(), session_.revision());
+    frames_->setCurrentIndex(
+        frameModel_->index(static_cast<int>(session_.selectedFrame())));
     const auto settings = session_.document().settings();
     const QSignalBlocker rateBlocker(frameRate_), durationBlocker(duration_),
         sampleBlocker(sampleRate_), phaseBlocker(phase_);

@@ -4,6 +4,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <span>
 #include <vector>
 
 namespace vibmory
@@ -89,6 +90,14 @@ public:
                                             CellPosition pos) const;
     [[nodiscard]] const std::vector<CellStimulus>& frame(
         std::size_t index) const;
+    [[nodiscard]] std::uint64_t frameId(std::size_t index) const;
+    [[nodiscard]] std::uint64_t nextFrameId() const
+    {
+        return nextFrameId_;
+    }
+    // Restore a complete validated identity table when decoding a project.
+    [[nodiscard]] Result<void> restoreFrameIds(
+        std::span<const std::uint64_t> ids, std::uint64_t nextId);
     [[nodiscard]] Result<void> setCell(std::size_t frame, CellPosition pos,
                                        CellStimulus value);
     [[nodiscard]] Result<void> setSettings(PlaybackSettings settings);
@@ -106,7 +115,14 @@ private:
     [[nodiscard]] Result<void> canInsertFrame() const;
 
     GridShape shape_;
-    std::vector<std::vector<CellStimulus>> frames_;
+    struct Frame
+    {
+        std::uint64_t id;
+        std::vector<CellStimulus> cells;
+        bool operator==(const Frame&) const = default;
+    };
+    std::vector<Frame> frames_;
+    std::uint64_t nextFrameId_ = 2;
     PlaybackSettings settings_;
     ChannelRouting routing_;
 };

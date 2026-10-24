@@ -11,7 +11,7 @@
 class QAction;
 class QComboBox;
 class QDoubleSpinBox;
-class QListWidget;
+class QListView;
 class QProgressDialog;
 class QPushButton;
 class QSpinBox;
@@ -20,6 +20,7 @@ namespace vibmory
 {
 class GridWidget;
 class CellInspector;
+class FrameListModel;
 class WaveExportJob;
 
 class EditorWindow final : public QMainWindow
@@ -65,7 +66,8 @@ private:
     QTimer refreshTimer_;
     QProgressDialog* exportDialog_ = nullptr;
     GridWidget* grid_ = nullptr;
-    QListWidget* frames_ = nullptr;
+    QListView* frames_ = nullptr;
+    FrameListModel* frameModel_ = nullptr;
     QWidget* editControls_ = nullptr;
     CellInspector* inspector_ = nullptr;
     QSpinBox* frameRate_ = nullptr;

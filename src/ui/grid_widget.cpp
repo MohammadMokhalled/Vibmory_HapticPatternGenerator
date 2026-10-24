@@ -8,6 +8,14 @@
 
 namespace vibmory
 {
+QColor stimulusColor(CellStimulus cell)
+{
+    const auto hue = static_cast<int>(cell.frequencyHz * 200 / maxFrequencyHz);
+    const auto saturation =
+        static_cast<int>(cell.amplitude * 190 / maxAmplitude);
+    return QColor::fromHsv(hue, saturation, 245);
+}
+
 std::optional<CellPosition> GridGeometry::cellAt(QRectF bounds, GridShape shape,
                                                  QPointF point)
 {
@@ -76,12 +84,8 @@ void GridWidget::paintEvent(QPaintEvent*)
                         column];
             const auto bounds =
                 GridGeometry::cellRect(QRectF(rect()), shape_, position);
-            const auto hue =
-                static_cast<int>(cell.frequencyHz * 200 / maxFrequencyHz);
-            const auto saturation =
-                static_cast<int>(cell.amplitude * 190 / maxAmplitude);
-            const auto color = QColor::fromHsv(hue, saturation, 245);
-            painter.fillRect(bounds.adjusted(1, 1, -1, -1), color);
+            painter.fillRect(bounds.adjusted(1, 1, -1, -1),
+                             stimulusColor(cell));
             painter.setPen(palette().mid().color());
             painter.drawRect(bounds.adjusted(0, 0, -1, -1));
             if (bounds.width() > 95 && bounds.height() > 55)

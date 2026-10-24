@@ -7,8 +7,12 @@
 
 #include <optional>
 
+class QColor;
+
 namespace vibmory
 {
+[[nodiscard]] QColor stimulusColor(CellStimulus cell);
+
 class GridGeometry
 {
 public:

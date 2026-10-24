@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <limits>
 #include <numeric>
 #include <stdexcept>
 
@@ -67,7 +68,7 @@ Result<void> ChannelRouting::validate(std::size_t count) const
 }
 
 PatternDocument::PatternDocument(GridShape shape)
-    : shape_(shape), frames_(1, std::vector<CellStimulus>(shape.cellCount())),
+    : shape_(shape), frames_{{1, std::vector<CellStimulus>(shape.cellCount())}},
       routing_(ChannelRouting::identity(shape.cellCount()))
 {
 }
@@ -91,13 +92,34 @@ Result<CellStimulus> PatternDocument::cell(std::size_t frameIndex,
     if (!contains(frameIndex, pos))
         return invalid("Frame or cell index is outside the document.");
     return frames_[frameIndex]
-                  [static_cast<std::size_t>(pos.row) * shape_.columns +
-                   pos.column];
+        .cells[static_cast<std::size_t>(pos.row) * shape_.columns + pos.column];
 }
 
 const std::vector<CellStimulus>& PatternDocument::frame(std::size_t index) const
 {
-    return frames_.at(index);
+    return frames_.at(index).cells;
+}
+
+std::uint64_t PatternDocument::frameId(std::size_t index) const
+{
+    return frames_.at(index).id;
+}
+
+Result<void> PatternDocument::restoreFrameIds(
+    std::span<const std::uint64_t> ids, std::uint64_t nextId)
+{
+    if (ids.size() != frames_.size() || nextId == 0)
+        return invalid("Frame identity count or next identity is invalid.");
+    std::vector<std::uint64_t> sorted(ids.begin(), ids.end());
+    std::sort(sorted.begin(), sorted.end());
+    if (sorted.front() == 0 || sorted.back() >= nextId ||
+        std::adjacent_find(sorted.begin(), sorted.end()) != sorted.end())
+        return invalid("Frame identities must be unique, positive, and below "
+                       "the next identity.");
+    for (std::size_t index = 0; index < ids.size(); ++index)
+        frames_[index].id = ids[index];
+    nextFrameId_ = nextId;
+    return {};
 }
 
 Result<void> PatternDocument::setCell(std::size_t frameIndex, CellPosition pos,
@@ -109,8 +131,9 @@ Result<void> PatternDocument::setCell(std::size_t frameIndex, CellPosition pos,
         value.frequencyHz * 2 >= settings_.sampleRate)
         return invalid("Cell values exceed the amplitude, frequency, or "
                        "sample-rate limits.");
-    frames_[frameIndex][static_cast<std::size_t>(pos.row) * shape_.columns +
-                        pos.column] = value;
+    frames_[frameIndex]
+        .cells[static_cast<std::size_t>(pos.row) * shape_.columns +
+               pos.column] = value;
     return {};
 }
 
@@ -119,7 +142,7 @@ Result<void> PatternDocument::setSettings(PlaybackSettings settings)
     if (auto result = settings.validate(); !result)
         return result;
     for (const auto& frameValues : frames_)
-        for (const auto& value : frameValues)
+        for (const auto& value : frameValues.cells)
             if (value.frequencyHz * 2 >= settings.sampleRate)
                 return invalid("A cell frequency is too high for the requested "
                                "sample rate.");
@@ -140,6 +163,8 @@ Result<void> PatternDocument::setRouting(ChannelRouting routing)
 
 Result<void> PatternDocument::canInsertFrame() const
 {
+    if (nextFrameId_ == std::numeric_limits<std::uint64_t>::max())
+        return invalid("Frame identities are exhausted.");
     if (frames_.size() >= maxFrames ||
         (frames_.size() + 1) * shape_.cellCount() > maxDocumentCells)
         return invalid("The document's frame/cell budget would be exceeded.");
@@ -150,7 +175,9 @@ Result<void> PatternDocument::addFrame()
 {
     if (auto result = canInsertFrame(); !result)
         return result;
-    frames_.emplace_back(shape_.cellCount());
+    frames_.push_back(
+        {nextFrameId_, std::vector<CellStimulus>(shape_.cellCount())});
+    ++nextFrameId_;
     return {};
 }
 
@@ -160,9 +187,11 @@ Result<void> PatternDocument::duplicateFrame(std::size_t index)
         return invalid("Cannot duplicate an unknown frame.");
     if (auto result = canInsertFrame(); !result)
         return result;
-    const auto copy = frames_[index];
+    auto copy = frames_[index];
+    copy.id = nextFrameId_;
     frames_.insert(frames_.begin() + static_cast<std::ptrdiff_t>(index + 1),
                    copy);
+    ++nextFrameId_;
     return {};
 }
 

@@ -20,12 +20,13 @@ flowchart LR
 
 ## State and ownership
 
-- `PatternDocument` owns validated rows/columns, stimulus frames, settings, and explicit channel routing. It has no selected frame/cell, colors, timers, mutexes, file paths, or devices.
+- `PatternDocument` owns validated rows/columns, stimulus frames with durable document-scoped identities, settings, and explicit channel routing. It has no selected frame/cell, colors, timers, mutexes, file paths, or devices.
 - `EditorSession` owns the editable document, selection, monotonic revision, save identity, and bounded undo/redo. Commands apply to a candidate state and publish only after success. Selection changes do not dirty the document.
 - `DocumentWorkflow` owns document publication and saved-revision policy through a storage port. Failed reads never publish; failed saves never clear dirty state. Saving an earlier snapshot cannot mark newer edits as saved.
 - `PlaybackService` owns an immutable snapshot and playback state. A backend supplies processed sample position; a monotonic-clock fallback exists for backends without one. A UI timer requests projection updates and never defines elapsed frame count.
 - `GridWidget` owns only a one-frame numeric view projection. Geometry uses column=x, row=y and floating cell rectangles, including remainder pixels. Paint events are pure.
 - `CellInspector` owns its controls and emits edit intentions. Its programmatic refresh blocks command signals, including transitions back to zero values. The editor applies those intentions through its session.
+- `FrameListModel` projects frame IDs, labels, and cached thumbnails into a standard list view. Drag reorder invokes the same transactional session command as move buttons, then publishes Qt row-move notifications. Refresh blocks selection commands. Foreign or stale drag payloads are rejected using a model token and monotonic document revision; a failed command leaves the projection unchanged. Only edited cell values invalidate a thumbnail during ordinary refresh.
 - `QtAudioBackend` owns its sink and sequential PCM source. The stream owns a renderer snapshot and serves bounded blocks. Preview has no temporary files and no independently generated stale audio.
 - `WaveExportJob` owns the asynchronous export future, cancellation/progress state, and exception boundary. It accepts a snapshot and a replaceable export operation; it never reads mutable UI/session objects. Cancellation preserves the destination through the file adapter's atomic commit.
 - The executable constructs store, backend, clock, exporter, and editor in lifetime order. The editor stops playback and cancels/joins its export job before its session is destroyed. Qt parents own child widgets; smart pointers own non-parented sink/stream objects.
@@ -52,7 +53,7 @@ The backend's asynchronous error/completion signals reach the window through que
 
 Qt 6.8 is the minimum GUI baseline; CI builds 6.8.3 on Windows x64. Qt 5's raw QAudioOutput API was removed rather than hidden behind a misleading package selector. The pure core remains standard C++20 so it can be tested without Qt.
 
-The canonical format is deliberately a small versioned text grammar, not permissive ad hoc CSV. It preserves all rendering inputs. Legacy CSV has a dedicated strict reader and an explicit orientation argument. Its column-major audio channel order is preserved in a saved permutation. New documents use row-major channels. A phase policy is saved explicitly so changing frequencies is reproducible.
+The canonical format is deliberately a small versioned text grammar, not permissive ad hoc CSV. Version 2 preserves frame identities and the allocation counter alongside all rendering inputs; the reader also accepts version 1 and assigns sequential identities. Legacy CSV has a dedicated strict reader and an explicit orientation argument. Its column-major audio channel order is preserved in a saved permutation. New documents use row-major channels. A phase policy is saved explicitly so changing frequencies is reproducible.
 
 Saves and exports use QSaveFile with direct-write fallback disabled. Open validates the complete candidate before replacing a working project. Export failure/cancel never commits. Unsaved user changes are guarded on normal New/Open/Close navigation.
 

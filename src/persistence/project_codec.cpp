@@ -89,8 +89,9 @@ std::string encodeProject(const PatternDocument& document)
     output.imbue(std::locale::classic());
     const auto shape = document.shape();
     const auto settings = document.settings();
-    output << "VIBMORY 1\nGRID " << shape.rows << ' ' << shape.columns << ' '
-           << document.frameCount() << "\nPLAYBACK " << settings.frameRate
+    output << "VIBMORY 2\nGRID " << shape.rows << ' ' << shape.columns << ' '
+           << document.frameCount() << "\nNEXT_FRAME_ID "
+           << document.nextFrameId() << "\nPLAYBACK " << settings.frameRate
            << ' ' << settings.durationMs << ' ' << settings.sampleRate << ' '
            << (settings.phase == PhasePolicy::Continuous ? "continuous"
                                                          : "legacy")
@@ -101,8 +102,11 @@ std::string encodeProject(const PatternDocument& document)
                << document.routing().gains[i] << '\n';
     output << "FRAMES\n";
     for (std::size_t index = 0; index < document.frameCount(); ++index)
+    {
+        output << "FRAME " << document.frameId(index) << '\n';
         for (const auto cell : document.frame(index))
             output << cell.frequencyHz << ' ' << cell.amplitude << '\n';
+    }
     output << "END\n";
     return output.str();
 }
@@ -112,9 +116,11 @@ Result<PatternDocument> decodeProject(std::string_view text)
     if (text.size() > maxProjectBytes)
         return parseError("Project exceeds the 16 MiB input limit.");
     Tokens input(text);
-    if (!input.expect("VIBMORY") || !input.expect("1"))
-        return parseError(
-            "Unsupported project signature or version (expected VIBMORY 1).");
+    if (!input.expect("VIBMORY"))
+        return parseError("Invalid project signature.");
+    const auto version = input.next();
+    if (version != "1" && version != "2")
+        return parseError("Unsupported project version (expected 1 or 2).");
     if (!input.expect("GRID"))
         return parseError("Missing GRID section.");
     auto rows = input.numeric<std::uint32_t>("rows");
@@ -129,6 +135,16 @@ Result<PatternDocument> decodeProject(std::string_view text)
     if (frameCount.value() == 0 || frameCount.value() > maxFrames ||
         frameCount.value() * document.shape().cellCount() > maxDocumentCells)
         return parseError("Frame count exceeds the document budget.");
+    std::uint64_t nextFrameId = 0;
+    if (version == "2")
+    {
+        if (!input.expect("NEXT_FRAME_ID"))
+            return parseError("Missing NEXT_FRAME_ID section.");
+        const auto id = input.numeric<std::uint64_t>("next frame identity");
+        if (!id)
+            return id.error();
+        nextFrameId = id.value();
+    }
     if (!input.expect("PLAYBACK"))
         return parseError("Missing PLAYBACK section.");
     auto rate = input.numeric<std::uint32_t>("frame rate");
@@ -164,11 +180,22 @@ Result<PatternDocument> decodeProject(std::string_view text)
         return result.error();
     if (!input.expect("FRAMES"))
         return parseError("Missing FRAMES section.");
+    std::vector<std::uint64_t> frameIds;
+    frameIds.reserve(frameCount.value());
     for (std::size_t frame = 0; frame < frameCount.value(); ++frame)
     {
         if (frame != 0)
             if (auto result = document.addFrame(); !result)
                 return result.error();
+        if (version == "2")
+        {
+            if (!input.expect("FRAME"))
+                return parseError("Missing FRAME marker.");
+            const auto id = input.numeric<std::uint64_t>("frame identity");
+            if (!id)
+                return id.error();
+            frameIds.push_back(id.value());
+        }
         for (std::uint32_t row = 0; row < rows.value(); ++row)
             for (std::uint32_t column = 0; column < columns.value(); ++column)
             {
@@ -191,6 +218,10 @@ Result<PatternDocument> decodeProject(std::string_view text)
     if (!input.expect("END") || !input.next().empty())
         return parseError(
             "Missing END marker or unexpected trailing project content.");
+    if (version == "2")
+        if (auto result = document.restoreFrameIds(frameIds, nextFrameId);
+            !result)
+            return parseError(result.error().message);
     return document;
 }
 

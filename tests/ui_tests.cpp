@@ -1,14 +1,19 @@
+#include "persistence/project_codec.h"
 #include "platform/project_store.h"
 #include "platform/wave_export_job.h"
 #include "ui/cell_inspector.h"
 #include "ui/editor_window.h"
+#include "ui/frame_list_model.h"
 #include "ui/grid_widget.h"
 
+#include <QAbstractItemModelTester>
+#include <QAction>
 #include <QComboBox>
 #include <QFile>
 #include <QGroupBox>
-#include <QListWidget>
+#include <QListView>
 #include <QMessageBox>
+#include <QMimeData>
 #include <QPointer>
 #include <QPushButton>
 #include <QSpinBox>
@@ -208,8 +213,8 @@ private slots:
         QCOMPARE(window.findChild<QSpinBox*>("frequencySpinBox")->value(), 150);
         QCOMPARE(window.session().revision(), std::uint64_t{0});
         QVERIFY(!window.session().dirty());
-        auto* list = window.findChild<QListWidget*>("frameList");
-        list->setCurrentRow(1);
+        auto* list = window.findChild<QListView*>("frameList");
+        list->setCurrentIndex(list->model()->index(1, 0));
         QVERIFY(!window.session().selectedCell());
         QCOMPARE(window.session().revision(), std::uint64_t{0});
         QVERIFY(!window.findChild<QGroupBox*>("cellInspector")->isEnabled());
@@ -222,16 +227,16 @@ private slots:
         Clock clock;
         WaveExportJob exporter;
         EditorWindow window(store, backend, clock, exporter, document());
-        auto* list = window.findChild<QListWidget*>("frameList");
+        auto* list = window.findChild<QListView*>("frameList");
         window.findChild<QPushButton*>("duplicateFrameButton")->click();
         QCOMPARE(window.session().document().frameCount(), std::size_t{3});
-        QCOMPARE(list->currentRow(), 1);
+        QCOMPARE(list->currentIndex().row(), 1);
         QCOMPARE(
             window.session().document().cell(2, {1, 2}).value().frequencyHz,
             250U);
         window.findChild<QPushButton*>("deleteFrameButton")->click();
         QCOMPARE(window.session().document().frameCount(), std::size_t{2});
-        QCOMPARE(list->count(), 2);
+        QCOMPARE(list->model()->rowCount(), 2);
         QCOMPARE(
             window.session().document().cell(1, {1, 2}).value().frequencyHz,
             250U);
@@ -246,7 +251,8 @@ private slots:
             Clock clock;
             WaveExportJob exporter;
             EditorWindow window(store, backend, clock, exporter, document());
-            window.findChild<QListWidget*>("frameList")->setCurrentRow(removed);
+            auto* list = window.findChild<QListView*>("frameList");
+            list->setCurrentIndex(list->model()->index(removed, 0));
             auto* remove = window.findChild<QPushButton*>("deleteFrameButton");
             remove->click();
             QCOMPARE(window.session().document().frameCount(), std::size_t{1});
@@ -255,6 +261,113 @@ private slots:
                 removed == 0 ? 250U : 150U);
             QVERIFY(!remove->isEnabled());
         }
+    }
+
+    void timelineReorderPreservesIdentitySelectionAndUndo()
+    {
+        Store store;
+        Backend backend;
+        Clock clock;
+        WaveExportJob exporter;
+        EditorWindow window(store, backend, clock, exporter, document());
+        auto* list = window.findChild<QListView*>("frameList");
+        auto* model = qobject_cast<FrameListModel*>(list->model());
+        QVERIFY(model);
+        QAbstractItemModelTester tester(
+            model, QAbstractItemModelTester::FailureReportingMode::QtTest);
+        const auto id = window.session().document().frameId(0);
+        const auto preview =
+            model->index(0).data(Qt::DecorationRole).value<QIcon>();
+        QVERIFY(!preview.isNull());
+        QSignalSpy moved(model, &QAbstractItemModel::rowsMoved);
+        std::unique_ptr<QMimeData> drag(model->mimeData({model->index(0)}));
+        QVERIFY(model->dropMimeData(drag.get(), Qt::MoveAction, 2, 0, {}));
+        QCOMPARE(moved.count(), 1);
+        QCOMPARE(window.session().selectedFrame(), std::size_t{1});
+        QCOMPARE(list->currentIndex().row(), 1);
+        QCOMPARE(window.session().document().frameId(1), id);
+        QCOMPARE(model->index(1).data(Qt::UserRole).toULongLong(),
+                 static_cast<qulonglong>(id));
+        QVERIFY(window.session().dirty());
+        const auto saved =
+            decodeProject(encodeProject(window.session().document()));
+        QVERIFY(saved && saved.value().frameId(1) == id);
+        // A drag captured before an edit must never act on a new revision.
+        QVERIFY(!model->dropMimeData(drag.get(), Qt::MoveAction, 0, 0, {}));
+        for (auto* action : window.findChildren<QAction*>())
+            if (action->shortcut() == QKeySequence(QKeySequence::Undo))
+                action->trigger();
+        QCOMPARE(window.session().document().frameId(0), id);
+        QCOMPARE(list->currentIndex().row(), 0);
+        QVERIFY(!window.session().dirty());
+        QCOMPARE(model->index(0)
+                     .data(Qt::DecorationRole)
+                     .value<QIcon>()
+                     .pixmap(80, 48)
+                     .toImage(),
+                 preview.pixmap(80, 48).toImage());
+    }
+
+    void timelineRejectsForeignMalformedAndRejectedCommands()
+    {
+        auto source = document();
+        int requests = 0;
+        FrameListModel model([&](auto, auto, auto) {
+            ++requests;
+            return false;
+        });
+        model.setDocument(source, 10);
+        QAbstractItemModelTester tester(
+            &model, QAbstractItemModelTester::FailureReportingMode::QtTest);
+        FrameListModel foreign({}, nullptr);
+        foreign.setDocument(source, 10);
+        std::unique_ptr<QMimeData> foreignDrag(
+            foreign.mimeData({foreign.index(0)}));
+        QVERIFY(
+            !model.dropMimeData(foreignDrag.get(), Qt::MoveAction, 2, 0, {}));
+        QMimeData malformed;
+        malformed.setData("application/x-vibmory-frame", QByteArray(101, 'x'));
+        QVERIFY(!model.canDropMimeData(&malformed, Qt::MoveAction, 2, 0, {}));
+        std::unique_ptr<QMimeData> drag(model.mimeData({model.index(0)}));
+        QVERIFY(!model.dropMimeData(drag.get(), Qt::CopyAction, 2, 0, {}));
+        QVERIFY(!model.moveRows({}, 0, 1, {}, 1));
+        QVERIFY(!model.moveRows({}, 0, 2, {}, 2));
+        QCOMPARE(requests, 0);
+        QSignalSpy moved(&model, &QAbstractItemModel::rowsMoved);
+        QVERIFY(!model.dropMimeData(drag.get(), Qt::MoveAction, 2, 0, {}));
+        QCOMPARE(requests, 1);
+        QCOMPARE(moved.count(), 0);
+        QCOMPARE(model.index(0).data(Qt::UserRole).toULongLong(),
+                 static_cast<qulonglong>(source.frameId(0)));
+        model.setDocument(source, 11);
+        QVERIFY(!model.dropMimeData(drag.get(), Qt::MoveAction, 2, 0, {}));
+        QCOMPARE(requests, 1);
+    }
+
+    void timelineRefreshOnlyInvalidatesChangedThumbnails()
+    {
+        auto source = document();
+        FrameListModel model({});
+        model.setDocument(source, 0);
+        QSignalSpy changed(&model, &QAbstractItemModel::dataChanged);
+        QSignalSpy reset(&model, &QAbstractItemModel::modelReset);
+        const auto unchanged =
+            model.index(1).data(Qt::DecorationRole).value<QIcon>().cacheKey();
+        const auto edited =
+            model.index(0).data(Qt::DecorationRole).value<QIcon>().cacheKey();
+        model.setDocument(source, 0);
+        QCOMPARE(changed.count(), 0);
+        QCOMPARE(reset.count(), 0);
+        QVERIFY(source.setCell(0, {0, 0}, {200, 5000}));
+        model.setDocument(source, 1);
+        QCOMPARE(changed.count(), 1);
+        QCOMPARE(reset.count(), 0);
+        QCOMPARE(
+            model.index(1).data(Qt::DecorationRole).value<QIcon>().cacheKey(),
+            unchanged);
+        QVERIFY(
+            model.index(0).data(Qt::DecorationRole).value<QIcon>().cacheKey() !=
+            edited);
     }
 
     void paintingIsPure()
@@ -446,7 +559,7 @@ private slots:
         window.findChild<QPushButton*>("playButton")->click();
         QCOMPARE(window.findChild<QPushButton*>("playButton")->text(),
                  QString("Play"));
-        QVERIFY(window.findChild<QListWidget*>("frameList")->isEnabled());
+        QVERIFY(window.findChild<QListView*>("frameList")->isEnabled());
         QVERIFY(!window.session().dirty());
     }
 
@@ -495,8 +608,8 @@ private slots:
         Clock clock;
         WaveExportJob exporter;
         EditorWindow window(store, backend, clock, exporter, document());
-        auto* list = window.findChild<QListWidget*>("frameList");
-        list->setCurrentRow(1);
+        auto* list = window.findChild<QListView*>("frameList");
+        list->setCurrentIndex(list->model()->index(1, 0));
         auto* button = window.findChild<QPushButton*>("playButton");
         button->click();
         QCOMPARE(button->text(), QString("Stop"));
