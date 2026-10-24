@@ -26,6 +26,7 @@ class FrameListModel;
 class DeviceProfileActions;
 class RecoveryController;
 class WaveExportJob;
+class UiPreferences;
 
 class EditorWindow final : public QMainWindow
 {
@@ -43,6 +44,7 @@ public:
     void reportBackendFailure(const QString& message);
     void playbackFinished();
     void enableRecovery(const QString& directory, bool offerRestore);
+    void enablePreferences(UiPreferences& preferences);
 
 protected:
     void closeEvent(QCloseEvent* event) override;
@@ -62,6 +64,7 @@ private:
     void exportWave();
     void configureRouting();
     void refreshDevices();
+    void refreshIcons();
 
     EditorSession session_;
     DocumentWorkflow documents_;
@@ -91,5 +94,6 @@ private:
     QAction* import_ = nullptr;
     QAction* export_ = nullptr;
     QAction* routing_ = nullptr;
+    QAction* save_ = nullptr;
 };
 } // namespace vibmory

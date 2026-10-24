@@ -22,7 +22,9 @@ jobs:
       - name: Install pinned formatter
         run: python3 -m pip install clang-format==21.1.0 clang-tidy==21.1.0
       - name: Formatting and module boundaries
-        run: python3 tools/check_quality.py
+        run: |
+          python3 tools/check_quality.py
+          python3 tools/check_translations.py
       - name: Install documentation tool
         run: sudo apt-get update -qq && sudo apt-get install -y doxygen
       - name: Configure without Qt
@@ -65,6 +67,8 @@ jobs:
           arch: win64_msvc2022_64
           modules: qtmultimedia
           cache: true
+      - name: Verify translation extraction
+        run: python tools/check_translations.py --lupdate lupdate
       - name: Configure
         run: cmake --preset desktop
       - name: Build
@@ -99,6 +103,12 @@ jobs:
           $preview = Start-Process -FilePath "$pwd/stage/Vibmory/Vibmory.exe" -ArgumentList '--screenshot', "$pwd/artifacts/editor.png" -PassThru -WindowStyle Hidden -RedirectStandardOutput "$pwd/artifacts/preview.stdout.log" -RedirectStandardError "$pwd/artifacts/preview.stderr.log"
           if (-not $preview.WaitForExit(30000)) { $preview.Kill(); throw 'Editor preview did not exit.' }
           if ($preview.ExitCode -ne 0 -or -not (Test-Path artifacts/editor.png)) { throw 'Editor preview failed.' }
+          foreach ($variant in @(@{ Name = 'editor-light-en'; Theme = 'light'; Language = 'en' }, @{ Name = 'editor-dark-de'; Theme = 'dark'; Language = 'de' })) {
+            $previewPath = "$pwd/artifacts/$($variant.Name).png"
+            $variantProcess = Start-Process -FilePath "$pwd/stage/Vibmory/Vibmory.exe" -ArgumentList '--screenshot', $previewPath, '--theme', $variant.Theme, '--language', $variant.Language -PassThru -WindowStyle Hidden -RedirectStandardOutput "$pwd/artifacts/$($variant.Name).stdout.log" -RedirectStandardError "$pwd/artifacts/$($variant.Name).stderr.log"
+            if (-not $variantProcess.WaitForExit(30000)) { $variantProcess.Kill(); throw "Preview timed out: $($variant.Name)" }
+            if ($variantProcess.ExitCode -ne 0 -or -not (Test-Path $previewPath)) { throw "Preview failed: $($variant.Name)" }
+          }
       - name: Create ZIP and checksum
         shell: pwsh
         run: |

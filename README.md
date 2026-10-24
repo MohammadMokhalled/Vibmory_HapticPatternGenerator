@@ -32,6 +32,7 @@ gh run download RUN_ID --name Vibmory-windows-x64 --dir artifacts
 - **File > Export WAV** renders the same snapshot to a valid multichannel WAV without requiring an audio device. Export runs in the background, reports progress, and can be canceled.
 - Save a `.vibmory` project to preserve all reproducible settings. Save/close failures preserve the working document; ordinary saves and WAV exports publish only after successful completion.
 - Unsaved changes receive a separate recovery snapshot every 30 seconds. After an abnormal exit, startup offers Restore, Discard, or Keep. Restored work remains unsaved. See [Recovery](docs/Recovery.md) for retention and lifecycle behavior.
+- **View** selects System/Light/Dark themes and the language for the next launch (English/German/System). These preferences do not change the project. See [Appearance and language](docs/AppearanceAndLanguage.md).
 
 A 2x3 grid requires six physical output channels for preview. A stereo device can preview a 1x2 grid. A larger project can still be exported on a machine without a matching audio device. Actual physical actuator/channel routing and latency must be verified on the intended device; CI uses fake audio and does not exercise physical outputs.
 
@@ -46,7 +47,7 @@ Use **File > Import legacy CSV** for old files. The original writer used `frame 
 Requirements for the desktop build:
 
 - CMake 3.24+, Ninja, and a C++20 compiler.
-- Qt 6.8+ with Core, Gui, Widgets, Concurrent, Multimedia, and Qt Test when testing is enabled. CI pins Qt 6.8.3's `msvc2022_64` package and uses the Windows 2025 hosted MSVC x64 toolchain.
+- Qt 6.8+ with Core, Gui, Widgets, Concurrent, Multimedia, LinguistTools, and Qt Test when testing is enabled. CI pins Qt 6.8.3's `msvc2022_64` package and uses the Windows 2025 hosted MSVC x64 toolchain.
 - A matching compiler/architecture for Qt's binaries. On Windows, use a developer command prompt and set `CMAKE_PREFIX_PATH` to the Qt compiler-specific installation directory.
 
 ```powershell

@@ -9,6 +9,7 @@
 #include "ui/editor_window.h"
 #include "ui/frame_list_model.h"
 #include "ui/grid_widget.h"
+#include "ui/ui_preferences.h"
 
 #include <QAbstractItemModelTester>
 #include <QAction>
@@ -25,6 +26,7 @@
 #include <QMimeData>
 #include <QPointer>
 #include <QPushButton>
+#include <QSettings>
 #include <QSpinBox>
 #include <QTemporaryDir>
 #include <QtTest>
@@ -179,6 +181,43 @@ private slots:
         QCOMPARE(selections.count(), count);
         QTest::keyClick(&grid, Qt::Key_Escape);
         QCOMPARE(cleared.count(), 1);
+    }
+
+    void presentationPreferencesDoNotEditOrResetTheSession()
+    {
+        QTemporaryDir temporary;
+        QVERIFY(temporary.isValid());
+        QSettings settings(temporary.filePath("preferences.ini"),
+                           QSettings::IniFormat);
+        UiPreferences preferences(settings);
+        QVERIFY(preferences.initialize("light", "en"));
+        Store store;
+        Backend backend;
+        Clock clock;
+        WaveExportJob exporter;
+        EditorWindow window(store, backend, clock, exporter, document());
+        window.enablePreferences(preferences);
+        auto* grid = window.findChild<GridWidget*>("gridWidget");
+        grid->cellSelected(1, 2);
+        const auto before = window.session().document();
+        const auto revision = window.session().revision();
+        auto* dark = window.findChild<QAction*>("theme_dark");
+        QVERIFY(dark);
+        dark->trigger();
+        QCOMPARE(preferences.theme(), ColorTheme::Dark);
+        auto* german = window.findChild<QAction*>("language_de");
+        QVERIFY(german);
+        german->trigger();
+        QCOMPARE(preferences.language(), QString("de"));
+        QCOMPARE(preferences.appliedLanguage(), QString("en"));
+        QVERIFY(window.session().document() == before);
+        QCOMPARE(window.session().revision(), revision);
+        QVERIFY(window.session().selectedCell() == (CellPosition{1, 2}));
+        QVERIFY(!window.session().dirty());
+        QVERIFY(!window.findChild<QPushButton*>("playButton")->icon().isNull());
+        QVERIFY(!window.findChild<QPushButton*>("moveEarlierButton")
+                     ->icon()
+                     .isNull());
     }
 
     void deviceRefreshDoesNotSwitchThePhysicalOutput()

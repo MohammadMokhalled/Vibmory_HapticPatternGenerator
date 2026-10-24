@@ -27,7 +27,7 @@ endforeach()
 
 if(VIBMORY_BUILD_GUI)
     find_package(Qt6 6.8 REQUIRED COMPONENTS Test)
-    foreach(suite ui recovery)
+    foreach(suite ui recovery preferences)
         qt_add_executable(vibmory_${suite}_tests ${suite}_tests.cpp)
         set_target_properties(vibmory_${suite}_tests PROPERTIES WIN32_EXECUTABLE FALSE AUTOMOC ON AUTOUIC OFF CXX_EXTENSIONS OFF)
         target_link_libraries(vibmory_${suite}_tests PRIVATE vibmory_ui vibmory_platform Qt6::Test vibmory_options)

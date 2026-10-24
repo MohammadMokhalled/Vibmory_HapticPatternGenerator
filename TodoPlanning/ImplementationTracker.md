@@ -92,7 +92,7 @@ Verified (software) means the implemented behavior has supporting current source
 | R63 | P3 | — Real-time streaming and low-latency synthesis | Verified (software) |
 | R64 | P3 | — Extended fuzzing, property testing, and benchmark infrastructure | Verified (software) |
 | R65 | P3 | — Remove all Qt dependencies from the domain | Verified (software) |
-| R66 | P3 | — Introduce a custom visual theme, icons, and richer localization | Pending |
+| R66 | P3 | — Introduce a custom visual theme, icons, and richer localization | Implemented / CI verification pending |
 | R67 | P3 | — Add actuator backends, calibration, and device profiles | Verified (software) |
 | R68 | P3 | — Autosave and crash recovery | Verified (software) |
 | R69 | P3 | — Broaden release automation and platform coverage | Pending |
@@ -112,9 +112,9 @@ Verified (software) means the implemented behavior has supporting current source
 ## Next implementation stages (still required)
 
 1. Keep the final branch head green after each change and refresh the checked artifact/evidence before the completion audit.
-2. Inspector, asynchronous export job, save-path dialog policy, and document workflow have been extracted. Continue component extraction where the upcoming timeline/profile/recovery features introduce a coherent responsibility; avoid wrappers for trivial slots.
+2. Inspector, asynchronous export job, save-path dialog policy, document workflow, timeline model, profile actions, and recovery controller have been extracted. Preserve these responsibilities while completing presentation and release work.
 3. Categorized diagnostics and focused Clang analysis are implemented and passed with LLVM 21.1.0. Finish the deployment license/attribution inventory and remaining item acceptance gaps. Preserve existing project rights while documenting distribution terms.
-4. Verify device profiles and implement the remaining requested extensions: autosave/recovery, theme/localization, and tagged release/installer/signing configuration where credentials are available. Existing timeline, undo, bounded streaming, property tests/benchmark and standard C++ core provide the other extended items.
+4. Verify theme/localization and finish tagged release/installer/signing configuration where credentials are available. Existing timeline, profiles, recovery, undo, bounded streaming, property tests/benchmark and standard C++ core provide the other extended items.
 5. Audit every requirement against current source and test/artifact evidence. Only then mark the goal complete. Physical routing and latency checks remain for the user's intended device, as requested.
 
 ## Verified foundation checkpoint
@@ -132,3 +132,5 @@ Verified (software) means the implemented behavior has supporting current source
 - Device profiles passed run 40126595002 / cb5929b, including both full jobs, validated application behavior, bounded JSON corruption cases, Unicode round trip, atomic-save preservation, Doxygen, and packaged Windows launch. Windows artifact: 12573367624.
 - Recovery passed run 40127308000 / b46928d: both jobs, nine Windows suites, seven Linux suites, static analysis, Doxygen, and packaged launch. Tests exercise a terminated child leaving a stale process lock, active-instance exclusion, retention, immutable background snapshots, cancellation/restart, worker exceptions, project replacement, startup restore/discard/keep, and accepted window-close cleanup.
 - Downloaded profile artifact 12573367624 from 40126595002; SHA-256 9b8d021807d1cc7ae13f45a067ec6efed7d0dbd8b0e87b65e8298ac25b813b7a; 75 ZIP entries with app-local runtime/plugins. It launched locally with Qt removed from PATH (exit 0). Reviewed its editor screenshot and thumbnail timeline layout.
+- Run 40127642913 / 775687f passed all jobs. Downloaded and parsed successful JUnit reports: seven Linux suites, nine Windows suites, 26 UI cases and seven recovery cases plus fixtures, zero failures/errors/skips. Downloaded Windows artifact 12573114829; SHA-256 676023566be6de4c2cbeeb7b84b38d223d0a30c67011a938efb0c0e06ed02391; 75 entries. The extracted executable launched locally without Qt on PATH and exited 0.
+- Presentation adds system/light/dark palettes, standard action icons, persistent isolated UI preferences, and a 118-message German UI catalog with Qt dialog translations. Source/catalog checks pass locally; Qt extraction, contrast/preference/UI tests, and packaged English/light and German/dark previews are pending CI verification.

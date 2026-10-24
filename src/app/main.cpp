@@ -2,13 +2,19 @@
 #include "platform/qt_audio_backend.h"
 #include "platform/wave_export_job.h"
 #include "ui/editor_window.h"
+#include "ui/ui_preferences.h"
 
 #include <QApplication>
 #include <QCommandLineParser>
+#include <QDebug>
 #include <QMessageBox>
 #include <QPixmap>
+#include <QSettings>
 #include <QStandardPaths>
+#include <QTemporaryDir>
 #include <QTimer>
+
+#include <memory>
 
 int main(int argc, char** argv)
 {
@@ -29,9 +35,45 @@ int main(int argc, char** argv)
     parser.addOption(
         {"no-recovery",
          "Disable recovery snapshots and startup recovery prompts."});
+    parser.addOption({"theme",
+                      "Override this launch's theme: system, light, dark.",
+                      "theme"});
+    parser.addOption({"language",
+                      "Override this launch's UI language: system, en, de.",
+                      "language"});
     parser.addPositionalArgument("project",
                                  "Optional .vibmory project to open.");
     parser.process(application);
+    const bool automated =
+        parser.isSet("smoke-test") || parser.isSet("screenshot");
+    std::unique_ptr<QTemporaryDir> isolatedSettings;
+    std::unique_ptr<QSettings> settings;
+    if (automated)
+    {
+        isolatedSettings = std::make_unique<QTemporaryDir>();
+        if (!isolatedSettings->isValid())
+            return 1;
+        settings = std::make_unique<QSettings>(
+            isolatedSettings->filePath("preferences.ini"),
+            QSettings::IniFormat);
+    }
+    else
+        settings = std::make_unique<QSettings>();
+    vibmory::UiPreferences preferences(*settings);
+    if (const auto result = preferences.initialize(parser.value("theme"),
+                                                   parser.value("language"));
+        !result)
+    {
+        if (automated)
+        {
+            qCritical().noquote()
+                << QString::fromStdString(result.error().message);
+            return 1;
+        }
+        QMessageBox::critical(nullptr, "Vibmory",
+                              QString::fromStdString(result.error().message));
+        return 1;
+    }
     vibmory::QtProjectStore store;
     vibmory::QtAudioBackend backend;
     vibmory::QtClock clock;
@@ -41,6 +83,7 @@ int main(int argc, char** argv)
         return 1;
     vibmory::EditorWindow window(store, backend, clock, exporter,
                                  std::move(initial.value()));
+    window.enablePreferences(preferences);
     QObject::connect(
         &backend, &vibmory::QtAudioBackend::failed, &window,
         [&backend, &window](const QString& message, quint64 generation) {
@@ -67,8 +110,7 @@ int main(int argc, char** argv)
             return 1;
         }
     }
-    if (!parser.isSet("smoke-test") && !parser.isSet("screenshot") &&
-        !parser.isSet("no-recovery"))
+    if (!automated && !parser.isSet("no-recovery"))
     {
         const auto data = QStandardPaths::writableLocation(
             QStandardPaths::AppLocalDataLocation);

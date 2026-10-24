@@ -8,6 +8,7 @@
 #include "ui/frame_list_model.h"
 #include "ui/grid_widget.h"
 #include "ui/recovery_controller.h"
+#include "ui/ui_preferences.h"
 
 #include <QAction>
 #include <QCloseEvent>
@@ -32,10 +33,12 @@
 #include <QSignalBlocker>
 #include <QSpinBox>
 #include <QStatusBar>
+#include <QStyle>
 #include <QTableWidget>
 #include <QVBoxLayout>
 
 #include <algorithm>
+#include <utility>
 
 namespace vibmory
 {
@@ -83,6 +86,7 @@ EditorWindow::EditorWindow(DocumentStore& store, PlaybackBackend& backend,
             });
     refreshDevices();
     refresh();
+    refreshIcons();
 }
 
 EditorWindow::~EditorWindow()
@@ -106,6 +110,46 @@ void EditorWindow::enableRecovery(const QString& directory, bool offerRestore)
     refresh();
 }
 
+void EditorWindow::enablePreferences(UiPreferences& preferences)
+{
+    if (findChild<QMenu*>("viewMenu"))
+        return;
+    auto* view = new QMenu(tr("&View"), this);
+    view->setObjectName("viewMenu");
+    menuBar()->insertMenu(menuBar()->actions().last(), view);
+    preferences.populateMenu(*view);
+    connect(&preferences, &UiPreferences::themeChanged, this,
+            &EditorWindow::refreshIcons);
+    connect(&preferences, &UiPreferences::notice, this,
+            [this](const QString& message) {
+                statusBar()->showMessage(message, 8000);
+            });
+}
+
+void EditorWindow::refreshIcons()
+{
+    new_->setIcon(style()->standardIcon(QStyle::SP_FileIcon));
+    open_->setIcon(style()->standardIcon(QStyle::SP_DialogOpenButton));
+    save_->setIcon(style()->standardIcon(QStyle::SP_DialogSaveButton));
+    import_->setIcon(style()->standardIcon(QStyle::SP_ArrowDown));
+    export_->setIcon(style()->standardIcon(QStyle::SP_ArrowUp));
+    undo_->setIcon(style()->standardIcon(QStyle::SP_ArrowBack));
+    redo_->setIcon(style()->standardIcon(QStyle::SP_ArrowForward));
+    const std::pair<const char*, QStyle::StandardPixmap> icons[] = {
+        {"addFrameButton", QStyle::SP_FileIcon},
+        {"duplicateFrameButton", QStyle::SP_FileLinkIcon},
+        {"deleteFrameButton", QStyle::SP_TrashIcon},
+        {"moveEarlierButton", QStyle::SP_ArrowUp},
+        {"moveLaterButton", QStyle::SP_ArrowDown},
+        {"refreshDevicesButton", QStyle::SP_BrowserReload}};
+    for (const auto& [name, icon] : icons)
+        findChild<QPushButton*>(name)->setIcon(style()->standardIcon(icon));
+    play_->setIcon(style()->standardIcon(
+        playback_.state() == PlaybackState::Playing ? QStyle::SP_MediaStop
+                                                    : QStyle::SP_MediaPlay));
+    setWindowIcon(style()->standardIcon(QStyle::SP_MediaVolume));
+}
+
 void EditorWindow::buildMenus()
 {
     auto* file = menuBar()->addMenu(tr("&File"));
@@ -116,12 +160,12 @@ void EditorWindow::buildMenus()
     import_ = file->addAction(tr("Import legacy &CSV…"), this,
                               [this] { openProject(true); });
     file->addSeparator();
-    file->addAction(tr("&Save"), QKeySequence::Save, this,
-                    [this] { (void)saveProject(); });
+    save_ = file->addAction(tr("&Save"), QKeySequence::Save, this,
+                            [this] { (void)saveProject(); });
     file->addAction(tr("Save &as…"), QKeySequence::SaveAs, this,
                     [this] { (void)saveProject(true); });
-    export_ = file->addAction(tr("Export &WAV…"), QKeySequence(tr("Ctrl+E")),
-                              this, &EditorWindow::exportWave);
+    export_ = file->addAction(tr("Export &WAV…"), QKeySequence("Ctrl+E"), this,
+                              &EditorWindow::exportWave);
     file->addSeparator();
     file->addAction(tr("E&xit"), QKeySequence::Quit, this, &QWidget::close);
     auto* edit = menuBar()->addMenu(tr("&Edit"));
@@ -209,12 +253,12 @@ void EditorWindow::buildEditor()
         const auto index = session_.selectedFrame();
         if (index > 0)
             apply(session_.moveFrame(index, index - 1));
-    });
+    })->setObjectName("moveEarlierButton");
     addFrameButton(tr("Move later"), [this] {
         const auto index = session_.selectedFrame();
         if (index + 1 < session_.document().frameCount())
             apply(session_.moveFrame(index, index + 1));
-    });
+    })->setObjectName("moveLaterButton");
     layout->addLayout(sequence);
     grid_ = new GridWidget;
     layout->addWidget(grid_, 1);
@@ -312,6 +356,8 @@ void EditorWindow::refresh()
     redo_->setEnabled(!busy && session_.canRedo());
     play_->setEnabled(!exporter_.busy());
     play_->setText(playing ? tr("Stop") : tr("Play"));
+    play_->setIcon(style()->standardIcon(playing ? QStyle::SP_MediaStop
+                                                 : QStyle::SP_MediaPlay));
     const QSignalBlocker frameBlocker(frames_->selectionModel());
     frameModel_->setDocument(session_.document(), session_.revision());
     frames_->setCurrentIndex(
