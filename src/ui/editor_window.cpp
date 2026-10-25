@@ -310,11 +310,12 @@ void EditorWindow::buildEditor()
     auto* settings = new QGroupBox(tr("Playback settings"));
     auto* form = new QFormLayout(settings);
     frameRate_ = new QSpinBox;
-    frameRate_->setRange(1, 240);
+    frameRate_->setRange(static_cast<int>(minFrameRate),
+                         static_cast<int>(maxFrameRate));
     frameRate_->setObjectName("frameRateSpinBox");
     duration_ = new QDoubleSpinBox;
     duration_->setDecimals(3);
-    duration_->setRange(0.001, 600);
+    duration_->setRange(minDurationMs / 1000.0, maxDurationMs / 1000.0);
     duration_->setSuffix(tr(" s"));
     sampleRate_ = new QComboBox;
     for (int rate : {8000, 16000, 22050, 44100, 48000, 96000, 192000})

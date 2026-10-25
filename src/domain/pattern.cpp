@@ -24,11 +24,11 @@ Result<void> GridShape::validate() const
 
 Result<void> PlaybackSettings::validate() const
 {
-    if (frameRate == 0 || frameRate > 240)
+    if (frameRate < minFrameRate || frameRate > maxFrameRate)
         return invalid("Frame rate must be between 1 and 240 frames/second.");
-    if (durationMs == 0 || durationMs > 600000)
+    if (durationMs < minDurationMs || durationMs > maxDurationMs)
         return invalid("Duration must be between 1 ms and 10 minutes.");
-    if (sampleRate < 8000 || sampleRate > 192000)
+    if (sampleRate < minSampleRate || sampleRate > maxSampleRate)
         return invalid("Sample rate must be between 8000 and 192000 Hz.");
     if (phase != PhasePolicy::Continuous &&
         phase != PhasePolicy::LegacyAbsolute)

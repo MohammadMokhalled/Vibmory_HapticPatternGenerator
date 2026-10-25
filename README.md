@@ -85,6 +85,8 @@ On Linux, `cmake --preset sanitized`, `cmake --build --preset sanitized`, and `c
 
 Read [Architecture](docs/Architecture.md), [Project format](docs/ProjectFormat.md), [the original refactoring audit](TodoPlanning/RefactoringAudit.md), and [the live implementation tracker](TodoPlanning/ImplementationTracker.md).
 
+See [Contributing](CONTRIBUTING.md) for naming, units, thread/error contracts, validation, and dependency/review guidance, and [Completion audit](TodoPlanning/CompletionAudit.md) for the requirement-by-requirement evidence.
+
 Keep document rules in `domain`, editor/playback coordination in `application`, numeric audio rendering in `audio`, codecs in `persistence`, Qt adapters in `platform`, and widgets in `ui`. `app/main.cpp` owns and wires the desktop lifetime. No worker reads a mutable editor session and painting never advances playback.
 
 Use clang-format 21.1.0 for project C++; keep semantic changes separate from large mechanical changes. Add behavioral regressions for changed invariants and error paths. Do not silently change channel order, file interpretation, timing, or waveform semantics in a cleanup commit.
@@ -93,7 +95,7 @@ Run `python tools/check_quality.py` to check formatting and module boundaries. I
 
 Install `clang-tidy==21.1.0` and run `python tools/run_static_analysis.py out/core-preset` after configuring a Ninja preset to analyze the core. The Visual Studio project generator does not produce the compilation database this command needs. CI pins both LLVM tools to 21.1.0 rather than relying on different OS defaults.
 
-Diagnostic categories are `vibmory.storage`, `vibmory.export`, and `vibmory.ui`. Set `QT_LOGGING_TO_CONSOLE=1` and capture standard error when investigating a failure. Normal playback does not log every sample, repaint, or mouse action.
+Diagnostic categories are `vibmory.storage`, `vibmory.export`, `vibmory.ui`, and `vibmory.recovery`. Set `QT_LOGGING_TO_CONSOLE=1` and capture standard error when investigating a failure. Normal playback does not log every sample, repaint, or mouse action.
 
 The `codec_properties` test runs 500 generated complete round trips and 10,000 reproducible parser mutations. `independent_wave_decode` uses Python 3.12+ to independently verify mono, stereo, and multichannel exports. CI also runs the editor's save/open/export workflow against the deployed runtime without developer Qt paths. For an informational renderer benchmark, configure with `VIBMORY_BUILD_BENCHMARKS=ON` and run `vibmory_render_benchmark`; speed is not a hardware-independent pass/fail gate.
 

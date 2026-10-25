@@ -109,6 +109,24 @@ TEST(domain_invalid_shapes_indexes_and_values)
     CHECK(!document.setSettings({10, 1000, 8000}));
 }
 
+TEST(domain_timing_and_frame_count_limits_have_valid_boundaries)
+{
+    auto document = makeDocument({1, 1});
+    CHECK(document.setSettings({240, 600000, 192000}));
+    CHECK(document.setSettings({1, 1, 8000}));
+    for (const auto settings :
+         {PlaybackSettings{241, 1, 8000}, PlaybackSettings{1, 600001, 8000},
+          PlaybackSettings{1, 1, 7999}, PlaybackSettings{1, 1, 192001},
+          PlaybackSettings{1, 1, 8000, static_cast<PhasePolicy>(99)}})
+        CHECK(!document.setSettings(settings));
+    for (std::size_t frame = 1; frame < 1024; ++frame)
+        CHECK(document.addFrame());
+    const auto before = document;
+    CHECK(!document.addFrame());
+    CHECK(!document.duplicateFrame(0));
+    CHECK(document == before);
+}
+
 TEST(domain_frame_operations_preserve_order)
 {
     auto document = distinctDocument();

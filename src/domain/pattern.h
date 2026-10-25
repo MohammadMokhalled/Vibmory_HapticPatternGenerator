@@ -15,6 +15,12 @@ inline constexpr std::size_t maxDocumentCells = 262144;
 inline constexpr std::uint64_t maxOutputBytes = 512ULL * 1024 * 1024;
 inline constexpr std::uint32_t maxFrequencyHz = 22000;
 inline constexpr std::uint32_t maxAmplitude = 32767;
+inline constexpr std::uint32_t minFrameRate = 1;
+inline constexpr std::uint32_t maxFrameRate = 240;
+inline constexpr std::uint32_t minDurationMs = 1;
+inline constexpr std::uint32_t maxDurationMs = 600000;
+inline constexpr std::uint32_t minSampleRate = 8000;
+inline constexpr std::uint32_t maxSampleRate = 192000;
 
 struct GridShape
 {

@@ -161,7 +161,7 @@ jobs:
         run: |
           $probeDirectory = Join-Path $env:RUNNER_TEMP 'vibmory-deployed-ui'
           New-Item -ItemType Directory -Path $probeDirectory -ErrorAction Stop | Out-Null
-          Copy-Item out/desktop/tests/vibmory_ui_tests.exe $probeDirectory
+          Copy-Item out/desktop/vibmory_ui_tests.exe $probeDirectory
           Copy-Item "$env:QT_ROOT_DIR/bin/Qt6Test.dll" $probeDirectory
           $env:QT_PLUGIN_PATH = "$pwd/stage/Vibmory/plugins"
           $env:QT_QPA_PLATFORM_PLUGIN_PATH = "$pwd/stage/Vibmory/plugins/platforms"
