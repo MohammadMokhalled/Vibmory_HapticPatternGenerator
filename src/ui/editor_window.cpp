@@ -387,6 +387,11 @@ void EditorWindow::refresh()
     profileActions_->setEnabled(!busy);
     editControls_->setEnabled(!busy);
     deleteFrame_->setEnabled(!busy && session_.document().frameCount() > 1);
+    findChild<QPushButton*>("moveEarlierButton")
+        ->setEnabled(!busy && session_.selectedFrame() > 0);
+    findChild<QPushButton*>("moveLaterButton")
+        ->setEnabled(!busy && session_.selectedFrame() + 1 <
+                                  session_.document().frameCount());
     for (auto* action : {new_, open_, import_, export_, routing_})
         action->setEnabled(!busy);
     undo_->setEnabled(!busy && session_.canUndo());

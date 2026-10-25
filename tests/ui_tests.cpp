@@ -336,6 +336,33 @@ private slots:
         }
     }
 
+    void moveActionsReflectTheCurrentSequenceBoundaries()
+    {
+        Store store;
+        Backend backend;
+        Clock clock;
+        WaveExportJob exporter;
+        auto initial = PatternDocument::create({2, 3});
+        QVERIFY(initial);
+        EditorWindow window(store, backend, clock, exporter,
+                            std::move(initial.value()));
+        auto* earlier = window.findChild<QPushButton*>("moveEarlierButton");
+        auto* later = window.findChild<QPushButton*>("moveLaterButton");
+        QVERIFY(!earlier->isEnabled() && !later->isEnabled());
+        window.findChild<QPushButton*>("addFrameButton")->click();
+        QCOMPARE(window.session().selectedFrame(), std::size_t{1});
+        QVERIFY(earlier->isEnabled() && !later->isEnabled());
+        earlier->click();
+        QCOMPARE(window.session().selectedFrame(), std::size_t{0});
+        QVERIFY(!earlier->isEnabled() && later->isEnabled());
+        window.findChild<QPushButton*>("duplicateFrameButton")->click();
+        QCOMPARE(window.session().selectedFrame(), std::size_t{1});
+        QVERIFY(earlier->isEnabled() && later->isEnabled());
+        auto* list = window.findChild<QListView*>("frameList");
+        list->setCurrentIndex(list->model()->index(2, 0));
+        QVERIFY(earlier->isEnabled() && !later->isEnabled());
+    }
+
     void timelineReorderPreservesIdentitySelectionAndUndo()
     {
         Store store;
