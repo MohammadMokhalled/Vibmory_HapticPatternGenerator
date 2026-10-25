@@ -32,6 +32,20 @@ VIAddVersionKey /LANG=1033 "LegalCopyright" "Copyright (c) 2021-2026 Mohammad Mo
 !insertmacro MUI_UNPAGE_INSTFILES
 !insertmacro MUI_LANGUAGE "English"
 
+!macro TRACE TEXT
+    Push $R8
+    Push $R9
+    ReadEnvStr $R8 "VIBMORY_INSTALLER_TRACE"
+    ${If} $R8 != ""
+        FileOpen $R9 $R8 a
+        FileSeek $R9 0 END
+        FileWrite $R9 "${TEXT}$\r$\n"
+        FileClose $R9
+    ${EndIf}
+    Pop $R9
+    Pop $R8
+!macroend
+
 Function .onInit
     ${IfNot} ${RunningX64}
         MessageBox MB_OK|MB_ICONSTOP "Vibmory requires 64-bit Windows."
@@ -59,10 +73,10 @@ Function ${NAME}
 retry:
     IfFileExists "$INSTDIR\Vibmory.exe" 0 done
     System::Call 'kernel32::CreateFileW(w "$INSTDIR\Vibmory.exe", i 0x40000000, i 1, p 0, i 3, i 0, p 0)p.r0'
-    ${If} $0 != -1
-        System::Call 'kernel32::CloseHandle(p r0)'
-        Goto done
-    ${EndIf}
+    IntCmp $0 -1 locked
+    System::Call 'kernel32::CloseHandle(p r0)'
+    Goto done
+locked:
     IfSilent fail
     MessageBox MB_RETRYCANCEL|MB_ICONEXCLAMATION "Close Vibmory before continuing. If it is already closed, check that you can write to the installation folder." IDRETRY retry
 fail:
@@ -75,10 +89,10 @@ FunctionEnd
 !insertmacro CHECK_CLOSED un.CheckClosed
 
 Section "Vibmory" SEC_APPLICATION
-    GetFullPathName $INSTDIR $INSTDIR
+    !insertmacro TRACE "Install begin: $INSTDIR"
     ReadRegStr $0 HKCU "Software\Vibmory\Installer" "InstallDir"
+    !insertmacro TRACE "Previous directory: $0"
     ${If} $0 != ""
-        GetFullPathName $0 $0
         ${If} $0 != $INSTDIR
             IfSilent different_location
             MessageBox MB_OK|MB_ICONSTOP "Vibmory is installed in $0. Upgrade in that folder, or uninstall it before choosing another location."
@@ -88,6 +102,7 @@ different_location:
         ${EndIf}
     ${EndIf}
     Call CheckClosed
+    !insertmacro TRACE "Executable availability checked"
     IfFileExists "$INSTDIR\Uninstall.exe" 0 install_files
     ExecWait '"$INSTDIR\Uninstall.exe" /S _?=$INSTDIR' $1
     ${If} $1 != 0
@@ -96,6 +111,7 @@ different_location:
     ${EndIf}
     Delete "$INSTDIR\Uninstall.exe"
 install_files:
+    !insertmacro TRACE "Copying files to: $INSTDIR"
     SetOutPath "$INSTDIR"
     SetOverwrite on
     ClearErrors
@@ -119,12 +135,14 @@ install_files:
     SetErrorLevel 0
     Goto done
 failed:
+    !insertmacro TRACE "Installation failed: $INSTDIR"
     SetErrorLevel 5
     Abort
 done:
 SectionEnd
 
 Section "Uninstall"
+    !insertmacro TRACE "Uninstall begin: $INSTDIR"
     Call un.CheckClosed
     ClearErrors
     ; The generated list deletes only files shipped by this version. Empty

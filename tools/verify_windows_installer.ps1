@@ -13,13 +13,28 @@ $shortcutDirectory = Join-Path ([Environment]::GetFolderPath('Programs')) 'Vibmo
 if ((Test-Path -LiteralPath $registryPath) -or (Test-Path -LiteralPath $shortcutDirectory)) {
     throw 'Installer verification requires a clean runner user profile.'
 }
-$installDirectory = Join-Path ([IO.Path]::GetFullPath($env:RUNNER_TEMP)) ('Vibmory installer QA ä-' + [guid]::NewGuid().ToString())
+$installDirectory = Join-Path ([IO.Path]::GetFullPath($env:RUNNER_TEMP)) ('Vibmory installer QA ' + [char]0x00E4 + '-' + [guid]::NewGuid().ToString())
+$env:VIBMORY_INSTALLER_TRACE = Join-Path (Split-Path -Parent ([IO.Path]::GetFullPath($Report))) 'installer.trace.log'
 if (Test-Path -LiteralPath $installDirectory) { throw 'Installer QA directory already exists.' }
 
 function Invoke-TestProcess([string]$Executable, [string]$Arguments, [int]$ExpectedExit = 0) {
-    $process = Start-Process -FilePath $Executable -ArgumentList $Arguments -WindowStyle Hidden -PassThru
+    Write-Output "Running $Executable $Arguments (expected exit $ExpectedExit)"
+    $info = New-Object System.Diagnostics.ProcessStartInfo
+    $info.FileName = $Executable
+    $info.Arguments = $Arguments
+    $info.UseShellExecute = $false
+    $info.CreateNoWindow = $true
+    $info.WindowStyle = [Diagnostics.ProcessWindowStyle]::Hidden
+    $process = New-Object System.Diagnostics.Process
+    $process.StartInfo = $info
+    [void]$process.Start()
     if (-not $process.WaitForExit(60000)) { $process.Kill(); throw "Timed out: $Executable" }
-    if ($process.ExitCode -ne $ExpectedExit) { throw "Unexpected exit code $($process.ExitCode), expected ${ExpectedExit}: $Executable" }
+    $exitCode = $process.ExitCode
+    $process.Dispose()
+    if ($exitCode -ne $ExpectedExit) {
+        if (Test-Path -LiteralPath $env:VIBMORY_INSTALLER_TRACE) { Get-Content -LiteralPath $env:VIBMORY_INSTALLER_TRACE }
+        throw "Unexpected exit code $exitCode, expected ${ExpectedExit}: $Executable"
+    }
 }
 
 function Compare-InstalledFiles {

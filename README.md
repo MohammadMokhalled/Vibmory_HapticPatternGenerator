@@ -15,6 +15,8 @@ A local Qt installation is **not needed** to run the portable build.
 
 The artifact also contains a SHA-256 checksum. CI builds Windows x64 with Qt 6.8.3, runs core and offscreen UI tests, deploys Qt runtime/plugins, and launches the packaged program with Qt removed from PATH. Artifacts are retained for 30 days. A push, pull request, or manual workflow run produces a new build.
 
+Version tags also assemble a verified draft release with portable/setup/source downloads and checksums. See [Releases](docs/Releases.md) for installer lifecycle, optional signing credentials, and the draft review process. Builds are unsigned when no certificate is configured.
+
 The same run supplies **Vibmory-dependency-sources** with matching Qt/FFmpeg sources and upstream software-renderer sources. Keep it with the binary when redistributing. The application uses Qt under LGPLv3 and FFmpeg under LGPLv2.1-or-later; full notices, a hashed runtime inventory, and [library replacement/source instructions](docs/Distribution.md) accompany the package. Vibmory's own code uses [MIT](LICENSE).
 
 ```powershell

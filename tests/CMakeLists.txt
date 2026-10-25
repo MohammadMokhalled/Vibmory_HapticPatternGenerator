@@ -14,6 +14,7 @@ set_tests_properties(codec_properties PROPERTIES TIMEOUT 60)
 find_package(Python3 3.12 QUIET COMPONENTS Interpreter)
 if(Python3_FOUND)
     add_test(NAME distribution_tools COMMAND Python3::Interpreter "${CMAKE_CURRENT_SOURCE_DIR}/test_distribution.py")
+    add_test(NAME release_tools COMMAND Python3::Interpreter "${CMAKE_CURRENT_SOURCE_DIR}/test_release.py")
     add_executable(vibmory_wave_fixture wave_fixture.cpp)
     target_link_libraries(vibmory_wave_fixture PRIVATE vibmory_audio vibmory_options)
     add_test(NAME independent_wave_decode COMMAND Python3::Interpreter

@@ -4,6 +4,12 @@ on:
   push:
   pull_request:
   workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Optional existing version tag to assemble as a draft (must match this source commit)'
+        type: string
+        required: false
+        default: ''
 
 permissions:
   contents: read
@@ -51,6 +57,22 @@ jobs:
           retention-days: 14
           if-no-files-found: ignore
 
+  draft-release:
+    name: Assemble verified draft release
+    needs: [core, windows]
+    if: startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && inputs.release_tag != '')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Create draft from matching build, installer and dependency sources
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.release_tag || github.ref_name }}
+        run: python3 tools/create_draft_release.py --repository "$GITHUB_REPOSITORY" --run-id "$GITHUB_RUN_ID" --tag "$RELEASE_TAG"
   windows:
     name: Windows desktop and portable executable
     runs-on: windows-2025
@@ -149,7 +171,6 @@ jobs:
             artifacts/*.sha256
             artifacts/*.png
             artifacts/*.log
-            artifacts/*.json
           if-no-files-found: error
           retention-days: 30
       - name: Upload matching dependency sources
@@ -170,5 +191,6 @@ jobs:
             out/desktop/test-results.xml
             out/desktop/tests/*-results.xml
             artifacts/*.log
+            artifacts/*.json
           if-no-files-found: ignore
           retention-days: 14
