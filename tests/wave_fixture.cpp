@@ -7,7 +7,10 @@ int main(int argc, char** argv)
 {
     if (argc != 3)
         return 2;
-    const auto channels = std::string_view(argv[2]) == "6" ? 6U : 2U;
+    const auto argument = std::string_view(argv[2]);
+    if (argument != "1" && argument != "2" && argument != "6")
+        return 2;
+    const auto channels = argument == "6" ? 6U : (argument == "2" ? 2U : 1U);
     auto documentResult = vibmory::PatternDocument::create({1, channels});
     if (!documentResult)
         return 1;

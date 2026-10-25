@@ -8,7 +8,7 @@ import tempfile
 import wave
 
 with tempfile.TemporaryDirectory(prefix="vibmory-wave-") as temporary:
-    for channels in (2, 6):
+    for channels in (1, 2, 6):
         path = Path(temporary) / f"{channels}.wav"
         subprocess.run([sys.argv[1], str(path), str(channels)], check=True)
         with wave.open(str(path), "rb") as decoded:
@@ -23,4 +23,4 @@ with tempfile.TemporaryDirectory(prefix="vibmory-wave-") as temporary:
         raw = path.read_bytes()
         assert struct.unpack_from("<I", raw, 4)[0] == len(raw) - 8
         assert len(raw) == (68 if channels > 2 else 44) + channels * 80 * 2
-print("Independent stereo and multichannel PCM WAV decoding passed.")
+print("Independent mono, stereo and multichannel PCM WAV decoding passed.")

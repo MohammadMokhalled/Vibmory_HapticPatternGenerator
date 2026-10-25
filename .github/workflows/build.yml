@@ -97,6 +97,11 @@ jobs:
         run: cmake --build --preset desktop --parallel 2
       - name: Core and offscreen UI tests
         run: ctest --preset desktop --output-junit test-results.xml
+      - name: Verify desktop build without test targets
+        run: |
+          cmake -S . -B out/desktop-no-tests -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF -DVIBMORY_WARNINGS_AS_ERRORS=ON
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cmake --build out/desktop-no-tests --target Vibmory --parallel 2
       - name: Install runtime and plugins
         run: cmake --install out/desktop --prefix "$pwd/stage/Vibmory"
       - name: Deploy app-local C++ runtime
@@ -151,6 +156,20 @@ jobs:
             if (-not $variantProcess.WaitForExit(30000)) { $variantProcess.Kill(); throw "Preview timed out: $($variant.Name)" }
             if ($variantProcess.ExitCode -ne 0 -or -not (Test-Path $previewPath)) { throw "Preview failed: $($variant.Name)" }
           }
+      - name: Save, reopen and export with deployed runtime only
+        shell: pwsh
+        run: |
+          $probeDirectory = Join-Path $env:RUNNER_TEMP 'vibmory-deployed-ui'
+          New-Item -ItemType Directory -Path $probeDirectory -ErrorAction Stop | Out-Null
+          Copy-Item out/desktop/tests/vibmory_ui_tests.exe $probeDirectory
+          Copy-Item "$env:QT_ROOT_DIR/bin/Qt6Test.dll" $probeDirectory
+          $env:QT_PLUGIN_PATH = "$pwd/stage/Vibmory/plugins"
+          $env:QT_QPA_PLATFORM_PLUGIN_PATH = "$pwd/stage/Vibmory/plugins/platforms"
+          $env:PATH = "$pwd/stage/Vibmory;$env:WINDIR\System32;$env:WINDIR"
+          $report = "$pwd/artifacts/deployed-ui-results.xml,junitxml"
+          $probe = Start-Process -FilePath "$probeDirectory/vibmory_ui_tests.exe" -WorkingDirectory $probeDirectory -ArgumentList 'deployedEditorCanSaveReopenAndExport', '-platform', 'windows', '-o', $report, '-o', '-,txt' -PassThru -WindowStyle Hidden -RedirectStandardOutput "$pwd/artifacts/deployed-ui.stdout.log" -RedirectStandardError "$pwd/artifacts/deployed-ui.stderr.log"
+          if (-not $probe.WaitForExit(60000)) { $probe.Kill(); throw 'Deployed editor workflow timed out.' }
+          if ($probe.ExitCode -ne 0) { Get-Content artifacts/deployed-ui.*.log; throw "Deployed editor workflow failed: $($probe.ExitCode)" }
       - name: Create ZIP and checksum
         shell: pwsh
         run: |
@@ -171,6 +190,7 @@ jobs:
             artifacts/*.sha256
             artifacts/*.png
             artifacts/*.log
+            artifacts/*-results.xml
           if-no-files-found: error
           retention-days: 30
       - name: Upload matching dependency sources
@@ -190,6 +210,7 @@ jobs:
             out/desktop/Testing/Temporary/
             out/desktop/test-results.xml
             out/desktop/tests/*-results.xml
+            artifacts/*-results.xml
             artifacts/*.log
             artifacts/*.json
           if-no-files-found: ignore

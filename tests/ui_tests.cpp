@@ -1,3 +1,4 @@
+#include "audio/pcm_renderer.h"
 #include "persistence/project_codec.h"
 #include "platform/device_profile_store.h"
 #include "platform/project_store.h"
@@ -17,6 +18,7 @@
 #include <QComboBox>
 #include <QDialog>
 #include <QFile>
+#include <QFileDialog>
 #include <QGroupBox>
 #include <QJsonArray>
 #include <QJsonDocument>
@@ -26,9 +28,11 @@
 #include <QMimeData>
 #include <QPointer>
 #include <QPushButton>
+#include <QScopeGuard>
 #include <QSettings>
 #include <QSpinBox>
 #include <QTemporaryDir>
+#include <QTimer>
 #include <QtTest>
 
 #include <atomic>
@@ -504,6 +508,89 @@ private slots:
         });
         QVERIFY(window.close());
         QVERIFY(!QFile::exists(path));
+    }
+
+    void deployedEditorCanSaveReopenAndExport()
+    {
+        // This case also runs natively against only the deployed Qt DLLs and
+        // plugins. The fake output keeps hardware availability independent.
+        const bool previous =
+            QApplication::testAttribute(Qt::AA_DontUseNativeDialogs);
+        QApplication::setAttribute(Qt::AA_DontUseNativeDialogs);
+        const auto restore = qScopeGuard([previous] {
+            QApplication::setAttribute(Qt::AA_DontUseNativeDialogs, previous);
+        });
+        QTemporaryDir temporary;
+        QVERIFY(temporary.isValid());
+        QtProjectStore store;
+        Backend backend;
+        Clock clock;
+        WaveExportJob exporter;
+        auto source = document();
+        QVERIFY(source.setSettings({7, 125, 8000}));
+        EditorWindow window(store, backend, clock, exporter, source);
+        window.show();
+        window.findChild<GridWidget*>("gridWidget")->cellSelected(1, 2);
+        window.findChild<QSpinBox*>("amplitudeSpinBox")->setValue(3210);
+        QVERIFY(window.session().dirty());
+        const auto expected = window.session().document();
+        auto triggerWithPath = [&](const QKeySequence& shortcut,
+                                   const QString& path) {
+            QAction* action = nullptr;
+            for (auto* candidate : window.findChildren<QAction*>())
+                if (candidate->shortcut() == shortcut)
+                    action = candidate;
+            QVERIFY(action);
+            bool accepted = false;
+            QTimer responder;
+            connect(&responder, &QTimer::timeout, &window, [&] {
+                if (auto* dialog = qobject_cast<QFileDialog*>(
+                        QApplication::activeModalWidget()))
+                {
+                    responder.stop();
+                    dialog->selectFile(path);
+                    accepted = QMetaObject::invokeMethod(dialog, "accept",
+                                                         Qt::DirectConnection);
+                }
+            });
+            responder.start(10);
+            action->trigger();
+            responder.stop();
+            QVERIFY(accepted);
+        };
+        const auto base = temporary.filePath(QString::fromUtf8("pattern-ä"));
+        const auto project = base + ".vibmory";
+        triggerWithPath(QKeySequence(QKeySequence::Save), base);
+        QVERIFY(!window.session().dirty());
+        QVERIFY(window.session().path() == toPath(project));
+        auto saved = store.load(toPath(project));
+        QVERIFY(saved);
+        QVERIFY(saved.value() == expected);
+        const auto other = temporary.filePath("other.vibmory");
+        auto different = PatternDocument::create({1, 1});
+        QVERIFY(different);
+        QVERIFY(store.save(toPath(other), different.value()));
+        QVERIFY(window.loadProject(toPath(other)));
+        triggerWithPath(QKeySequence(QKeySequence::Open), project);
+        QVERIFY(window.session().document() == expected);
+        QVERIFY(!window.session().dirty());
+        const auto wave = base + ".wav";
+        QSignalSpy completed(&exporter, &WaveExportJob::finished);
+        triggerWithPath(QKeySequence("Ctrl+E"), base);
+        QTRY_COMPARE_WITH_TIMEOUT(completed.count(), 1, 10000);
+        QVERIFY(completed.first().first().value<Result<void>>());
+        QFile exported(wave);
+        QVERIFY(exported.open(QIODevice::ReadOnly));
+        QByteArray expectedBytes;
+        QVERIFY(
+            renderWave(expected, [&expectedBytes](auto bytes) -> Result<void> {
+                expectedBytes.append(
+                    reinterpret_cast<const char*>(bytes.data()),
+                    static_cast<qsizetype>(bytes.size()));
+                return {};
+            }));
+        QCOMPARE(exported.readAll(), expectedBytes);
+        QVERIFY(window.close());
     }
 
     void atomicSaveAndCancelledExport()

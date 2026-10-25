@@ -95,7 +95,7 @@ Install `clang-tidy==21.1.0` and run `python tools/run_static_analysis.py out/co
 
 Diagnostic categories are `vibmory.storage`, `vibmory.export`, and `vibmory.ui`. Set `QT_LOGGING_TO_CONSOLE=1` and capture standard error when investigating a failure. Normal playback does not log every sample, repaint, or mouse action.
 
-The `codec_properties` test runs 500 generated complete round trips and 10,000 reproducible parser mutations. `independent_wave_decode` uses Python 3.12+ to independently verify stereo and multichannel exports. For an informational renderer benchmark, configure with `VIBMORY_BUILD_BENCHMARKS=ON` and run `vibmory_render_benchmark`; speed is not a hardware-independent pass/fail gate.
+The `codec_properties` test runs 500 generated complete round trips and 10,000 reproducible parser mutations. `independent_wave_decode` uses Python 3.12+ to independently verify mono, stereo, and multichannel exports. CI also runs the editor's save/open/export workflow against the deployed runtime without developer Qt paths. For an informational renderer benchmark, configure with `VIBMORY_BUILD_BENCHMARKS=ON` and run `vibmory_render_benchmark`; speed is not a hardware-independent pass/fail gate.
 
 Current limits: 256 logical cells/channels, 1024 frames, 262144 stored cells, 16 MiB project input, 512 MiB rendered PCM, 1-240 frames/s, 1 ms-10 minutes, 8-192 kHz sample rate, and frequencies strictly below Nyquist (also capped at 22000 Hz). These are allocation/output budgets, not a claim that an audio device supports every configuration.
 
