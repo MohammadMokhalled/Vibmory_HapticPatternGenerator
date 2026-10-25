@@ -16,6 +16,18 @@ QColor stimulusColor(CellStimulus cell)
     return QColor::fromHsv(hue, saturation, 245);
 }
 
+QColor cellFillColor(CellStimulus cell, const QPalette& palette)
+{
+    return cell.frequencyHz == 0 || cell.amplitude == 0 ? palette.base().color()
+                                                        : stimulusColor(cell);
+}
+
+QColor cellTextColor(CellStimulus cell, const QPalette& palette)
+{
+    return cell.frequencyHz == 0 || cell.amplitude == 0 ? palette.text().color()
+                                                        : QColor(Qt::black);
+}
+
 std::optional<CellPosition> GridGeometry::cellAt(QRectF bounds, GridShape shape,
                                                  QPointF point)
 {
@@ -85,12 +97,12 @@ void GridWidget::paintEvent(QPaintEvent*)
             const auto bounds =
                 GridGeometry::cellRect(QRectF(rect()), shape_, position);
             painter.fillRect(bounds.adjusted(1, 1, -1, -1),
-                             stimulusColor(cell));
+                             cellFillColor(cell, palette()));
             painter.setPen(palette().mid().color());
             painter.drawRect(bounds.adjusted(0, 0, -1, -1));
             if (bounds.width() > 95 && bounds.height() > 55)
             {
-                painter.setPen(Qt::black);
+                painter.setPen(cellTextColor(cell, palette()));
                 painter.drawText(bounds.adjusted(5, 5, -5, -5), Qt::AlignCenter,
                                  tr("R%1 C%2\n%3 Hz · %4")
                                      .arg(row + 1)

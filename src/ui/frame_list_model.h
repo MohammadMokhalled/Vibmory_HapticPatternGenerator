@@ -4,6 +4,7 @@
 
 #include <QAbstractListModel>
 #include <QIcon>
+#include <QPalette>
 
 #include <functional>
 
@@ -19,6 +20,7 @@ public:
                                            std::uint64_t revision)>;
     explicit FrameListModel(MoveCommand move, QObject* parent = nullptr);
     void setDocument(const PatternDocument& document, std::uint64_t revision);
+    void setPalette(const QPalette& palette);
     [[nodiscard]] bool moving() const
     {
         return moving_;
@@ -62,6 +64,7 @@ private:
     QByteArray dragToken_;
     std::vector<Entry> entries_;
     GridShape shape_;
+    QPalette palette_;
     std::uint64_t revision_ = 0;
     bool moving_ = false;
 };

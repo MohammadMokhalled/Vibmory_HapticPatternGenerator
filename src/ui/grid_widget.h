@@ -12,6 +12,8 @@ class QColor;
 namespace vibmory
 {
 [[nodiscard]] QColor stimulusColor(CellStimulus cell);
+[[nodiscard]] QColor cellFillColor(CellStimulus cell, const QPalette& palette);
+[[nodiscard]] QColor cellTextColor(CellStimulus cell, const QPalette& palette);
 
 class GridGeometry
 {

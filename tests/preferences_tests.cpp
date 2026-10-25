@@ -56,10 +56,18 @@ private slots:
                  {std::pair{QPalette::WindowText, QPalette::Window},
                   {QPalette::Text, QPalette::Base},
                   {QPalette::ButtonText, QPalette::Button},
+                  {QPalette::PlaceholderText, QPalette::Button},
                   {QPalette::HighlightedText, QPalette::Highlight},
                   {QPalette::ToolTipText, QPalette::ToolTipBase}})
                 QVERIFY(contrast(palette.color(pair.first),
                                  palette.color(pair.second)) >= 4.5);
+            for (const auto cell :
+                 {CellStimulus{}, {0, maxAmplitude}, {maxFrequencyHz, 0}})
+            {
+                QCOMPARE(cellFillColor(cell, palette), palette.base().color());
+                QVERIFY(contrast(cellTextColor(cell, palette),
+                                 cellFillColor(cell, palette)) >= 4.5);
+            }
         }
         QCOMPARE(changed.count(), 2);
         QCOMPARE(settings.value("appearance/theme").toString(),

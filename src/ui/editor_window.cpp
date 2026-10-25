@@ -22,12 +22,16 @@
 #include <QFormLayout>
 #include <QGroupBox>
 #include <QHeaderView>
+#include <QIcon>
 #include <QInputDialog>
 #include <QLabel>
 #include <QListView>
 #include <QLoggingCategory>
 #include <QMenuBar>
 #include <QMessageBox>
+#include <QPainter>
+#include <QPixmap>
+#include <QPolygonF>
 #include <QProgressDialog>
 #include <QPushButton>
 #include <QSignalBlocker>
@@ -45,7 +49,30 @@ namespace vibmory
 namespace
 {
 Q_LOGGING_CATEGORY(uiLog, "vibmory.ui")
+
+QIcon mediaIcon(bool stopping, const QPalette& palette)
+{
+    QIcon icon;
+    for (auto mode : {QIcon::Normal, QIcon::Disabled})
+    {
+        QPixmap pixmap(32, 32);
+        pixmap.fill(Qt::transparent);
+        QPainter painter(&pixmap);
+        painter.setRenderHint(QPainter::Antialiasing);
+        painter.setPen(Qt::NoPen);
+        painter.setBrush(palette.color(
+            mode == QIcon::Disabled ? QPalette::Disabled : QPalette::Active,
+            QPalette::ButtonText));
+        if (stopping)
+            painter.drawRect(QRectF(8, 8, 16, 16));
+        else
+            painter.drawPolygon(QPolygonF{{10, 6}, {26, 16}, {10, 26}});
+        painter.end();
+        icon.addPixmap(pixmap, mode);
+    }
+    return icon;
 }
+} // namespace
 
 EditorWindow::EditorWindow(DocumentStore& store, PlaybackBackend& backend,
                            const MonotonicClock& clock, WaveExportJob& exporter,
@@ -128,6 +155,7 @@ void EditorWindow::enablePreferences(UiPreferences& preferences)
 
 void EditorWindow::refreshIcons()
 {
+    frameModel_->setPalette(palette());
     new_->setIcon(style()->standardIcon(QStyle::SP_FileIcon));
     open_->setIcon(style()->standardIcon(QStyle::SP_DialogOpenButton));
     save_->setIcon(style()->standardIcon(QStyle::SP_DialogSaveButton));
@@ -144,9 +172,8 @@ void EditorWindow::refreshIcons()
         {"refreshDevicesButton", QStyle::SP_BrowserReload}};
     for (const auto& [name, icon] : icons)
         findChild<QPushButton*>(name)->setIcon(style()->standardIcon(icon));
-    play_->setIcon(style()->standardIcon(
-        playback_.state() == PlaybackState::Playing ? QStyle::SP_MediaStop
-                                                    : QStyle::SP_MediaPlay));
+    play_->setIcon(
+        mediaIcon(playback_.state() == PlaybackState::Playing, palette()));
     setWindowIcon(style()->standardIcon(QStyle::SP_MediaVolume));
 }
 
@@ -355,9 +382,12 @@ void EditorWindow::refresh()
     undo_->setEnabled(!busy && session_.canUndo());
     redo_->setEnabled(!busy && session_.canRedo());
     play_->setEnabled(!exporter_.busy());
-    play_->setText(playing ? tr("Stop") : tr("Play"));
-    play_->setIcon(style()->standardIcon(playing ? QStyle::SP_MediaStop
-                                                 : QStyle::SP_MediaPlay));
+    const auto playText = playing ? tr("Stop") : tr("Play");
+    if (play_->text() != playText)
+    {
+        play_->setText(playText);
+        play_->setIcon(mediaIcon(playing, palette()));
+    }
     const QSignalBlocker frameBlocker(frames_->selectionModel());
     frameModel_->setDocument(session_.document(), session_.revision());
     frames_->setCurrentIndex(

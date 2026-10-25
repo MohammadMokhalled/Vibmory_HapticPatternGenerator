@@ -2,6 +2,7 @@
 
 #include "ui/grid_widget.h"
 
+#include <QGuiApplication>
 #include <QMimeData>
 #include <QPainter>
 #include <QScopedValueRollback>
@@ -15,7 +16,8 @@ namespace
 {
 constexpr auto frameMimeType = "application/x-vibmory-frame";
 
-QIcon thumbnail(GridShape shape, const std::vector<CellStimulus>& cells)
+QIcon thumbnail(GridShape shape, const std::vector<CellStimulus>& cells,
+                const QPalette& palette)
 {
     QPixmap pixmap(80, 48);
     pixmap.fill(Qt::transparent);
@@ -27,8 +29,8 @@ QIcon thumbnail(GridShape shape, const std::vector<CellStimulus>& cells)
                                                        shape, {row, column});
             const auto cell =
                 cells[static_cast<std::size_t>(row) * shape.columns + column];
-            painter.fillRect(bounds, stimulusColor(cell));
-            painter.setPen(QColor(100, 100, 100));
+            painter.fillRect(bounds, cellFillColor(cell, palette));
+            painter.setPen(palette.mid().color());
             painter.drawRect(bounds.adjusted(0, 0, -0.5, -0.5));
         }
     return QIcon(pixmap);
@@ -37,7 +39,8 @@ QIcon thumbnail(GridShape shape, const std::vector<CellStimulus>& cells)
 
 FrameListModel::FrameListModel(MoveCommand move, QObject* parent)
     : QAbstractListModel(parent), move_(std::move(move)),
-      dragToken_(QUuid::createUuid().toByteArray(QUuid::WithoutBraces))
+      dragToken_(QUuid::createUuid().toByteArray(QUuid::WithoutBraces)),
+      palette_(QGuiApplication::palette())
 {
 }
 
@@ -94,7 +97,7 @@ void FrameListModel::setDocument(const PatternDocument& document,
         for (std::size_t index = 0; index < document.frameCount(); ++index)
             entries.push_back(
                 {document.frameId(index), document.frame(index),
-                 thumbnail(document.shape(), document.frame(index))});
+                 thumbnail(document.shape(), document.frame(index), palette_)});
         beginResetModel();
         entries_ = std::move(entries);
         shape_ = document.shape();
@@ -105,10 +108,22 @@ void FrameListModel::setDocument(const PatternDocument& document,
         if (entries_[row].cells != document.frame(row))
         {
             entries_[row].cells = document.frame(row);
-            entries_[row].thumbnail = thumbnail(shape_, entries_[row].cells);
+            entries_[row].thumbnail =
+                thumbnail(shape_, entries_[row].cells, palette_);
             const auto changed = index(static_cast<int>(row));
             emit dataChanged(changed, changed, {Qt::DecorationRole});
         }
+}
+
+void FrameListModel::setPalette(const QPalette& palette)
+{
+    if (palette_ == palette)
+        return;
+    palette_ = palette;
+    for (auto& entry : entries_)
+        entry.thumbnail = thumbnail(shape_, entry.cells, palette_);
+    if (!entries_.empty())
+        emit dataChanged(index(0), index(rowCount() - 1), {Qt::DecorationRole});
 }
 
 QStringList FrameListModel::mimeTypes() const

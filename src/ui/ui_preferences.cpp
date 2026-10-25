@@ -59,6 +59,8 @@ QPalette paletteFor(bool dark)
     palette.setColor(QPalette::AlternateBase,
                      QColor(dark ? "#202a3b" : "#eaf0f8"));
     palette.setColor(QPalette::Text, text);
+    palette.setColor(QPalette::PlaceholderText,
+                     QColor(dark ? "#b0bfd4" : "#596b85"));
     palette.setColor(QPalette::Button, button);
     palette.setColor(QPalette::ButtonText, text);
     palette.setColor(QPalette::BrightText, Qt::white);

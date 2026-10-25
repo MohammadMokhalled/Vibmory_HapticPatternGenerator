@@ -201,10 +201,27 @@ private slots:
         grid->cellSelected(1, 2);
         const auto before = window.session().document();
         const auto revision = window.session().revision();
+        auto* timeline = window.findChild<QListView*>("frameList");
+        const auto thumbnail = timeline->model()
+                                   ->index(0, 0)
+                                   .data(Qt::DecorationRole)
+                                   .value<QIcon>()
+                                   .cacheKey();
         auto* dark = window.findChild<QAction*>("theme_dark");
         QVERIFY(dark);
         dark->trigger();
         QCOMPARE(preferences.theme(), ColorTheme::Dark);
+        QVERIFY(timeline->model()
+                    ->index(0, 0)
+                    .data(Qt::DecorationRole)
+                    .value<QIcon>()
+                    .cacheKey() != thumbnail);
+        const auto icon = window.findChild<QPushButton*>("playButton")
+                              ->icon()
+                              .pixmap(32, 32)
+                              .toImage();
+        QCOMPARE(icon.pixelColor(16, 16),
+                 window.palette().color(QPalette::ButtonText));
         auto* german = window.findChild<QAction*>("language_de");
         QVERIFY(german);
         german->trigger();
