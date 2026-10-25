@@ -39,6 +39,7 @@
 #include <QtTest>
 
 #include <atomic>
+#include <fstream>
 #include <memory>
 #include <stdexcept>
 #include <thread>
@@ -672,6 +673,43 @@ private slots:
         QVERIFY(previous.open(QIODevice::ReadOnly));
         QCOMPARE(previous.readAll(), QByteArray("previous"));
     }
+
+#ifdef Q_OS_WIN
+    void commitFailurePreservesThePreviousProjectAndWave()
+    {
+        QTemporaryDir temporary;
+        QVERIFY(temporary.isValid());
+        QtProjectStore store;
+        auto changed = document();
+        QVERIFY(changed.setCell(0, {1, 2}, {1000, 1234}));
+        QVERIFY(changed.setSettings({7, 10, 8000}));
+        for (const bool wave : {false, true})
+        {
+            const auto path =
+                temporary.filePath(wave ? "existing.wav" : "existing.vibmory");
+            const QByteArray previous =
+                wave ? QByteArray("Previous WAV must survive")
+                     : QByteArray::fromStdString(encodeProject(document()));
+            {
+                QFile file(path);
+                QVERIFY(file.open(QIODevice::WriteOnly));
+                QCOMPARE(file.write(previous), previous.size());
+            }
+            // MSVC's file stream permits reads/writes but not replacement of
+            // its open file. QSaveFile can write its sibling temporary file;
+            // the final atomic replacement must fail without changing this one.
+            std::ifstream locked(toPath(path), std::ios::binary);
+            QVERIFY(locked.is_open());
+            const auto result = wave ? exportWaveFile(toPath(path), changed)
+                                     : store.save(toPath(path), changed);
+            QVERIFY(!result);
+            QCOMPARE(result.error().code, ErrorCode::Io);
+            QFile preserved(path);
+            QVERIFY(preserved.open(QIODevice::ReadOnly));
+            QCOMPARE(preserved.readAll(), previous);
+        }
+    }
+#endif
 
     void deviceProfileReviewRequiresExplicitOutputSelection()
     {
