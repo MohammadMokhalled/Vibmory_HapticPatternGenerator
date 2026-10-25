@@ -32,7 +32,9 @@ jobs:
           python3 tools/check_quality.py
           python3 tools/check_translations.py
       - name: Install documentation tool
-        run: sudo apt-get update -qq && sudo apt-get install -y doxygen
+        run: sudo apt-get update -qq && sudo apt-get install -y doxygen graphviz
+      - name: Render maintained architecture diagrams
+        run: python3 tools/render_diagrams.py --output-dir out/diagrams
       - name: Configure without Qt
         run: cmake --preset sanitized
       - name: Build
@@ -104,6 +106,17 @@ jobs:
           cmake --build out/desktop-no-tests --target Vibmory --parallel 2
       - name: Install runtime and plugins
         run: cmake --install out/desktop --prefix "$pwd/stage/Vibmory"
+      - name: Verify installed architecture documentation
+        shell: pwsh
+        run: |
+          foreach ($name in @('Architecture', 'ClassDiagram', 'EditorLifecycle')) {
+            foreach ($extension in @('dot', 'png', 'svg')) {
+              $relative = "docs/diagrams/$name.$extension"
+              if ((Get-FileHash -LiteralPath "stage/Vibmory/$relative" -Algorithm SHA256).Hash -ne (Get-FileHash -LiteralPath $relative -Algorithm SHA256).Hash) {
+                throw "Installed diagram differs from the maintained documentation: $relative"
+              }
+            }
+          }
       - name: Deploy app-local C++ runtime
         shell: pwsh
         run: |

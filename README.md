@@ -4,6 +4,28 @@ Vibmory is a Qt 6 desktop editor for patterns played through speakers used as ha
 
 The software was used in [Vibmory - Mapping Episodic Memories to Vibrotactile Patterns](https://dl.acm.org/doi/abs/10.1145/3569009.3572747).
 
+The current implementation is **Vibmory 2.0.0**: a validated C++20 document/editor core, a Qt 6 Widgets desktop shell, streaming audio preview, atomic project/WAV writes, grouped undo/redo, stable frame identities, device profiles, recovery, and English/German presentation preferences. Windows x64 is the packaged desktop target; Linux CI validates the Qt-free core.
+
+## Architecture at a glance
+
+![Current production target dependencies](docs/diagrams/Architecture.png)
+
+Arrows point from a consumer to its direct project dependency. The four green core libraries build without Qt. The executable constructs the concrete services and supplies them to the editor.
+
+| Target / source directory | Responsibility | Main types or operations |
+| --- | --- | --- |
+| `Vibmory` / `src/app` | Startup, settings, dependency construction and lifetime | `main.cpp` |
+| `vibmory_ui` / `src/ui` | Editor actions and numeric view projections | `EditorWindow`, `GridWidget`, `CellInspector`, `FrameListModel`, `DeviceProfileActions`, `RecoveryController`, `UiPreferences` |
+| `vibmory_platform` / `src/platform` | Qt storage/device adapters and export jobs | `QtProjectStore`, `QtAudioBackend`, `QtClock`, `WaveExportJob`, `RecoveryFile` |
+| `vibmory_application` / `src/application` | Transactional edits, save policy, playback and replaceable contracts | `EditorSession`, `DocumentWorkflow`, `PlaybackService`, `DocumentStore`, `PlaybackBackend`, `MonotonicClock`, `applyDeviceProfile()` |
+| `vibmory_audio` / `src/audio` | Bounded deterministic samples and WAV encoding | `PcmRenderer`, `renderWave()`, `waveHeader()` |
+| `vibmory_persistence` / `src/persistence` | Versioned project and strict legacy parsing | `encodeProject()`, `decodeProject()`, `decodeLegacyCsv()` |
+| `vibmory_domain` / `src/domain` | Validated numeric values, frame identities, routing and profiles | `PatternDocument`, `DocumentSnapshot`, `DeviceProfile`, `Result` |
+
+`EditorSession` owns the editable document, selection, revision and undo state. Playback, export and recovery receive independent document copies. Painting reads a numeric projection; it never changes selection, document data or playback position. The GUI thread owns mutable editor/Qt objects, while export/recovery workers return results through queued watchers.
+
+See [Architecture](docs/Architecture.md) for state/thread contracts and [Class and lifecycle diagrams](docs/diagrams/ClassDiagram.md) for current ownership, interfaces, adapters, and diagram regeneration instructions.
+
 ## Download a Windows executable
 
 A local Qt installation is **not needed** to run the portable build.
@@ -29,6 +51,7 @@ gh run download RUN_ID --name Vibmory-windows-x64 --dir artifacts
 - **File > New project** creates a grid with named rows and columns.
 - Select a cell with the mouse or arrow keys, then set frequency in Hz and amplitude from 0 to 32767. Escape clears selection. Zero frequency produces silence.
 - Add/duplicate/delete frames, move them earlier/later, or drag them between rows in the thumbnail timeline. Undo/redo applies to document changes, including reordering, routing, and settings. Frame identity and selection follow the moved frame.
+- The final frame cannot be deleted. Move actions are disabled at sequence boundaries; a failed edit leaves the document and timeline unchanged.
 - Set frame rate, total duration, sample rate, and phase policy. The sequence repeats for the specified total duration; duration is not a repeat count.
 - **Edit > Channel routing and gains** maps each physical output channel to a logical cell. New documents use row-major order. Gains are multiplicative values between 0 and 1.
 - **Edit > Save/Load device profile** reuses a grid's channel map and calibration gains across projects. Loading shows a review and keeps the current output device unless you explicitly select the profile's available device. See [Device profiles](docs/DeviceProfiles.md).
@@ -63,6 +86,15 @@ cmake --install out/desktop --prefix "$PWD/stage/Vibmory"
 
 Run `out/desktop/Vibmory.exe` or the deployed `stage/Vibmory/Vibmory.exe`. An optional positional argument opens a `.vibmory` project. `--smoke-test` starts the complete UI and exits without audio.
 
+```powershell
+./stage/Vibmory/Vibmory.exe ./my-pattern.vibmory
+./stage/Vibmory/Vibmory.exe --theme dark --language de
+./stage/Vibmory/Vibmory.exe --smoke-test
+./stage/Vibmory/Vibmory.exe --screenshot ./editor.png --theme light --language en
+```
+
+`--no-recovery` disables recovery snapshots and startup prompts for that launch. Theme/language overrides do not write preferences. Smoke-test and screenshot modes isolate preferences in a temporary directory and disable recovery.
+
 The pure C++ domain, editor, codec, and renderer can be built **without Qt or downloaded dependencies**:
 
 ```powershell
@@ -81,9 +113,11 @@ ctest --test-dir out/core-vs -C Debug --output-on-failure
 
 On Linux, `cmake --preset sanitized`, `cmake --build --preset sanitized`, and `ctest --preset sanitized` enable AddressSanitizer/UndefinedBehaviorSanitizer. Set `BUILD_TESTING=OFF` to omit test targets entirely. The core uses a small dependency-free test runner registered with CTest; UI tests use Qt Test.
 
+Python 3.12+ enables the additional independent WAV, distribution, and release-tool checks. Graphviz is only needed to regenerate the maintained diagrams; it is not a desktop/core build dependency.
+
 ## Architecture and contribution
 
-Read [Architecture](docs/Architecture.md), [Project format](docs/ProjectFormat.md), [the original refactoring audit](TodoPlanning/RefactoringAudit.md), and [the live implementation tracker](TodoPlanning/ImplementationTracker.md).
+Read [Architecture](docs/Architecture.md), [Class and lifecycle diagrams](docs/diagrams/ClassDiagram.md), [Project format](docs/ProjectFormat.md), [the original refactoring audit](TodoPlanning/RefactoringAudit.md), and [the implementation tracker](TodoPlanning/ImplementationTracker.md).
 
 See [Contributing](CONTRIBUTING.md) for naming, units, thread/error contracts, validation, and dependency/review guidance, and [Completion audit](TodoPlanning/CompletionAudit.md) for the requirement-by-requirement evidence.
 

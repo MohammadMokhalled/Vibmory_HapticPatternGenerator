@@ -2,19 +2,9 @@
 
 ## Dependency rules
 
-```mermaid
-flowchart LR
-  App[Executable composition root] --> UI[Qt Widgets]
-  App --> Platform[Qt file/audio adapters]
-  UI --> Application[Editor and playback services]
-  UI --> Platform
-  Platform --> Application
-  Platform --> Audio[PCM and WAV]
-  Platform --> Codec[Project codecs]
-  Application --> Domain[Standard C++ domain]
-  Audio --> Domain
-  Codec --> Domain
-```
+![Current production target dependencies](diagrams/Architecture.png)
+
+Arrows point from a consumer to a direct project dependency. The overview is generated from `docs/diagrams/Architecture.dot`, which mirrors the production links in `CMakeLists.txt`. See [Class and lifecycle diagrams](diagrams/ClassDiagram.md) for current service ownership, interface implementations, background jobs, scalable images and regeneration commands.
 
 `vibmory_domain`, `vibmory_application`, `vibmory_audio`, and `vibmory_persistence` compile without Qt. The platform adapter connects codecs/renderers to Qt files and audio. The UI coordinates user requests through those boundaries. Internal headers live with their modules, with target-scoped include/link requirements. There is no service locator, dependency container, plugin framework, or shared mutable global document.
 
@@ -66,4 +56,4 @@ Core tests check shape/index/value limits, frame commands, complete codec round 
 
 Formatting and include-direction checks run for all owned C++ sources. Clang-Tidy analyzes the actual core compilation database using pinned LLVM 21.1.0. Sanitizer builds and independent WAV decoding complement analysis; no one check establishes all behavior.
 
-The original audit remains a historical snapshot; use the implementation tracker for remaining scope and current evidence.
+The original audit remains a historical snapshot. All 69 software items are closed in the [implementation tracker](../TodoPlanning/ImplementationTracker.md); the [completion audit](../TodoPlanning/CompletionAudit.md) maps requirements to implementation and verification evidence. Physical device testing and credentialed signing remain the documented external checks.
