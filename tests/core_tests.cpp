@@ -5,6 +5,7 @@
 #include "audio/pcm_renderer.h"
 #include "persistence/project_codec.h"
 
+#include <algorithm>
 #include <fstream>
 #include <functional>
 #include <iostream>
@@ -320,6 +321,28 @@ TEST(audio_rational_timing_and_phase_policy)
     CHECK(renderer.render(samples));
     CHECK(samples[1] ==
           707); // Legacy quantization truncates rather than rounds.
+}
+
+TEST(audio_silent_frames_never_hold_the_previous_oscillator_value)
+{
+    for (const auto phase :
+         {PhasePolicy::Continuous, PhasePolicy::LegacyAbsolute})
+        for (const auto silent : {CellStimulus{0, 1000}, CellStimulus{1000, 0}})
+        {
+            auto document = makeDocument({1, 1});
+            CHECK(document.setSettings({7, 300, 8000, phase}));
+            CHECK(document.setCell(0, {0, 0}, {1000, 1000}));
+            CHECK(document.addFrame());
+            CHECK(document.setCell(1, {0, 0}, silent));
+            auto renderer = PcmRenderer::create(document).value();
+            std::vector<std::int16_t> samples(2400);
+            CHECK(renderer.render(samples).value() == samples.size());
+            CHECK(samples[1] == 707);
+            CHECK(std::all_of(samples.begin() + 1143, samples.begin() + 2286,
+                              [](auto value) { return value == 0; }));
+            CHECK(std::any_of(samples.begin() + 2286, samples.end(),
+                              [](auto value) { return value != 0; }));
+        }
 }
 
 TEST(audio_reordered_and_saved_sequence_uses_document_order)

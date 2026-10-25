@@ -65,8 +65,13 @@ Result<std::size_t> PcmRenderer::render(std::span<std::int16_t> output)
                                      : (tau * stimulus.frequencyHz) *
                                            (static_cast<double>(position_) /
                                             settings.sampleRate);
-            const double scaled =
-                stimulus.amplitude * routing.gains[channel] * std::sin(phase);
+            // A zero-frequency frame is silent even when continuous phase was
+            // left at a nonzero value by the preceding frame.
+            const double scaled = stimulus.frequencyHz == 0
+                                      ? 0.0
+                                      : stimulus.amplitude *
+                                            routing.gains[channel] *
+                                            std::sin(phase);
             const auto value = settings.phase == PhasePolicy::LegacyAbsolute
                                    ? static_cast<long>(scaled)
                                    : std::lround(scaled);

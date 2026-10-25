@@ -17,12 +17,15 @@
 #include <QCheckBox>
 #include <QComboBox>
 #include <QDialog>
+#include <QElapsedTimer>
 #include <QFile>
 #include <QFileDialog>
+#include <QFileInfo>
 #include <QGroupBox>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QLineEdit>
 #include <QListView>
 #include <QMessageBox>
 #include <QMimeData>
@@ -510,8 +513,18 @@ private slots:
         QVERIFY(!QFile::exists(path));
     }
 
+    void deployedEditorCanSaveReopenAndExport_data()
+    {
+        QTest::addColumn<unsigned>("rows");
+        QTest::addColumn<unsigned>("columns");
+        QTest::newRow("2x3") << 2U << 3U;
+        QTest::newRow("3x2") << 3U << 2U;
+    }
+
     void deployedEditorCanSaveReopenAndExport()
     {
+        QFETCH(unsigned, rows);
+        QFETCH(unsigned, columns);
         // This case also runs natively against only the deployed Qt DLLs and
         // plugins. The fake output keeps hardware availability independent.
         const bool previous =
@@ -526,29 +539,73 @@ private slots:
         Backend backend;
         Clock clock;
         WaveExportJob exporter;
-        auto source = document();
-        QVERIFY(source.setSettings({7, 125, 8000}));
+        auto created = PatternDocument::create({rows, columns});
+        QVERIFY(created);
+        auto source = std::move(created.value());
+        QVERIFY(source.addFrame());
+        QVERIFY(source.setSettings({7, 300, 8000}));
+        for (std::size_t frame = 0; frame < source.frameCount(); ++frame)
+            for (unsigned row = 0; row < rows; ++row)
+                for (unsigned column = 0; column < columns; ++column)
+                {
+                    const auto index = row * columns + column + 1;
+                    QVERIFY(source.setCell(
+                        frame, {row, column},
+                        {100 * index,
+                         200 * index + static_cast<unsigned>(frame)}));
+                }
         EditorWindow window(store, backend, clock, exporter, source);
         window.show();
-        window.findChild<GridWidget*>("gridWidget")->cellSelected(1, 2);
+        auto* grid = window.findChild<GridWidget*>("gridWidget");
+        QCoreApplication::processEvents();
+        for (unsigned row = 0; row < rows; ++row)
+            for (unsigned column = 0; column < columns; ++column)
+            {
+                const auto bounds = GridGeometry::cellRect(
+                    QRectF(grid->rect()), {rows, columns}, {row, column});
+                QTest::mouseClick(grid, Qt::LeftButton, Qt::NoModifier,
+                                  bounds.center().toPoint());
+                QVERIFY(window.session().selectedCell() ==
+                        (CellPosition{row, column}));
+                QCOMPARE(
+                    window.findChild<QSpinBox*>("frequencySpinBox")->value(),
+                    static_cast<int>(100 * (row * columns + column + 1)));
+            }
         window.findChild<QSpinBox*>("amplitudeSpinBox")->setValue(3210);
         QVERIFY(window.session().dirty());
         const auto expected = window.session().document();
         auto triggerWithPath = [&](const QKeySequence& shortcut,
-                                   const QString& path) {
+                                   const QString& path) -> bool {
             QAction* action = nullptr;
             for (auto* candidate : window.findChildren<QAction*>())
                 if (candidate->shortcut() == shortcut)
                     action = candidate;
-            QVERIFY(action);
+            if (!action)
+                return false;
             bool accepted = false;
+            bool timedOut = false;
+            QElapsedTimer elapsed;
+            elapsed.start();
             QTimer responder;
             connect(&responder, &QTimer::timeout, &window, [&] {
+                if (elapsed.elapsed() > 5000)
+                {
+                    timedOut = true;
+                    if (auto* modal = qobject_cast<QDialog*>(
+                            QApplication::activeModalWidget()))
+                        modal->reject();
+                    return;
+                }
                 if (auto* dialog = qobject_cast<QFileDialog*>(
                         QApplication::activeModalWidget()))
                 {
-                    responder.stop();
-                    dialog->selectFile(path);
+                    // Qt's selectFile deliberately ignores the focused name
+                    // editor after showing. Enter the filename as a user would.
+                    dialog->setDirectory(QFileInfo(path).absolutePath());
+                    auto* name = dialog->findChild<QLineEdit*>("fileNameEdit");
+                    if (!name)
+                        return;
+                    name->setText(QFileInfo(path).fileName());
                     accepted = QMetaObject::invokeMethod(dialog, "accept",
                                                          Qt::DirectConnection);
                 }
@@ -556,11 +613,11 @@ private slots:
             responder.start(10);
             action->trigger();
             responder.stop();
-            QVERIFY(accepted);
+            return accepted && !timedOut;
         };
         const auto base = temporary.filePath(QString::fromUtf8("pattern-ä"));
         const auto project = base + ".vibmory";
-        triggerWithPath(QKeySequence(QKeySequence::Save), base);
+        QVERIFY(triggerWithPath(QKeySequence(QKeySequence::Save), base));
         QVERIFY(!window.session().dirty());
         QVERIFY(window.session().path() == toPath(project));
         auto saved = store.load(toPath(project));
@@ -571,12 +628,12 @@ private slots:
         QVERIFY(different);
         QVERIFY(store.save(toPath(other), different.value()));
         QVERIFY(window.loadProject(toPath(other)));
-        triggerWithPath(QKeySequence(QKeySequence::Open), project);
+        QVERIFY(triggerWithPath(QKeySequence(QKeySequence::Open), project));
         QVERIFY(window.session().document() == expected);
         QVERIFY(!window.session().dirty());
         const auto wave = base + ".wav";
         QSignalSpy completed(&exporter, &WaveExportJob::finished);
-        triggerWithPath(QKeySequence("Ctrl+E"), base);
+        QVERIFY(triggerWithPath(QKeySequence("Ctrl+E"), base));
         QTRY_COMPARE_WITH_TIMEOUT(completed.count(), 1, 10000);
         QVERIFY(completed.first().first().value<Result<void>>());
         QFile exported(wave);
