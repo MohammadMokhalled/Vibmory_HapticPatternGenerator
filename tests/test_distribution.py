@@ -9,6 +9,7 @@ import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
 from prepare_distribution import collect_notices, component_for, fetch, safe_target
+from build_windows_installer import nsis_string, uninstall_manifest
 
 
 class DistributionTests(unittest.TestCase):
@@ -44,6 +45,26 @@ class DistributionTests(unittest.TestCase):
         for dependency in ("unknown.dll", "Qt6Quick.dll", "newcodec.dll"):
             with self.assertRaisesRegex(ValueError, "Unreviewed"):
                 component_for(Path(dependency))
+
+    def test_installer_manifest_is_limited_to_owned_files(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            stage = root / "stage"
+            stage.mkdir()
+            (stage / "Vibmory.exe").write_bytes(b"fixture")
+            (stage / "nested").mkdir()
+            (stage / "nested/LICENSE").write_text("notice", encoding="utf-8")
+            (root / "user-pattern.vibmory").write_text("user data", encoding="utf-8")
+            manifest = uninstall_manifest(stage)
+            self.assertNotIn("/r", manifest)
+            self.assertNotIn("user-pattern", manifest)
+            self.assertIn('Delete "$INSTDIR\\Vibmory.exe"', manifest)
+            (stage / "Uninstall.exe").write_bytes(b"existing installation")
+            with self.assertRaisesRegex(ValueError, "clean stage"):
+                uninstall_manifest(stage)
+        self.assertEqual(nsis_string("price$folder"), "price$$folder")
+        with self.assertRaises(ValueError):
+            nsis_string("path\ncommand")
 
 
 if __name__ == "__main__":

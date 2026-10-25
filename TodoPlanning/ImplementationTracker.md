@@ -86,7 +86,7 @@ Verified (software) means the implemented behavior has supporting current source
 | R57 | P2 | — Fix Doxygen input and output configuration | Verified (software) |
 | R58 | P2 | — Verify an installable, runnable application artifact | Verified (software) |
 | R59 | P2 | — Make repository hygiene intentional | Verified (software) |
-| R60 | P2 | — Align project metadata and preserve third-party notices | Implemented / CI verification pending |
+| R60 | P2 | — Align project metadata and preserve third-party notices | Verified (software) |
 | R61 | P3 | — Undo/redo through editor commands | Verified (software) |
 | R62 | P3 | — Advanced timeline and stable frame identities | Verified (software) |
 | R63 | P3 | — Real-time streaming and low-latency synthesis | Verified (software) |
@@ -95,7 +95,7 @@ Verified (software) means the implemented behavior has supporting current source
 | R66 | P3 | — Introduce a custom visual theme, icons, and richer localization | Verified (software) |
 | R67 | P3 | — Add actuator backends, calibration, and device profiles | Verified (software) |
 | R68 | P3 | — Autosave and crash recovery | Verified (software) |
-| R69 | P3 | — Broaden release automation and platform coverage | Pending |
+| R69 | P3 | — Broaden release automation and platform coverage | Partial / installer CI and draft-release work pending |
 
 ## Verification log
 
@@ -124,7 +124,7 @@ Verified (software) means the implemented behavior has supporting current source
 - The distribution with app-local C++ runtime was downloaded from 39807471809 and verified: SHA-256 1a25e084cd93563e87fa94bd4b45970258bf191f2e75e60f313c1d78aa306466; 75 entries, including msvcp140.dll, vcruntime140.dll and vcruntime140_1.dll.
 - No analysis checks were suppressed. LLVM 18's variant error-copy diagnostic was not reproduced under the pinned 21.1.0 analyzer; Error construction additionally requires an explicit code/message.
 - Save/export filenames now receive their default suffix inside QFileDialog before overwrite confirmation; the application does not rewrite the chosen path afterward.
-- The full objective is still open: R60 distribution verification and R69 extended release delivery remain to be finished and verified. Physical channel/latency testing belongs to the user's later device check.
+- The full objective is still open: R69 extended release delivery and the final requirement-by-requirement audit remain to be finished and verified. Physical channel/latency testing belongs to the user's later device check.
 
 ## Timeline and profile checkpoints
 
@@ -134,4 +134,5 @@ Verified (software) means the implemented behavior has supporting current source
 - Downloaded profile artifact 12573367624 from 40126595002; SHA-256 9b8d021807d1cc7ae13f45a067ec6efed7d0dbd8b0e87b65e8298ac25b813b7a; 75 ZIP entries with app-local runtime/plugins. It launched locally with Qt removed from PATH (exit 0). Reviewed its editor screenshot and thumbnail timeline layout.
 - Run 40127642913 / 775687f passed all jobs. Downloaded and parsed successful JUnit reports: seven Linux suites, nine Windows suites, 26 UI cases and seven recovery cases plus fixtures, zero failures/errors/skips. Downloaded Windows artifact 12573114829; SHA-256 676023566be6de4c2cbeeb7b84b38d223d0a30c67011a938efb0c0e06ed02391; 75 entries. The extracted executable launched locally without Qt on PATH and exited 0.
 - Presentation passed run 40170327591 / 19c5d5f: all jobs, ten Windows suites, Qt extraction, contrast/preferences tests, and deployed English/light and German/dark previews. Visual review found and corrected dark placeholder/media-icon/silent-cell colors; widget palette-event tests verify thumbnail/icon refresh without changing the document. The earlier extraction guard correctly caught a missing project include path, which was fixed rather than bypassed.
-- Distribution now has an MIT project license, CMake-generated name/version/revision metadata, full offline Markdown documentation, pinned Qt/FFmpeg/Mesa/LLVM source archives, upstream/vendor notices, FFmpeg build checks, and an explicit binary-component/hash/version inventory. Local assembly and verification passed for 71 deployed runtime files and seven source archives. Archive traversal, corrupt-cache/offline, and unreviewed-dependency regressions pass. Full distribution CI verification is pending.
+- Distribution passed run 40171094632 / 247f94b, including all jobs, eight Linux/eleven Windows suites, package/source validation and native previews. It includes MIT licensing, CMake-generated name/version/revision metadata, offline documentation, pinned Qt/FFmpeg/Mesa/LLVM sources, upstream/vendor notices, FFmpeg build checks, and a binary-component/hash/version inventory. Runtime artifact: 12590191703; companion source artifact: 12590216639.
+- A pinned NSIS 3.13 per-user installer compiles locally with warnings as errors. Its uninstall manifest removes only packaged files, keeps nonempty user directories, and uses separate installer registration keys. Optional Authenticode helpers are configured; the repository currently has no signing secrets, so test builds are unsigned. CI install/upgrade/Unicode-path/busy-file/uninstall checks and draft-release delivery remain pending.
