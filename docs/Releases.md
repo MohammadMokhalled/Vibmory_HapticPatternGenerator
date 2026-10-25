@@ -32,7 +32,7 @@ git tag v2.0.0-rc.1
 git push origin v2.0.0-rc.1
 ```
 
-A version-tag push runs both jobs and then assembles a **draft** release. Alternatively select the tagged commit in the workflow's manual run form and set `release_tag` to the existing matching tag. A manual run with no release tag creates only ordinary build artifacts.
+A version-tag push runs both jobs and then assembles a **draft** release. Once the workflow is present on the repository's default branch, you can also select the tagged commit in the manual run form and set `release_tag` to the existing matching tag. GitHub requires that default-branch presence for [manual dispatch](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/manually-run-a-workflow). A manual run with no release tag creates only ordinary build artifacts. Branch push/tag builds work before that merge.
 
 The assembler checks the trusted workflow/repository, successful Linux and Windows jobs, exact source revision and version, peeled Git tag, portable/setup checksums, runtime inventory, dependency source hashes/provenance, all installer acceptance results, and consistent signing reports. It attaches the portable ZIP, setup EXE, matching dependency-source ZIP, individual checksums, and `SHA256SUMS.txt`. Release notes link the source and build and state the signing status and hardware-test boundary.
 

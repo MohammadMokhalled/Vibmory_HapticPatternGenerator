@@ -1,13 +1,13 @@
 # Refactor implementation tracker
 
-This tracks the full 69-item audit, including optional items requested in the follow-up. An implemented source change is not complete until the relevant tests/build/artifact evidence exists. The original audit remains a historical source review.
+All 69 software items from the audit, including the optional extensions authorized in the follow-up, are implemented and verified. [Completion audit](CompletionAudit.md) maps each requirement to its owner and evidence and records the supported-platform, hardware-test, and signing boundaries. The original audit remains a historical source review.
 
 ## Delivery stages
 
-1. **Core contracts and regression tests:** validated standard C++ domain, transactional editor session, bounded undo/redo, deterministic PCM/WAV rendering, strict versioned project codec, explicit legacy CSV orientation/routing. Local MSVC Debug core suites currently pass with warnings as errors.
-2. **Qt 6 desktop integration:** one owned editor window, pure grid projection, signal-blocked inspector, state-based streamed playback, atomic file store, cancellable asynchronous export, explicit routing/gains/device selection. Windows Qt 6.8.3 compilation and UI suites passed in run 39806088336; remaining component extraction/lifecycle tests are listed below.
-3. **Build/test/package delivery:** pinned GitHub Actions, Linux sanitizer core tests, Windows Qt 6.8.3 build/UI tests/deployed ZIP/smoke test. Windows job passed in run 39806088336. Its ZIP checksum, contents, screenshot, and local packaged launch were verified. The complete workflow passed in run 39807471809, including Doxygen and app-local CRT deployment. Artifact contents/checksum were independently verified locally.
-4. **Polish and extended scope:** finish all remaining documentation, diagnostics, lifecycle/UI regressions, stable timeline identities, profiles, localization/theme, recovery, fuzz/benchmark tooling, and release automation. Items remain open until evidenced.
+1. **Core:** validated standard C++ domain, transactional commands, bounded grouped undo/redo, deterministic PCM/WAV, strict versioned codec and explicit legacy compatibility. Nine local/Linux suites pass.
+2. **Desktop:** one owned Qt 6.8 editor, numeric grid/inspector projections, stable timeline model, atomic files and isolated cancellable workers. Twelve Windows suites and the deployed native file workflow pass.
+3. **Delivery:** pinned CI, sanitizer/analysis/docs gates, test-disabled desktop build, app-local runtime, verified portable ZIP, per-user installer, optional signing, companion dependency sources and actual draft releases.
+4. **Extended scope:** routing/calibration profiles, recovery with terminated-process tests, theme/icons/German UI, property/mutation tests, streaming and benchmark tooling are complete. See the completion audit for the requirement-by-requirement review.
 
 ## Decisions
 
@@ -17,11 +17,11 @@ This tracks the full 69-item audit, including optional items requested in the fo
 - Canonical projects use a bounded versioned `.vibmory` text format. Legacy CSV import requires an explicit orientation and retains legacy physical channel order and phase mode.
 - Playback streams a fixed snapshot. Editing is locked during playback/export. Preview never depends on a temporary filename.
 - Frequency must remain below Nyquist, amplitude is signed-PCM peak 0-32767, maximum 256 channels/1024 frames/262144 stored cells/512 MiB rendered audio.
-- Project-owned code uses MIT under the maintainer's delegated decision authority. Existing third-party terms remain independent. Pinned source archives, upstream notices, binary inventory, and companion dependency-source delivery are implemented; distribution CI verification remains pending.
+- Project-owned code uses MIT under the maintainer's delegated decision authority. Existing third-party terms remain independent. Pinned archives, notices, runtime inventory and companion-source delivery passed distribution and actual tagged-release verification.
 
 ## Status meaning
 
-Verified (software) means the implemented behavior has supporting current source/build/test evidence; it does not assert physical actuator/driver/latency validation. Partial items still have acceptance work. Pending items remain in the full objective, including the requested extensions. This is not a claim that the entire refactor is complete.
+Verified (software) means the implemented behavior has source/build/test evidence. Physical actuator/driver/latency validation belongs to the user's later device test. Signing support is configured; credentialed signing requires an actual certificate, and current builds explicitly report that they are unsigned. All items below are closed within those documented boundaries.
 
 ## Item status
 
@@ -95,9 +95,18 @@ Verified (software) means the implemented behavior has supporting current source
 | R66 | P3 | — Introduce a custom visual theme, icons, and richer localization | Verified (software) |
 | R67 | P3 | — Add actuator backends, calibration, and device profiles | Verified (software) |
 | R68 | P3 | — Autosave and crash recovery | Verified (software) |
-| R69 | P3 | — Broaden release automation and platform coverage | Partial / installer CI and draft-release work pending |
+| R69 | P3 | — Broaden release automation and platform coverage | Verified (software) |
 
-## Verification log
+## Completion checkpoint
+
+- Implementation source `729f77c` passed branch run 40222527129 and tagged run 40222589069. Both build jobs and real draft assembly passed; draft `v2.0.0-rc.2` has portable/setup/source ZIPs and four checksum assets.
+- Downloaded reports: nine Linux suites, twelve Windows suites; 33 UI, nine recovery, six preferences and four deployed native cases including fixtures; zero failures/errors/skips. Atomic replacement failure preserves previous project/WAV bytes, both rectangular file workflows pass, and move controls reflect sequence boundaries.
+- The release assembler checked source/tag/version equality, all runtime/source hashes and provenance, seven installer lifecycle results, and unsigned-report consistency before creating its draft. Actual signing and physical output remain the explicit external checks above.
+- Local source `15c7935` downloads were independently checked: portable SHA-256 `e0c35f7e7566848ca7521ae25c7b0e130eac6bfda4e9a9a2bea6c4355184c51d`, setup `26d24559c2e08d5136218d0088cb4e36be3f5dc301074f62658ac65e538fe28c`; 71 runtime entries, seven archives; native launch without Qt exited 0. The later code change only corrects timeline move-action enabled state and has its own passing regression.
+
+## Historical verification log
+
+The following checkpoints record progress at their stated commits, including issues that were subsequently closed. Use the completion audit/checkpoint above for current status.
 
 - Local: `cmake -S . -B out/core -DVIBMORY_BUILD_GUI=OFF -DVIBMORY_WARNINGS_AS_ERRORS=ON`; MSVC 19.50.
 - Local: `cmake --build out/core --config Debug --parallel 4`; passed.
@@ -109,7 +118,7 @@ Verified (software) means the implemented behavior has supporting current source
 - Test-disabled Release configuration built successfully without Qt or test dependencies.
 - Informational local Debug renderer benchmark: 16 channels x 48 kHz x 10 seconds rendered in approximately 0.25 wall seconds. This is not a latency or physical-output measurement.
 
-## Next implementation stages (still required)
+## Historical implementation stages
 
 1. Keep the final branch head green after each change and refresh the checked artifact/evidence before the completion audit.
 2. Inspector, asynchronous export job, save-path dialog policy, document workflow, timeline model, profile actions, and recovery controller have been extracted. Preserve these responsibilities while completing presentation and release work.
@@ -124,7 +133,7 @@ Verified (software) means the implemented behavior has supporting current source
 - The distribution with app-local C++ runtime was downloaded from 39807471809 and verified: SHA-256 1a25e084cd93563e87fa94bd4b45970258bf191f2e75e60f313c1d78aa306466; 75 entries, including msvcp140.dll, vcruntime140.dll and vcruntime140_1.dll.
 - No analysis checks were suppressed. LLVM 18's variant error-copy diagnostic was not reproduced under the pinned 21.1.0 analyzer; Error construction additionally requires an explicit code/message.
 - Save/export filenames now receive their default suffix inside QFileDialog before overwrite confirmation; the application does not rewrite the chosen path afterward.
-- The full objective is still open: R69 extended release delivery and the final requirement-by-requirement audit remain to be finished and verified. Physical channel/latency testing belongs to the user's later device check.
+- At this foundation checkpoint, R69 delivery and the final audit remained open. Both are now closed by the completion checkpoint above. Physical channel/latency testing belongs to the user's later device check.
 
 ## Timeline and profile checkpoints
 

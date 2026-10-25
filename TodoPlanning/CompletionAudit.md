@@ -2,7 +2,11 @@
 
 Audit date: 2026-10-25. This covers the full [69-item original audit](RefactoringAudit.md), including the extensions authorized in the implementation request. It checks implemented contracts and behavioral evidence, rather than treating a tracker status as proof.
 
-**Verification in progress:** final-source CI, native deployed file-workflow results, and the real draft-release assembly must pass before this report is closed. Earlier verified installer delivery is [run 40220428752](https://github.com/MohammadMokhalled/Vibmory_HapticPatternGenerator/actions/runs/40220428752), source `6c2b908`; its downloaded ZIP/setup checksums, 71 runtime entries, seven dependency archives, seven installer acceptance results, and local launch without Qt were checked independently. The final waveform review additionally reproduced and corrected a zero-frequency continuous-phase silence defect. The current source has nine passing local CTest suites.
+**All 69 software items are closed.** The verified implementation baseline is source `729f77cb06c7a2420607fd0d1c81dc10f06eec74`. Its [branch build](https://github.com/MohammadMokhalled/Vibmory_HapticPatternGenerator/actions/runs/40222527129) and [tagged release build 40222589069](https://github.com/MohammadMokhalled/Vibmory_HapticPatternGenerator/actions/runs/40222589069) passed. The tagged run completed both build jobs and real draft-release assembly for `v2.0.0-rc.2`. This closing documentation records that baseline; later candidates identify their exact source in `application.json` and rerun the same gates.
+
+Downloaded JUnit evidence from the tagged run contains nine Linux suites, twelve Windows suites, 33 UI cases, nine recovery cases, six preference cases, and four native deployed-workflow cases (case counts include fixtures). There are zero failures, errors, or skips. The native cases exercise distinct-valued multi-frame 2x3 and 3x2 documents through actual Save, Open, and asynchronous Export actions with only deployed Qt DLLs/plugins available. Installer reports confirm all seven lifecycle results. The assembler verified exact tag/source metadata, runtime/source hashes, provenance, checksums, and consistent unsigned reports before attaching seven draft assets.
+
+Independent local evidence includes nine passing CTest suites; downloaded source `15c7935` ZIP/setup checksums, 71 runtime files and seven source archives; and a native downloaded executable launch with Qt removed from PATH (exit 0). English/light and German/dark previews were visually reviewed. The final waveform audit reproduced a zero-frequency continuous-phase silence defect before fixing it; both phase modes now test silence and resumed output. The final timeline review corrected and tested move-action states at sequence boundaries.
 
 ## Evidence sources
 
@@ -85,12 +89,14 @@ The implementation column identifies the authoritative owner or equivalent desig
 | R66 | System/light/dark palettes, labeled icons and English/German UI preferences. | 118-message extraction/catalog checks, contrast/locale/persistence tests, theme refresh/session preservation and reviewed native previews. |
 | R67 | Validated reusable routing/gain/device profiles with explicit review/selection. | Unicode bounded JSON/atomic-save tests, invalid/missing-device/shape failures, explicit output selection and undoable calibration; one supported audio backend. |
 | R68 | Process-locked versioned recovery snapshots have explicit restore/retention and never overwrite ordinary projects. | Actual terminated-child stale lock, active-session exclusion, 10/30-day retention, immutable worker, cancel/restart/replacement and Restore/Discard/Keep tests. |
-| R69 | Per-user installer, optional signing and provenance-checked draft-release distribution. | Seven installer acceptance results and unsigned reports verified; final draft integration remains pending. No additional desktop OS is advertised. |
+| R69 | Per-user installer, optional signing and provenance-checked draft-release distribution. | All three tagged workflow jobs passed; seven installer acceptance results, unsigned reports, matching source/tag provenance and seven draft assets verified. No additional desktop OS is advertised. |
 
 ## Scope and external checks
 
 Windows x64 is the supported packaged desktop target; Linux validates the standard C++ core. Profiles/calibration use the existing physical audio interface. Streaming is bounded, with measured device latency left to the user's intended device test; no hard real-time guarantee or alternate hardware protocol is claimed. The optional extensions are implemented to those concrete supported boundaries rather than introducing an unused plugin system or automatic updater.
 
 Signing is configured and fails closed when configured credentials fail, but no certificate secrets currently exist. The delivered build therefore explicitly reports that it is unsigned. A valid certificate/timestamp service is an external prerequisite for testing the signed path. Publication of a draft release remains a separate maintainer decision.
+
+The implementation is on `feature/refactor-the-code-architecture`. Push/tag workflows have been exercised there. Manual dispatch becomes available when the workflow is present on the repository's default branch, as explained in [Releases](../docs/Releases.md).
 
 Before using a haptic interface, verify its actual channel count/sample-rate support, physical channel-to-actuator mapping with an asymmetric low-amplitude pattern, early Stop/disconnection behavior, and measured latency on that device. These hardware observations are outside software CI and belong to the later device testing requested by the user.

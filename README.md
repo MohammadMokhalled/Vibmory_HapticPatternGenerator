@@ -13,7 +13,7 @@ A local Qt installation is **not needed** to run the portable build.
 3. Download the **Vibmory-windows-x64** artifact. GitHub may require sign-in to download artifacts.
 4. Run its per-user `Vibmory-windows-x64-setup.exe`, or extract `Vibmory-windows-x64.zip` and launch `Vibmory/Vibmory.exe`. Keep the portable DLLs and plugin folders beside the executable. The installer targets Windows 10 version 1809 or newer, x64, and needs no administrator rights.
 
-The artifact also contains a SHA-256 checksum. CI builds Windows x64 with Qt 6.8.3, runs core and offscreen UI tests, deploys Qt runtime/plugins, and launches the packaged program with Qt removed from PATH. Artifacts are retained for 30 days. A push, pull request, or manual workflow run produces a new build.
+The artifact also contains a SHA-256 checksum. CI builds Windows x64 with Qt 6.8.3, runs core and offscreen UI tests, deploys Qt runtime/plugins, and launches the packaged program with Qt removed from PATH. Artifacts are retained for 30 days. Pushes and pull requests produce builds; manual dispatch is available after the workflow is present on the repository's default branch.
 
 Version tags also assemble a verified draft release with portable/setup/source downloads and checksums. See [Releases](docs/Releases.md) for installer lifecycle, optional signing credentials, and the draft review process. Builds are unsigned when no certificate is configured.
 
