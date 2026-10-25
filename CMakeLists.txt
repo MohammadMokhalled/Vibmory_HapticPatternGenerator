@@ -62,7 +62,7 @@ if(VIBMORY_BUILD_GUI)
     qt_add_lrelease(TS_FILES translations/vibmory_de.ts QM_FILES_OUTPUT_VARIABLE vibmory_qm_files OPTIONS -nounfinished)
     qt_add_resources(vibmory_ui vibmory_translations PREFIX "/i18n" BASE "${PROJECT_BINARY_DIR}" FILES ${vibmory_qm_files})
     add_custom_target(update_translations
-        COMMAND Qt6::lupdate "${PROJECT_SOURCE_DIR}/src/ui" -no-obsolete -locations none -ts "${PROJECT_SOURCE_DIR}/translations/vibmory_de.ts"
+        COMMAND Qt6::lupdate "${PROJECT_SOURCE_DIR}/src/ui" -I "${PROJECT_SOURCE_DIR}/src" -no-obsolete -locations none -ts "${PROJECT_SOURCE_DIR}/translations/vibmory_de.ts"
         COMMENT "Update application translation sources (review the TS changes)")
     qt_add_executable(Vibmory WIN32 src/app/main.cpp)
     set_target_properties(Vibmory PROPERTIES AUTOMOC OFF AUTOUIC OFF CXX_EXTENSIONS OFF)

@@ -64,13 +64,14 @@ def main() -> None:
         with tempfile.TemporaryDirectory(prefix="vibmory-translations-") as directory:
             extracted = Path(directory) / CATALOG.name
             shutil.copyfile(CATALOG, extracted)
-            result = subprocess.run([args.lupdate, str(ROOT / "src/ui"), "-no-obsolete", "-locations", "none", "-ts", str(extracted)],
+            result = subprocess.run([args.lupdate, str(ROOT / "src/ui"), "-I", str(ROOT / "src"), "-no-obsolete", "-locations", "none", "-ts", str(extracted)],
                                     capture_output=True, text=True, encoding="utf-8")
             if result.returncode:
                 raise ValueError(result.stdout + result.stderr)
             actual = messages(extracted)
             if set(actual) != set(catalog):
-                raise ValueError(f"Qt extractor/catalog mismatch: {set(actual) ^ set(catalog)}")
+                difference = sorted(set(actual) ^ set(catalog))
+                raise ValueError(f"Qt extractor/catalog mismatch ({len(difference)} keys): {difference[:12]}\n{result.stdout}\n{result.stderr}")
     print(f"Validated {len(catalog)} German UI messages" + (" against Qt lupdate." if args.lupdate else "."))
 
 
