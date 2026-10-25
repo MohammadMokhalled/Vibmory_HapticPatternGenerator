@@ -211,11 +211,11 @@ private slots:
         QVERIFY(dark);
         dark->trigger();
         QCOMPARE(preferences.theme(), ColorTheme::Dark);
-        QVERIFY(timeline->model()
-                    ->index(0, 0)
-                    .data(Qt::DecorationRole)
-                    .value<QIcon>()
-                    .cacheKey() != thumbnail);
+        QTRY_VERIFY(timeline->model()
+                        ->index(0, 0)
+                        .data(Qt::DecorationRole)
+                        .value<QIcon>()
+                        .cacheKey() != thumbnail);
         const auto icon = window.findChild<QPushButton*>("playButton")
                               ->icon()
                               .pixmap(32, 32)

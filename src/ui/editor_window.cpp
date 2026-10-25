@@ -18,6 +18,7 @@
 #include <QDialog>
 #include <QDialogButtonBox>
 #include <QDoubleSpinBox>
+#include <QEvent>
 #include <QFileDialog>
 #include <QFormLayout>
 #include <QGroupBox>
@@ -145,12 +146,19 @@ void EditorWindow::enablePreferences(UiPreferences& preferences)
     view->setObjectName("viewMenu");
     menuBar()->insertMenu(menuBar()->actions().last(), view);
     preferences.populateMenu(*view);
-    connect(&preferences, &UiPreferences::themeChanged, this,
-            &EditorWindow::refreshIcons);
     connect(&preferences, &UiPreferences::notice, this,
             [this](const QString& message) {
                 statusBar()->showMessage(message, 8000);
             });
+}
+
+void EditorWindow::changeEvent(QEvent* event)
+{
+    QMainWindow::changeEvent(event);
+    if ((event->type() == QEvent::PaletteChange ||
+         event->type() == QEvent::StyleChange) &&
+        play_ && frameModel_)
+        refreshIcons();
 }
 
 void EditorWindow::refreshIcons()
