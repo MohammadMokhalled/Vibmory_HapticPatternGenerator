@@ -226,9 +226,10 @@ void EditorWindow::buildMenus()
     help->addAction(tr("&About Vibmory"), this, [this] {
         QMessageBox::about(
             this, tr("About Vibmory"),
-            tr("Vibmory %1\nHaptic pattern editor\n\nQt 6 desktop edition. "
-               "See README and THIRD_PARTY_NOTICES in the application folder "
-               "for project and dependency information.")
+            tr("Vibmory %1\nHaptic pattern editor\n\nUses Qt (LGPLv3) and "
+               "FFmpeg (LGPLv2.1+). Licenses, source access and library "
+               "replacement instructions: THIRD_PARTY_NOTICES and "
+               "docs/Distribution.md in the application folder.")
                 .arg(QCoreApplication::applicationVersion()));
     });
 }

@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "qtVersion": "6.8.3",
+  "archives": [
+    {
+      "id": "qtbase",
+      "version": "6.8.3",
+      "file": "qtbase-everywhere-src-6.8.3.tar.xz",
+      "url": "https://download.qt.io/archive/qt/6.8/6.8.3/submodules/qtbase-everywhere-src-6.8.3.tar.xz",
+      "sha256": "56001b905601bb9023d399f3ba780d7fa940f3e4861e496a7c490331f49e0b80"
+    },
+    {
+      "id": "qtmultimedia",
+      "version": "6.8.3",
+      "file": "qtmultimedia-everywhere-src-6.8.3.tar.xz",
+      "url": "https://download.qt.io/archive/qt/6.8/6.8.3/submodules/qtmultimedia-everywhere-src-6.8.3.tar.xz",
+      "sha256": "32e82307d783172a3b984cc3c47c5e4e8b819cee3cbfc702c7012c47f15f6b01"
+    },
+    {
+      "id": "qtsvg",
+      "version": "6.8.3",
+      "file": "qtsvg-everywhere-src-6.8.3.tar.xz",
+      "url": "https://download.qt.io/archive/qt/6.8/6.8.3/submodules/qtsvg-everywhere-src-6.8.3.tar.xz",
+      "sha256": "35eb516460f00f264eb504baa253432384351cf23fb9980a5857190e8deef438"
+    },
+    {
+      "id": "qttranslations",
+      "version": "6.8.3",
+      "file": "qttranslations-everywhere-src-6.8.3.tar.xz",
+      "url": "https://download.qt.io/archive/qt/6.8/6.8.3/submodules/qttranslations-everywhere-src-6.8.3.tar.xz",
+      "sha256": "c3c61d79c3d8fe316a20b3617c64673ce5b5519b2e45535f49bee313152fa531"
+    },
+    {
+      "id": "ffmpeg",
+      "version": "7.1",
+      "file": "ffmpeg-n7.1.tar.gz",
+      "url": "https://github.com/FFmpeg/FFmpeg/archive/refs/tags/n7.1.tar.gz",
+      "sha256": "7ddad2d992bd250a6c56053c26029f7e728bebf0f37f80cf3f8a0e6ec706431a"
+    },
+    {
+      "id": "mesa",
+      "version": "11.2.2",
+      "file": "mesa-11.2.2.tar.xz",
+      "url": "https://archive.mesa3d.org/older-versions/11.x/11.2.2/mesa-11.2.2.tar.xz",
+      "sha256": "40e148812388ec7c6d7b6657d5a16e2e8dabba8b97ddfceea5197947647bdfb4"
+    },
+    {
+      "id": "llvm",
+      "version": "3.6.2",
+      "file": "llvm-3.6.2.src.tar.xz",
+      "url": "https://releases.llvm.org/3.6.2/llvm-3.6.2.src.tar.xz",
+      "sha256": "f60dc158bfda6822de167e87275848969f0558b3134892ff54fced87e4667b94"
+    }
+  ]
+}

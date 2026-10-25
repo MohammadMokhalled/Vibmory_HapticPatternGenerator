@@ -1,9 +1,27 @@
 # Third-party notices
 
-Vibmory uses dynamically linked Qt 6 (Core, Gui, Widgets, Concurrent, Multimedia).
-Qt is maintained by The Qt Company and other contributors. See the license
-files supplied with the selected Qt distribution, https://www.qt.io/licensing/
-and https://code.qt.io/ for its notices, source, and licensing options.
+Vibmory's own code uses the MIT license in LICENSE. Bundled dependencies keep
+their own copyrights and licenses. The application uses shared Qt 6.8.3
+libraries (Core, Gui, Widgets, Network, Multimedia, Svg and required plugins)
+under applicable LGPLv3 and third-party terms. Qt is maintained by The Qt
+Company and other contributors.
+
+This software uses libraries from the FFmpeg project under LGPLv2.1 or later.
+The packaged build checks FFmpeg 7.1 and its actual license/configuration.
+Its source archive is supplied in the companion Vibmory-dependency-sources
+artifact alongside the executable. Qt's complete relevant module sources,
+upstream notices, and software-renderer sources are supplied there as well.
+
+Windows packages also contain the optional Mesa/LLVM software renderer,
+Microsoft graphics redistributables, and the Microsoft C++ release runtime.
+Their licenses are independent of Vibmory's MIT license. See
+docs/Distribution.md for component terms, supplier links, source/replacement
+instructions, and redistribution details. No application term restricts
+replacement of LGPL libraries or reverse engineering needed to debug them.
+
+The package's licenses/ directory contains full upstream license/notice files,
+source attribution metadata and vendor notices. runtime-inventory.json records
+the actual shipped binaries, hashes, versions and component assignments.
 
 The legacy `Helper` implementation was adapted from Qt's examples. Its original
 notice is preserved below even as that implementation is replaced.

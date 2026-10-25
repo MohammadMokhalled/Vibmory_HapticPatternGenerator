@@ -17,7 +17,7 @@ This tracks the full 69-item audit, including optional items requested in the fo
 - Canonical projects use a bounded versioned `.vibmory` text format. Legacy CSV import requires an explicit orientation and retains legacy physical channel order and phase mode.
 - Playback streams a fixed snapshot. Editing is locked during playback/export. Preview never depends on a temporary filename.
 - Frequency must remain below Nyquist, amplitude is signed-PCM peak 0-32767, maximum 256 channels/1024 frames/262144 stored cells/512 MiB rendered audio.
-- Existing third-party notices are preserved. Distribution/license metadata and bundled Qt notices still require completion.
+- Project-owned code uses MIT under the maintainer's delegated decision authority. Existing third-party terms remain independent. Pinned source archives, upstream notices, binary inventory, and companion dependency-source delivery are implemented; distribution CI verification remains pending.
 
 ## Status meaning
 
@@ -86,13 +86,13 @@ Verified (software) means the implemented behavior has supporting current source
 | R57 | P2 | — Fix Doxygen input and output configuration | Verified (software) |
 | R58 | P2 | — Verify an installable, runnable application artifact | Verified (software) |
 | R59 | P2 | — Make repository hygiene intentional | Verified (software) |
-| R60 | P2 | — Align project metadata and preserve third-party notices | Partial / acceptance gaps |
+| R60 | P2 | — Align project metadata and preserve third-party notices | Implemented / CI verification pending |
 | R61 | P3 | — Undo/redo through editor commands | Verified (software) |
 | R62 | P3 | — Advanced timeline and stable frame identities | Verified (software) |
 | R63 | P3 | — Real-time streaming and low-latency synthesis | Verified (software) |
 | R64 | P3 | — Extended fuzzing, property testing, and benchmark infrastructure | Verified (software) |
 | R65 | P3 | — Remove all Qt dependencies from the domain | Verified (software) |
-| R66 | P3 | — Introduce a custom visual theme, icons, and richer localization | Implemented / CI verification pending |
+| R66 | P3 | — Introduce a custom visual theme, icons, and richer localization | Verified (software) |
 | R67 | P3 | — Add actuator backends, calibration, and device profiles | Verified (software) |
 | R68 | P3 | — Autosave and crash recovery | Verified (software) |
 | R69 | P3 | — Broaden release automation and platform coverage | Pending |
@@ -114,7 +114,7 @@ Verified (software) means the implemented behavior has supporting current source
 1. Keep the final branch head green after each change and refresh the checked artifact/evidence before the completion audit.
 2. Inspector, asynchronous export job, save-path dialog policy, document workflow, timeline model, profile actions, and recovery controller have been extracted. Preserve these responsibilities while completing presentation and release work.
 3. Categorized diagnostics and focused Clang analysis are implemented and passed with LLVM 21.1.0. Finish the deployment license/attribution inventory and remaining item acceptance gaps. Preserve existing project rights while documenting distribution terms.
-4. Verify theme/localization and finish tagged release/installer/signing configuration where credentials are available. Existing timeline, profiles, recovery, undo, bounded streaming, property tests/benchmark and standard C++ core provide the other extended items.
+4. Finish tagged release/installer/signing configuration where credentials are available. Existing presentation, timeline, profiles, recovery, undo, bounded streaming, property tests/benchmark and standard C++ core provide the other extended items.
 5. Audit every requirement against current source and test/artifact evidence. Only then mark the goal complete. Physical routing and latency checks remain for the user's intended device, as requested.
 
 ## Verified foundation checkpoint
@@ -124,7 +124,7 @@ Verified (software) means the implemented behavior has supporting current source
 - The distribution with app-local C++ runtime was downloaded from 39807471809 and verified: SHA-256 1a25e084cd93563e87fa94bd4b45970258bf191f2e75e60f313c1d78aa306466; 75 entries, including msvcp140.dll, vcruntime140.dll and vcruntime140_1.dll.
 - No analysis checks were suppressed. LLVM 18's variant error-copy diagnostic was not reproduced under the pinned 21.1.0 analyzer; Error construction additionally requires an explicit code/message.
 - Save/export filenames now receive their default suffix inside QFileDialog before overwrite confirmation; the application does not rewrite the chosen path afterward.
-- The full objective is still open: R60 distribution metadata/notices, R66 theme/localization, and R69 extended release delivery remain to be finished and verified. Physical channel/latency testing belongs to the user's later device check.
+- The full objective is still open: R60 distribution verification and R69 extended release delivery remain to be finished and verified. Physical channel/latency testing belongs to the user's later device check.
 
 ## Timeline and profile checkpoints
 
@@ -133,4 +133,5 @@ Verified (software) means the implemented behavior has supporting current source
 - Recovery passed run 40127308000 / b46928d: both jobs, nine Windows suites, seven Linux suites, static analysis, Doxygen, and packaged launch. Tests exercise a terminated child leaving a stale process lock, active-instance exclusion, retention, immutable background snapshots, cancellation/restart, worker exceptions, project replacement, startup restore/discard/keep, and accepted window-close cleanup.
 - Downloaded profile artifact 12573367624 from 40126595002; SHA-256 9b8d021807d1cc7ae13f45a067ec6efed7d0dbd8b0e87b65e8298ac25b813b7a; 75 ZIP entries with app-local runtime/plugins. It launched locally with Qt removed from PATH (exit 0). Reviewed its editor screenshot and thumbnail timeline layout.
 - Run 40127642913 / 775687f passed all jobs. Downloaded and parsed successful JUnit reports: seven Linux suites, nine Windows suites, 26 UI cases and seven recovery cases plus fixtures, zero failures/errors/skips. Downloaded Windows artifact 12573114829; SHA-256 676023566be6de4c2cbeeb7b84b38d223d0a30c67011a938efb0c0e06ed02391; 75 entries. The extracted executable launched locally without Qt on PATH and exited 0.
-- Presentation adds system/light/dark palettes, standard action icons, persistent isolated UI preferences, and a 118-message German UI catalog with Qt dialog translations. Source/catalog checks pass locally; Qt extraction, contrast/preference/UI tests, and packaged English/light and German/dark previews are pending CI verification.
+- Presentation passed run 40170327591 / 19c5d5f: all jobs, ten Windows suites, Qt extraction, contrast/preferences tests, and deployed English/light and German/dark previews. Visual review found and corrected dark placeholder/media-icon/silent-cell colors; widget palette-event tests verify thumbnail/icon refresh without changing the document. The earlier extraction guard correctly caught a missing project include path, which was fixed rather than bypassed.
+- Distribution now has an MIT project license, CMake-generated name/version/revision metadata, full offline Markdown documentation, pinned Qt/FFmpeg/Mesa/LLVM source archives, upstream/vendor notices, FFmpeg build checks, and an explicit binary-component/hash/version inventory. Local assembly and verification passed for 71 deployed runtime files and seven source archives. Archive traversal, corrupt-cache/offline, and unreviewed-dependency regressions pass. Full distribution CI verification is pending.

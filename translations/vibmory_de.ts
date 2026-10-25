@@ -181,11 +181,11 @@
             <source>Vibmory %1
 Haptic pattern editor
 
-Qt 6 desktop edition. See README and THIRD_PARTY_NOTICES in the application folder for project and dependency information.</source>
+Uses Qt (LGPLv3) and FFmpeg (LGPLv2.1+). Licenses, source access and library replacement instructions: THIRD_PARTY_NOTICES and docs/Distribution.md in the application folder.</source>
             <translation>Vibmory %1
 Editor für haptische Muster
 
-Qt-6-Desktopversion. Informationen zum Projekt und seinen Abhängigkeiten stehen in README und THIRD_PARTY_NOTICES im Anwendungsordner.</translation>
+Verwendet Qt (LGPLv3) und FFmpeg (LGPLv2.1+). Lizenzen, Quelltextzugang und Hinweise zum Austausch der Bibliotheken: THIRD_PARTY_NOTICES und docs/Distribution.md im Anwendungsordner.</translation>
         </message>
         <message>
             <source>Frames</source>

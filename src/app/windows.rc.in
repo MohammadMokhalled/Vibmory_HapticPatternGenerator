@@ -17,6 +17,8 @@ BEGIN
             VALUE "OriginalFilename", "Vibmory.exe"
             VALUE "ProductName", "Vibmory"
             VALUE "ProductVersion", "@PROJECT_VERSION@"
+            VALUE "CompanyName", "Vibmory"
+            VALUE "LegalCopyright", "Copyright (c) 2021-2026 Mohammad Mokhalled and contributors"
         END
     END
     BLOCK "VarFileInfo"
