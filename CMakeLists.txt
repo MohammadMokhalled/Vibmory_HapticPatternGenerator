@@ -105,14 +105,16 @@ if(VIBMORY_BUILD_GUI)
     if(APPLE)
         # macdeployqt does not deploy Qt translations. Merge the linked modules'
         # German catalogs into the bundle before deploying/signing its runtime.
-        qt_generate_deploy_script(TARGET Vibmory NAME macos_translations
+        # The versionless Qt macro re-expands install-time variables. Call the
+        # Qt 6 function directly so QT_DEPLOY_PREFIX survives script generation.
+        qt6_generate_deploy_script(TARGET Vibmory NAME macos_translations
             OUTPUT_SCRIPT deploy_translations_script
-            CONTENT "
-set(QT_DEPLOY_TRANSLATIONS_DIR \"$<TARGET_BUNDLE_DIR_NAME:Vibmory>/Contents/Resources/translations\")
+            CONTENT [[
+set(QT_DEPLOY_TRANSLATIONS_DIR "$<TARGET_BUNDLE_DIR_NAME:Vibmory>/Contents/Resources/translations")
 qt_deploy_translations(LOCALES de)
-qt_deploy_qt_conf(\"\${QT_DEPLOY_PREFIX}/$<TARGET_BUNDLE_DIR_NAME:Vibmory>/Contents/Resources/qt.conf\"
+qt_deploy_qt_conf("${QT_DEPLOY_PREFIX}/$<TARGET_BUNDLE_DIR_NAME:Vibmory>/Contents/Resources/qt.conf"
     PLUGINS_DIR PlugIns QML_DIR Resources/qml TRANSLATIONS_DIR Resources/translations)
-")
+]])
         install(SCRIPT "${deploy_translations_script}")
         # macdeployqt preserves our qt.conf. Ad-hoc signing needs no identity
         # credentials and repairs signatures after relocating ARM64 libraries.
