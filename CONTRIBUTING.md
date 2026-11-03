@@ -23,7 +23,7 @@ cmake --build --preset core
 ctest --preset core
 ```
 
-Use the desktop preset and Qt UI tests for UI/adapters. CI also checks Linux sanitizers, focused Clang analysis, Doxygen, desktop builds with tests disabled, real packaged file workflows, installer lifecycle, and runtime/source provenance. See README for a Visual Studio generator alternative and static-analysis setup. Core tests need no Qt, sound device, or downloaded test framework.
+Use the desktop preset and Qt UI tests for UI/adapters, or the `macos` preset on Apple Silicon Macs. CI also checks native macOS core/desktop tests and installed English/German Cocoa startup, Linux sanitizers, focused Clang analysis, Doxygen, desktop builds with tests disabled, real packaged file workflows, installer lifecycle, and runtime/source provenance. See README for macOS setup, a Visual Studio generator alternative, and static-analysis setup. Core tests need no Qt, sound device, or downloaded test framework.
 
 Add focused behavioral regressions for changed invariants and failure paths. Use asymmetric rectangular grids, fake storage/audio/time where appropriate, and RAII temporary files. Sample or format changes need independently expected values; avoid tests that only repeat the implementation. Keep hardware routing/latency measurements separate from fake-backend results.
 

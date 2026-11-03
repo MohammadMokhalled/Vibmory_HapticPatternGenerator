@@ -19,6 +19,21 @@
       }
     },
     {
+      "name": "macos",
+      "displayName": "Qt 6 desktop / macOS Apple Silicon",
+      "inherits": "desktop",
+      "binaryDir": "${sourceDir}/out/macos",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Darwin"
+      },
+      "cacheVariables": {
+        "CMAKE_OSX_ARCHITECTURES": "arm64",
+        "CMAKE_OSX_DEPLOYMENT_TARGET": "12.0"
+      }
+    },
+    {
       "name": "core",
       "displayName": "Core without Qt",
       "generator": "Ninja",
@@ -46,6 +61,15 @@
       "configurePreset": "desktop"
     },
     {
+      "name": "macos",
+      "configurePreset": "macos",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Darwin"
+      }
+    },
+    {
       "name": "core",
       "configurePreset": "core"
     },
@@ -58,6 +82,18 @@
     {
       "name": "desktop",
       "configurePreset": "desktop",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "macos",
+      "configurePreset": "macos",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Darwin"
+      },
       "output": {
         "outputOnFailure": true
       }

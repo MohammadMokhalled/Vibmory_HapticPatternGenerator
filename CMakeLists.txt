@@ -70,6 +70,14 @@ if(VIBMORY_BUILD_GUI)
         COMMENT "Update application translation sources (review the TS changes)")
     qt_add_executable(Vibmory WIN32 src/app/main.cpp)
     set_target_properties(Vibmory PROPERTIES AUTOMOC OFF AUTOUIC OFF CXX_EXTENSIONS OFF)
+    if(APPLE)
+        set_target_properties(Vibmory PROPERTIES
+            MACOSX_BUNDLE TRUE
+            MACOSX_BUNDLE_GUI_IDENTIFIER "org.vibmory.Vibmory"
+            MACOSX_BUNDLE_BUNDLE_NAME "Vibmory"
+            MACOSX_BUNDLE_BUNDLE_VERSION "${PROJECT_VERSION}"
+            MACOSX_BUNDLE_SHORT_VERSION_STRING "${PROJECT_VERSION}")
+    endif()
     if(WIN32)
         enable_language(RC)
         configure_file(src/app/windows.rc.in "${PROJECT_BINARY_DIR}/windows.rc" @ONLY)
@@ -93,7 +101,25 @@ if(VIBMORY_BUILD_GUI)
     install(DIRECTORY docs/ DESTINATION docs FILES_MATCHING
         PATTERN "*.md" PATTERN "*.dot" PATTERN "*.png" PATTERN "*.svg")
     install(DIRECTORY TodoPlanning/ DESTINATION TodoPlanning FILES_MATCHING PATTERN "*.md")
-    qt_generate_deploy_app_script(TARGET Vibmory OUTPUT_SCRIPT deploy_script NO_UNSUPPORTED_PLATFORM_ERROR)
+    set(deploy_tool_options)
+    if(APPLE)
+        # macdeployqt does not deploy Qt translations. Merge the linked modules'
+        # German catalogs into the bundle before deploying/signing its runtime.
+        qt_generate_deploy_script(TARGET Vibmory NAME macos_translations
+            OUTPUT_SCRIPT deploy_translations_script
+            CONTENT "
+set(QT_DEPLOY_TRANSLATIONS_DIR \"$<TARGET_BUNDLE_DIR_NAME:Vibmory>/Contents/Resources/translations\")
+qt_deploy_translations(LOCALES de)
+qt_deploy_qt_conf(\"\${QT_DEPLOY_PREFIX}/$<TARGET_BUNDLE_DIR_NAME:Vibmory>/Contents/Resources/qt.conf\"
+    PLUGINS_DIR PlugIns QML_DIR Resources/qml TRANSLATIONS_DIR Resources/translations)
+")
+        install(SCRIPT "${deploy_translations_script}")
+        # macdeployqt preserves our qt.conf. Ad-hoc signing needs no identity
+        # credentials and repairs signatures after relocating ARM64 libraries.
+        set(deploy_tool_options -codesign=-)
+    endif()
+    qt_generate_deploy_app_script(TARGET Vibmory OUTPUT_SCRIPT deploy_script
+        NO_UNSUPPORTED_PLATFORM_ERROR DEPLOY_TOOL_OPTIONS ${deploy_tool_options})
     install(SCRIPT ${deploy_script})
 endif()
 
