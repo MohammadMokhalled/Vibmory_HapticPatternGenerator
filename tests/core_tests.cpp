@@ -6,10 +6,12 @@
 #include "persistence/project_codec.h"
 
 #include <algorithm>
+#include <cmath>
 #include <fstream>
 #include <functional>
 #include <iostream>
 #include <limits>
+#include <locale>
 #include <optional>
 #include <sstream>
 #include <stdexcept>
@@ -202,6 +204,86 @@ TEST(codec_complete_round_trip)
     auto decoded = decodeProject(encodeProject(document));
     CHECK(decoded);
     CHECK(decoded.value() == document);
+}
+
+Result<PatternDocument> decodeGainProject(std::string_view gain)
+{
+    return decodeProject(
+        "VIBMORY 1\nGRID 1 1 1\nPLAYBACK 10 1000 48000 continuous\n"
+        "ROUTING 1\n0 " +
+        std::string(gain) + "\nFRAMES\n100 2000\nEND\n");
+}
+
+TEST(codec_gain_decimal_and_scientific_notation)
+{
+    for (const auto& [text, expected] :
+         {std::pair<std::string_view, double>{"0", 0.0},
+          {"1", 1.0},
+          {"0.5", 0.5},
+          {".5", 0.5},
+          {"5.e-1", 0.5},
+          {"5e-1", 0.5},
+          {"1E-3", 0.001},
+          {"0e9999", 0.0},
+          {"-0", -0.0}})
+    {
+        const auto decoded = decodeGainProject(text);
+        CHECK(decoded);
+        const auto actual = decoded.value().routing().gains[0];
+        CHECK(actual == expected);
+        CHECK(std::signbit(actual) == std::signbit(expected));
+    }
+}
+
+TEST(codec_gain_floating_point_boundary_round_trips)
+{
+    auto document = makeDocument({1, 1});
+    for (const auto gain :
+         {0.0, 1.0, 0.123456789012345, std::nextafter(1.0, 0.0),
+          std::numeric_limits<double>::min(),
+          std::numeric_limits<double>::denorm_min()})
+    {
+        auto routing = document.routing();
+        routing.gains[0] = gain;
+        CHECK(document.setRouting(routing));
+        const auto decoded = decodeProject(encodeProject(document));
+        CHECK(decoded);
+        CHECK(decoded.value() == document);
+    }
+}
+
+TEST(codec_gain_rejects_invalid_numbers)
+{
+    for (const auto token : {"", "+0.5", "0.5junk", "0,5", "0.5 0.6", "1e", ".",
+                             "0x1p-1", "nan", "NaN", "inf", "-inf", "1e309",
+                             "-1e309", "1e-9999", "-0.5", "1.0000000000000002"})
+        CHECK(!decodeGainProject(token));
+}
+
+TEST(codec_gain_parsing_and_encoding_ignore_the_global_locale)
+{
+    struct CommaPunctuation : std::numpunct<char>
+    {
+        char do_decimal_point() const override
+        {
+            return ',';
+        }
+    };
+    struct RestoreLocale
+    {
+        std::locale previous = std::locale();
+        ~RestoreLocale()
+        {
+            std::locale::global(previous);
+        }
+    } restore;
+    std::locale::global(
+        std::locale(std::locale::classic(), new CommaPunctuation));
+    const auto decoded = decodeGainProject("0.5");
+    CHECK(decoded);
+    CHECK(decoded.value().routing().gains[0] == 0.5);
+    CHECK(encodeProject(decoded.value()).find("0 0.5\n") != std::string::npos);
+    CHECK(!decodeGainProject("0,5"));
 }
 
 TEST(codec_rejects_corruption_and_trailing_data)

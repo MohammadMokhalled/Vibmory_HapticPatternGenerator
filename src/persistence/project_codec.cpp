@@ -1,10 +1,12 @@
 #include "persistence/project_codec.h"
 
 #include <charconv>
+#include <cmath>
 #include <iomanip>
 #include <limits>
 #include <locale>
 #include <sstream>
+#include <type_traits>
 
 namespace vibmory
 {
@@ -31,10 +33,34 @@ Result<T> number(std::string_view text, const std::string& context)
     if (text.empty())
         return parseError("Missing number for " + context + ".");
     T value{};
-    const auto result =
-        std::from_chars(text.data(), text.data() + text.size(), value);
-    if (result.ec != std::errc{} || result.ptr != text.data() + text.size())
-        return parseError("Invalid number for " + context + ".");
+    if constexpr (std::is_floating_point_v<T>)
+    {
+        // Older Apple libc++ has no floating-point from_chars overloads.
+        // Keep decimal parsing independent of the process locale and reject
+        // leading plus signs and non-decimal syntax as from_chars does.
+        if (text.front() == '+' ||
+            text.find_first_not_of("0123456789.eE+-") != std::string_view::npos)
+            return parseError("Invalid number for " + context + ".");
+        std::istringstream input{std::string(text)};
+        input.imbue(std::locale::classic());
+        input >> std::noskipws >> value;
+        // libc++ may set failbit for a representable subnormal result.
+        const bool subnormal = std::fpclassify(value) == FP_SUBNORMAL;
+        const auto significand = text.substr(0, text.find_first_of("eE"));
+        const bool underflow =
+            value == 0 &&
+            significand.find_first_of("123456789") != std::string_view::npos;
+        if (!input.eof() || input.bad() || (input.fail() && !subnormal) ||
+            underflow)
+            return parseError("Invalid number for " + context + ".");
+    }
+    else
+    {
+        const auto result =
+            std::from_chars(text.data(), text.data() + text.size(), value);
+        if (result.ec != std::errc{} || result.ptr != text.data() + text.size())
+            return parseError("Invalid number for " + context + ".");
+    }
     return value;
 }
 
