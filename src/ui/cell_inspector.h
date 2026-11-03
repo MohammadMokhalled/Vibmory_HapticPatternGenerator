@@ -19,6 +19,7 @@ public:
     void setCell(std::optional<CellPosition> position,
                  std::optional<CellStimulus> value,
                  std::uint32_t frequencyLimit);
+    void commitPendingEdits();
     [[nodiscard]] CellStimulus stimulus() const;
 
 signals:

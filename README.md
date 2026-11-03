@@ -8,7 +8,7 @@ The current implementation is **Vibmory 2.0.0**: a validated C++20 document/edit
 
 ## Architecture at a glance
 
-![Current production target dependencies](docs/diagrams/Architecture.png)
+![Current production target dependencies](docs/diagrams/Architecture.svg)
 
 Arrows point from a consumer to its direct project dependency. The four green core libraries build without Qt. The executable constructs the concrete services and supplies them to the editor.
 

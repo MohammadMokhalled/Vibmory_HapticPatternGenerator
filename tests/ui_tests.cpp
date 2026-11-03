@@ -163,6 +163,30 @@ private slots:
         QVERIFY(inspector.stimulus() == (CellStimulus{0, 123}));
     }
 
+    void oddSampleRateKeepsTheHighestValidFrequency()
+    {
+        auto created = PatternDocument::create({1, 1});
+        QVERIFY(created);
+        auto source = std::move(created.value());
+        QVERIFY(source.setSettings({10, 5000, 11025}));
+        QVERIFY(source.setCell(0, {0, 0}, {5512, 1000}));
+        Store store;
+        Backend backend;
+        Clock clock;
+        WaveExportJob exporter;
+        EditorWindow window(store, backend, clock, exporter, source);
+        window.show();
+        QCoreApplication::processEvents();
+        auto* grid = window.findChild<GridWidget*>("gridWidget");
+        QTest::mouseClick(grid, Qt::LeftButton, Qt::NoModifier,
+                          grid->rect().center());
+        auto* frequency = window.findChild<QSpinBox*>("frequencySpinBox");
+        QCOMPARE(frequency->value(), 5512);
+        window.findChild<QSpinBox*>("amplitudeSpinBox")->setValue(2000);
+        QVERIFY(window.session().document().cell(0, {0, 0}).value() ==
+                (CellStimulus{5512, 2000}));
+    }
+
     void keyboardAndMouseSelectionRespectBounds()
     {
         const auto source = document();
@@ -676,6 +700,136 @@ private slots:
             }));
         QCOMPARE(exported.readAll(), expectedBytes);
         QVERIFY(window.close());
+    }
+
+    void pendingInspectorTextIsCommittedBeforeSavingAndClosing()
+    {
+        QTemporaryDir temporary;
+        QVERIFY(temporary.isValid());
+        const auto path = toPath(temporary.filePath("pending.vibmory"));
+        auto created = PatternDocument::create({1, 1});
+        QVERIFY(created);
+        auto source = std::move(created.value());
+        QVERIFY(source.setCell(0, {0, 0}, {100, 1000}));
+        QtProjectStore store;
+        QVERIFY(store.save(path, source));
+        Backend backend;
+        Clock clock;
+        WaveExportJob exporter;
+        EditorWindow window(store, backend, clock, exporter, source);
+        QVERIFY(window.loadProject(path));
+        window.show();
+        QCoreApplication::processEvents();
+        auto* grid = window.findChild<GridWidget*>("gridWidget");
+        QTest::mouseClick(grid, Qt::LeftButton, Qt::NoModifier,
+                          grid->rect().center());
+        auto* frequency = window.findChild<QSpinBox*>("frequencySpinBox");
+        auto* amplitude = window.findChild<QSpinBox*>("amplitudeSpinBox");
+        frequency->findChild<QLineEdit*>()->setText("250");
+        amplitude->findChild<QLineEdit*>()->setText("2000");
+        QCOMPARE(frequency->value(), 100);
+        QCOMPARE(amplitude->value(), 1000);
+        QAction* save = nullptr;
+        for (auto* action : window.findChildren<QAction*>())
+            if (action->shortcut() == QKeySequence(QKeySequence::Save))
+                save = action;
+        QVERIFY(save);
+        save->trigger();
+        auto stored = store.load(path);
+        QVERIFY(stored);
+        QVERIFY(stored.value().cell(0, {0, 0}).value() ==
+                (CellStimulus{250, 2000}));
+        QVERIFY(!window.session().dirty());
+
+        frequency->findChild<QLineEdit*>()->setText("300");
+        QTimer::singleShot(10, [] {
+            if (auto* box = qobject_cast<QMessageBox*>(
+                    QApplication::activeModalWidget()))
+                box->button(QMessageBox::Cancel)->click();
+        });
+        QVERIFY(!window.close());
+        QVERIFY(window.session().dirty());
+        QCOMPARE(
+            window.session().document().cell(0, {0, 0}).value().frequencyHz,
+            300U);
+    }
+
+    void reopeningTheCurrentFileAfterSaveUsesTheSavedVersion()
+    {
+        const bool previous =
+            QApplication::testAttribute(Qt::AA_DontUseNativeDialogs);
+        QApplication::setAttribute(Qt::AA_DontUseNativeDialogs);
+        const auto restore = qScopeGuard([previous] {
+            QApplication::setAttribute(Qt::AA_DontUseNativeDialogs, previous);
+        });
+        QTemporaryDir temporary;
+        QVERIFY(temporary.isValid());
+        const auto path = temporary.filePath("reopen.vibmory");
+        auto created = PatternDocument::create({1, 1});
+        QVERIFY(created);
+        auto source = std::move(created.value());
+        QVERIFY(source.setCell(0, {0, 0}, {100, 1000}));
+        QtProjectStore store;
+        QVERIFY(store.save(toPath(path), source));
+        Backend backend;
+        Clock clock;
+        WaveExportJob exporter;
+        EditorWindow window(store, backend, clock, exporter, source);
+        QVERIFY(window.loadProject(toPath(path)));
+        window.show();
+        QCoreApplication::processEvents();
+        auto* grid = window.findChild<GridWidget*>("gridWidget");
+        QTest::mouseClick(grid, Qt::LeftButton, Qt::NoModifier,
+                          grid->rect().center());
+        window.findChild<QSpinBox*>("frequencySpinBox")->setValue(250);
+        QVERIFY(window.session().dirty());
+        QAction* open = nullptr;
+        for (auto* action : window.findChildren<QAction*>())
+            if (action->shortcut() == QKeySequence(QKeySequence::Open))
+                open = action;
+        QVERIFY(open);
+        bool selected = false, confirmedSave = false, timedOut = false;
+        QElapsedTimer elapsed;
+        elapsed.start();
+        QTimer responder;
+        connect(&responder, &QTimer::timeout, &window, [&] {
+            if (elapsed.elapsed() > 5000)
+            {
+                timedOut = true;
+                if (auto* modal = qobject_cast<QDialog*>(
+                        QApplication::activeModalWidget()))
+                    modal->reject();
+                return;
+            }
+            if (auto* dialog = qobject_cast<QFileDialog*>(
+                    QApplication::activeModalWidget()))
+            {
+                dialog->setDirectory(QFileInfo(path).absolutePath());
+                if (auto* name = dialog->findChild<QLineEdit*>("fileNameEdit"))
+                {
+                    name->setText(QFileInfo(path).fileName());
+                    selected = QMetaObject::invokeMethod(dialog, "accept",
+                                                         Qt::DirectConnection);
+                }
+            }
+            else if (auto* box = qobject_cast<QMessageBox*>(
+                         QApplication::activeModalWidget()))
+            {
+                confirmedSave = true;
+                box->button(QMessageBox::Save)->click();
+            }
+        });
+        responder.start(10);
+        open->trigger();
+        responder.stop();
+        QVERIFY(!timedOut && selected && confirmedSave);
+        QCOMPARE(
+            window.session().document().cell(0, {0, 0}).value().frequencyHz,
+            250U);
+        QVERIFY(!window.session().dirty());
+        auto stored = store.load(toPath(path));
+        QVERIFY(stored);
+        QCOMPARE(stored.value().cell(0, {0, 0}).value().frequencyHz, 250U);
     }
 
     void atomicSaveAndCancelledExport()

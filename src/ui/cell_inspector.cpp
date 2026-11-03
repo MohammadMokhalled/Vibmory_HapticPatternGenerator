@@ -86,6 +86,24 @@ void CellInspector::setCell(std::optional<CellPosition> position,
         tr("Cell R%1 C%2").arg(position->row + 1).arg(position->column + 1));
 }
 
+void CellInspector::commitPendingEdits()
+{
+    if (!isEnabled())
+        return;
+    const auto before = stimulus();
+    {
+        // Interpret both fields before publishing either value. Publishing the
+        // first one refreshes the inspector and would erase the second field's
+        // uncommitted text.
+        const QSignalBlocker frequencyBlocker(frequency_);
+        const QSignalBlocker amplitudeBlocker(amplitude_);
+        frequency_->interpretText();
+        amplitude_->interpretText();
+    }
+    if (stimulus() != before)
+        emit stimulusEdited();
+}
+
 CellStimulus CellInspector::stimulus() const
 {
     return {static_cast<std::uint32_t>(frequency_->value()),

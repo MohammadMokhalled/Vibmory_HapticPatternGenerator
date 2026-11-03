@@ -51,6 +51,12 @@ protected:
     void changeEvent(QEvent* event) override;
 
 private:
+    enum class DiscardDecision
+    {
+        Cancelled,
+        Discarded,
+        Saved
+    };
     void buildMenus();
     void buildEditor();
     void refresh();
@@ -59,7 +65,7 @@ private:
     void newProject();
     void openProject(bool legacy = false);
     [[nodiscard]] bool saveProject(bool saveAs = false);
-    [[nodiscard]] bool confirmDiscard();
+    [[nodiscard]] DiscardDecision confirmDiscard();
     void updateSettings();
     void togglePlayback();
     void exportWave();

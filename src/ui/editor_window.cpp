@@ -428,8 +428,9 @@ void EditorWindow::refresh()
             session_.document()
                 .cell(session_.selectedFrame(), *session_.selectedCell())
                 .value();
-    inspector_->setCell(session_.selectedCell(), selectedValue,
-                        std::min(maxFrequencyHz, settings.sampleRate / 2 - 1));
+    inspector_->setCell(
+        session_.selectedCell(), selectedValue,
+        std::min(maxFrequencyHz, (settings.sampleRate - 1) / 2));
     if (playing && playback_.snapshot())
         grid_->setFrame(playback_.snapshot()->document, playback_.visualFrame(),
                         std::nullopt);
@@ -475,6 +476,7 @@ void EditorWindow::updateSettings()
 
 bool EditorWindow::saveProject(bool saveAs)
 {
+    inspector_->commitPendingEdits();
     auto path = session_.path();
     if (saveAs || path.empty())
     {
@@ -500,16 +502,20 @@ bool EditorWindow::saveProject(bool saveAs)
     return current;
 }
 
-bool EditorWindow::confirmDiscard()
+EditorWindow::DiscardDecision EditorWindow::confirmDiscard()
 {
+    inspector_->commitPendingEdits();
     if (!session_.dirty())
-        return true;
+        return DiscardDecision::Discarded;
     const auto choice = QMessageBox::warning(
         this, tr("Unsaved changes"), tr("Save changes before continuing?"),
         QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel,
         QMessageBox::Save);
-    return choice == QMessageBox::Discard ||
-           (choice == QMessageBox::Save && saveProject());
+    if (choice == QMessageBox::Discard)
+        return DiscardDecision::Discarded;
+    if (choice == QMessageBox::Save && saveProject())
+        return DiscardDecision::Saved;
+    return DiscardDecision::Cancelled;
 }
 
 Result<void> EditorWindow::loadProject(const std::filesystem::path& path)
@@ -532,6 +538,7 @@ void EditorWindow::openProject(bool legacy)
     if (selected.isEmpty())
         return;
     Result<PatternDocument> loaded = Error{ErrorCode::Cancelled, "Cancelled"};
+    LegacyOrientation orientation = LegacyOrientation::RowsThenColumns;
     if (legacy)
     {
         bool accepted = false;
@@ -544,7 +551,7 @@ void EditorWindow::openProject(bool legacy)
             0, false, &accepted);
         if (!accepted)
             return;
-        const auto orientation =
+        orientation =
             choice == tr("Frame count, rows, columns (original writer)")
                 ? LegacyOrientation::RowsThenColumns
                 : LegacyOrientation::ColumnsThenRows;
@@ -557,8 +564,21 @@ void EditorWindow::openProject(bool legacy)
         showError(loaded.error());
         return;
     }
-    if (!confirmDiscard())
+    const auto decision = confirmDiscard();
+    if (decision == DiscardDecision::Cancelled)
         return;
+    if (decision == DiscardDecision::Saved)
+    {
+        // Saving may have updated the file selected for reopening. The
+        // preflight read above is no longer the version on disk.
+        loaded = legacy ? importLegacy(toPath(selected), orientation)
+                        : documents_.read(toPath(selected));
+        if (!loaded)
+        {
+            showError(loaded.error());
+            return;
+        }
+    }
     documents_.replace(std::move(loaded.value()),
                        legacy ? std::filesystem::path{} : toPath(selected));
     refresh();
@@ -590,7 +610,8 @@ void EditorWindow::newProject()
             dialog.accept();
     });
     connect(buttons, &QDialogButtonBox::rejected, &dialog, &QDialog::reject);
-    if (dialog.exec() != QDialog::Accepted || !confirmDiscard())
+    if (dialog.exec() != QDialog::Accepted ||
+        confirmDiscard() == DiscardDecision::Cancelled)
         return;
     auto document =
         PatternDocument::create({static_cast<std::uint32_t>(rows->value()),
@@ -605,6 +626,7 @@ void EditorWindow::togglePlayback()
         playback_.stop();
     else
     {
+        inspector_->commitPendingEdits();
         const auto result = playback_.start(session_.snapshot());
         if (!result)
             showError(result.error());
@@ -646,6 +668,7 @@ void EditorWindow::refreshDevices()
 
 void EditorWindow::exportWave()
 {
+    inspector_->commitPendingEdits();
     const auto selected =
         chooseSavePath(this, tr("Export WAV"), tr("WAV audio (*.wav)"), "wav");
     if (selected.isEmpty())
@@ -731,7 +754,7 @@ void EditorWindow::configureRouting()
 
 void EditorWindow::closeEvent(QCloseEvent* event)
 {
-    if (!confirmDiscard())
+    if (confirmDiscard() == DiscardDecision::Cancelled)
     {
         event->ignore();
         return;
