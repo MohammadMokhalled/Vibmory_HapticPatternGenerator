@@ -59,6 +59,9 @@ if(VIBMORY_BUILD_GUI)
     target_link_libraries(vibmory_platform PUBLIC vibmory_application vibmory_audio vibmory_persistence Qt6::Core Qt6::Multimedia PRIVATE Qt6::Concurrent)
     vibmory_library(vibmory_ui src/ui/grid_widget.cpp src/ui/cell_inspector.cpp src/ui/file_dialogs.cpp src/ui/frame_list_model.cpp src/ui/device_profile_actions.cpp src/ui/recovery_controller.cpp src/ui/ui_preferences.cpp src/ui/editor_window.cpp)
     set_target_properties(vibmory_ui PROPERTIES AUTOMOC ON)
+    # Reject obsolete APIs (including the old QMenu::addAction overloads) on every
+    # compiler, even when warnings-as-errors is disabled. Qt 6.8 is our baseline.
+    target_compile_definitions(vibmory_ui PRIVATE QT_DISABLE_DEPRECATED_UP_TO=0x060800)
     target_link_libraries(vibmory_ui PUBLIC vibmory_application Qt6::Widgets PRIVATE vibmory_platform Qt6::Concurrent)
     qt_add_lrelease(TS_FILES translations/vibmory_de.ts QM_FILES_OUTPUT_VARIABLE vibmory_qm_files OPTIONS -nounfinished)
     qt_add_resources(vibmory_ui vibmory_translations PREFIX "/i18n" BASE "${PROJECT_BINARY_DIR}" FILES ${vibmory_qm_files})
