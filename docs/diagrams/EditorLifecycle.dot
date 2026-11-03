@@ -1,0 +1,45 @@
+digraph EditorLifecycle {
+    graph [rankdir=TB, bgcolor="white", pad=0.3, nodesep=0.4, ranksep=0.65,
+           fontname="Arial", fontsize=18, labelloc=t,
+           label="Vibmory 2.0 | editor ownership and background work"];
+    node [shape=box, style="rounded,filled", fontname="Arial", fontsize=11,
+          color="#66758b", fillcolor="#edf3ff", margin="0.16,0.12"];
+    edge [fontname="Arial", fontsize=10, color="#66758b", arrowsize=0.7];
+
+    Root [fillcolor="#dce7ff", label="main.cpp composition root\nConstructs settings/preferences, store, backend,\nclock, exporter and then EditorWindow"];
+    EditorWindow [label="EditorWindow\nOwns session, workflow and playback services\nStops playback and cancels/joins export on close"];
+    Preferences [label="UiPreferences\nBorrows root-owned QSettings\nPalette, translators and next-launch language"];
+    Export [label="WaveExportJob\nRoot-owned; editor borrows it\nOwns future/watcher + atomic progress/cancel"];
+    Grid [label="GridWidget + CellInspector\nQt-parented views\nNumeric projection / edit intentions"];
+    Timeline [label="FrameListModel + QListView\nQt-parented model and view\nStable IDs, thumbnails and guarded drag commands"];
+    Profiles [label="DeviceProfileActions\nQt-parented to editor\nReview + validated applyDeviceProfile()\n.vibprofile JSON / atomic store"];
+    Recovery [label="RecoveryController\nEditor-owned unique_ptr\nBorrows session; observes generation/revision\n30-second dirty snapshots / explicit restore"];
+    RecoveryFile [label="RecoveryFile\nOwned process lock + unique snapshot path\nVersioned .vibrecovery / bounded retention"];
+    ExportWorker [shape=note, fillcolor="#fff4d9", label="Export worker task (not a class)\nOwn immutable document copy\nexportWaveFile() -> renderWave() -> PcmRenderer\nWorker-created QSaveFile / commit on success"];
+    RecoveryWorker [shape=note, fillcolor="#fff4d9", label="Recovery worker task (not a class)\nOwn RecoveryRecord document/path/time copy\nwriteRecoveryFile() -> canonical codec\nWorker-created QSaveFile / atomic publication"];
+
+    edge [dir=both, arrowtail=diamond, arrowhead=vee];
+    Root -> Preferences [label="stack lifetime"];
+    Root -> EditorWindow [label="stack lifetime"];
+    Root -> Export [label="stack lifetime"];
+    EditorWindow -> Grid [label="Qt parenting"];
+    EditorWindow -> Timeline [label="Qt parenting"];
+    EditorWindow -> Profiles [label="Qt parenting"];
+    EditorWindow -> Recovery [label="unique ownership"];
+    Recovery -> RecoveryFile [label="exclusive lease"];
+
+    edge [dir=forward, arrowtail=none, arrowhead=vee, style=dashed];
+    EditorWindow:w -> Preferences:e [label="borrows", constraint=false];
+    EditorWindow:e -> Export:w [label="borrows", constraint=false];
+    Export -> ExportWorker [label="launch; cancel / join"];
+    Recovery -> RecoveryWorker [label="launch; cancel / join"];
+
+    { rank=same; Preferences; EditorWindow; Export; }
+    Preferences -> EditorWindow -> Export [style=invis, weight=100];
+    { rank=same; Grid; Timeline; Profiles; Recovery; }
+    Legend [shape=plaintext, fillcolor="white", fontsize=11,
+            label="Blue: GUI-thread ownership / coordination | Yellow: worker tasks\nWorkers never borrow an editor or widget. Results return through queued watchers.\nStore, audio-backend and clock contracts are detailed in ClassDiagram."];
+    RecoveryFile -> Legend [style=invis];
+    ExportWorker -> Legend [style=invis];
+    RecoveryWorker -> Legend [style=invis];
+}

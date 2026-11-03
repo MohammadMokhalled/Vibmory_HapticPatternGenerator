@@ -1,192 +1,64 @@
-## Class Diagram
+# Current class and lifecycle diagrams
 
-Here is the class diagram to give a good overview of the project. 
+These diagrams describe the Vibmory 2.0 implementation. They replace the old window/controller/helper diagram. The maintained Graphviz `.dot` files are the image sources; PNG previews and scalable SVGs are generated from them. Selected responsibilities and methods are shown rather than every field or framework base class.
 
-![Class Diagram](ClassDiagram.png)
+## Production targets
 
-```plantuml
-@startuml
-class Animation {
-    - QSize mSize
-    - quint16 mCurrentFrame
-    - QPoint mCurrentPos
-    - bool mCreationError
-    - QVector<Frame> mFrames
-    - QMutex mLock
-    + Animation(const QSize& size)
-    + Animation(const QString& fileAddress)
-    + void addFrame()
-    + void duplicateCurrentFrame()
-    + void selectFrame(int index)
-    + int getLen() const
-    + void setAmplitude(const QPoint& pos, quint32 value)
-    + void setFrequency(const QPoint& pos, quint32 value)
-    + QColor getColor(const QPoint& pos)
-    + int getAmplitude(const QPoint& pos, int frameIndex = -1)
-    + int getFrequency(const QPoint& pos, int frameIndex = -1)
-    + bool writeInFile(const QString& fileAddress)
-    + QSize getSize() const
-    + QString getFrameString()
-    + void nextFrame()
-    + int getCurrentFrameIndex() const
-    + bool getError() const
-    + void removeCurrentFrame()
-}
+![Production target dependencies](Architecture.png)
 
-class AnimationController {
-    - Animation *mAnimation
-    - IActuatorController *mAudioActuator
-    - Helper *mHelper
-    - PaintingWidget *mPaintingWidget
-    - QTimer *mTimer
-    - QTimer *mStopTimer
-    + AnimationController(const QString& fileName, QObject* parent = nullptr)
-    + AnimationController(const QSize &size, QObject *parent = nullptr)
-    + ~AnimationController()
-    + QSize getSize() const
-    + int getLen() const
-    + void addFrame()
-    + void duplicateCurrentFrame()
-    + void selectFrame(int index)
-    + QWidget* getPaintingWidget()
-    + void drawBackground()
-    + void playAnimation(quint16 framerate, quint32 duration)
-    + void stopAnimation()
-    + void saveToFile(const QString& fileName)
-    + void setFrameRate(qint32 frameRate)
-    + void setDuration(qint32 duration)
-    + bool prepareActuator(QString &fileName)
-    + int getAmplitude(const QPoint& pos = QPoint(-1,-1)) const
-    + int getFrequency(const QPoint &pos = QPoint(-1, -1)) const
-    + void setAmplitude(quint32 value)
-    + void setFrequency(quint32 value)
-    + void unselect()
-    + void removeFrame()
-    + bool isSelected() const
-}
+[Scalable SVG](Architecture.svg) · [Graphviz source](Architecture.dot)
 
-class AudioActuator {
-    - Animation *mAnimation
-    - qint32 mFrameRate
-    - qint32 mDuration
-    - quint32 mSampleRate
-    - const QString mFileName
-    - QAudioOutput *mAudioOutput
-    - QFile *mAudioFile
-    + AudioActuator(Animation *animation, qint32 frameRate = 1, qint32 duration = 0, quint32 sampleRate = 48000)
-    + void setFrameRate(qint32 frameRate) override
-    + void setDuration(qint32 duration) override
-    + void setSampleRate(quint32 sampleRate)
-    + bool prepare() override
-    + bool play() override
-    + bool stop() override
-}
+Arrows point from a consumer to a direct production target dependency in the root `CMakeLists.txt`. Green nodes compile without Qt; blue nodes form the desktop integration. Compiler-options, framework, test and benchmark targets are omitted. There is no dependency from the core back into the UI or Qt adapters.
 
-class CreateProjectWindow {
-    - Ui::CreateProjectWindow *ui
-    - QMainWindow *mSecondWindow
-    + CreateProjectWindow(QWidget *parent = nullptr)
-    + ~CreateProjectWindow()
-}
+## Document, workflows and playback
 
-class Frame {
-    - QSize mSize
-    - bool mCreationError
-    - QVector<QVector<quint32>> mFrequencies
-    - QVector<QVector<quint32>> mAmplitudes
-    - QVector<QVector<QColor>> mColors
-    + Frame(const QSize& size)
-    + Frame(const QString& csv, const QSize& size)
-    + void setAmplitude(const QPoint& pos, quint32 value)
-    + void setFrequency(const QPoint& pos, quint32 value)
-    + QColor getColor(const QPoint& pos) const
-    + qint32 getAmplitude(const QPoint& pos) const
-    + qint32 getFrequency(const QPoint& pos) const
-    + QString toString() const
-    + bool getError() const
-}
+![Current document, workflow and playback classes](ClassDiagram.png)
 
-interface IActuatorController {
-    + void setFrameRate(qint32 frameRate) = 0
-    + void setDuration(qint32 duration) = 0
-    + bool prepare() = 0
-    + bool play() = 0
-    + bool stop() = 0
-}
+[Scalable SVG](ClassDiagram.svg) · [Graphviz source](ClassDiagram.dot)
 
-class Helper {
-    - Animation* mAnimation
-    - QBrush mBackgroundBrush
-    - QBrush mForegroundBrush
-    - QPen mBoldPen
-    - QPen mTextPen
-    - QFont mTextFont
-    - bool mIsPlaying
-    - qint32 mTabIndexBeforePlay
-    - QPoint mSelectedCell
-    - bool mIsSelected
-    - QSize mCellSize
-    - QMutex mLock
-    + Helper(Animation* animation)
-    + void paint(QPainter *painter, QPaintEvent *event)
-    + void drawBackground(QPainter *painter)
-    + void selectCell(const QPoint& pos)
-    + void drawColors(QPainter * painter)
-    + void unselectCell()
-    + bool isSelected()
-    + QPoint getSelectedCell() const
-    + void startPlay()
-    + void stopPlay()
-}
+- A filled diamond is at the owner of a value/resource. Each owned `PatternDocument` is a separate value, not a shared mutable document.
+- A dashed arrow labeled **borrows** is a non-owning service/reference dependency.
+- A dashed arrow with an open triangle points from an implementation to its interface. `DocumentStore`, `PlaybackBackend`, and `MonotonicClock` have virtual destructors and support test fakes.
+- The note-shaped codec node contains free functions. There is no `ProjectCodec` class. WAV encoding also uses free functions around `PcmRenderer`.
 
-class MainWindow {
-    - Ui::MainWindow *ui
-    - QMainWindow *mSecondWindow
-    + MainWindow(QWidget *parent = nullptr)
-    + ~MainWindow()
-}
+`EditorWindow` owns its `EditorSession`, `DocumentWorkflow`, and `PlaybackService` values. `DocumentWorkflow` borrows the session and a root-owned store. `PlaybackService` borrows a root-owned backend and clock and owns a snapshot while playing. `QtAudioBackend` creates an owned `PcmStream`, which owns a renderer/document copy; a separate owned `QAudioSink` pulls its PCM bytes. The renderer never borrows the editor's live document.
 
-class PaintingWidget {
-    - Helper* mHelper
-    - qint32 mElapsed
-    - QPoint mPoint
-    + PaintingWidget(Helper* helper, QWidget* parent = nullptr)
-    + void mousePressEvent(QMouseEvent* evt)
-    + void drawBackground()
-    + void paintEvent(QPaintEvent *event) override
-}
+`PatternDocument` owns a grid shape, frames with durable identities and row-major `CellStimulus` vectors, validated `PlaybackSettings`, and explicit `ChannelRouting`. It contains no colors, file paths, device objects, selection or timers. `EditorSession` separately owns selected frame/cell, monotonic revision/document generation, save identity/path, and bounded grouped undo/redo.
 
-class ProjectSettingWindow {
-    - Ui::projectsettingwindow *ui
-    - QSize mSize
-    - QGraphicsView* mGraphicViews
-    - AnimationController* mAnimationController
-    - quint16 mCurrentFrame
-    - QPoint mCurrentCell
-    - quint8 mTabChangeTries
-    - bool mEnableUnselect
-    - QMediaPlayer* mPlayer
-    - QFile* mSourceFile
-    - QAudioOutput* mAudio
-    + ProjectSettingWindow(QWidget *parent = nullptr)
-    + ProjectSettingWindow(const QSize& size, QWidget *parent = nullptr)
-    + ProjectSettingWindow(const QString& fileName, QWidget *parent = nullptr)
-    + ~ProjectSettingWindow()
-}
+## Editor ownership, export and recovery
 
-AnimationController *--> Animation
-AnimationController *--> IActuatorController
-AnimationController *--> PaintingWidget 
-AnimationController *--> Helper
-AudioActuator --> Animation
-CreateProjectWindow --> ProjectSettingWindow 
-Helper --> Animation
-MainWindow --> CreateProjectWindow
-MainWindow --> ProjectSettingWindow 
-PaintingWidget --> Helper
-ProjectSettingWindow --> AnimationController
-Animation *--> Frame
+![Editor ownership and worker lifetimes](EditorLifecycle.png)
 
-IActuatorController <|.. AudioActuator
-@enduml
+[Scalable SVG](EditorLifecycle.svg) · [Graphviz source](EditorLifecycle.dot)
+
+Blue objects are owned/coordinated on the GUI thread. Yellow notes represent worker tasks, not additional classes. The composition root constructs dependencies before the editor, so borrowed stores, output devices, clock, preferences and export job outlive the editor. Qt parenting owns child views/actions/models; the editor exclusively owns its recovery controller.
+
+| Component | Current role and lifecycle |
+| --- | --- |
+| `GridWidget` / `GridGeometry` | One numeric frame projection; shared floating geometry for painting and hit testing; bounded keyboard/mouse selection. Painting does not advance playback. |
+| `CellInspector` | Frequency/amplitude controls emit edit intentions. Signal-blocked refresh cannot issue a command or dirty the document. |
+| `FrameListModel` / `QListView` | Labels, durable IDs and cached thumbnails. Dragging calls the session move command; model token/revision checks reject foreign or stale drags. |
+| `DeviceProfileActions` / `DeviceProfile` | Save/load/review `.vibprofile` values. `applyDeviceProfile()` validates shape/routing/gains and changes the physical device only on explicit selection. Document routing changes are undoable. |
+| `UiPreferences` | Borrows root-owned `QSettings`; owns palette/translator state. Themes change immediately; language changes apply next launch without replacing the document. |
+| `WaveExportJob` | Borrows no editor state. A copied snapshot goes to a worker running `exportWaveFile()` / `renderWave()`. It owns future/watcher and atomic cancel/progress state; shutdown cancels and joins. |
+| `RecoveryController` / `RecoveryFile` | The controller borrows the session and owns a locked, session-specific recovery file. Workers receive a `RecoveryRecord` copy. Save/replacement/accepted close cancel/join work before clearing the owned snapshot. |
+
+Project saves use `QtProjectStore` and checked atomic writes. WAV export creates its `QSaveFile` on the export worker, uses the same PCM renderer as preview, and commits only after successful rendering. Recovery uses a separate versioned file and never automatically overwrites the last explicitly saved project. Workers deliver completion through queued watchers; no worker captures a widget or mutable session reference.
+
+See [Architecture](../Architecture.md) for the playback state diagram and contracts, [Project format](../ProjectFormat.md) for v2/v1/legacy compatibility and phase/routing rules, [Device profiles](../DeviceProfiles.md), and [Recovery](../Recovery.md) for retention/restore behavior.
+
+## Regenerate and review
+
+Install Graphviz so that `dot` is on PATH, then run from the repository root:
+
+```powershell
+python tools/render_diagrams.py
 ```
+
+This updates all three PNG/SVG pairs from their `.dot` files, including the README overview and the existing `ClassDiagram.png` path. To validate rendering without changing the tracked previews:
+
+```powershell
+python tools/render_diagrams.py --output-dir out/diagrams
+```
+
+Update the DOT source with any related CMake/class/ownership change, regenerate, and visually review the results. Layout/font metrics can vary between Graphviz installations; the DOT relationships are authoritative. CI renders the sources into `out/diagrams` to catch invalid diagrams, and packaged documentation includes sources and previews.

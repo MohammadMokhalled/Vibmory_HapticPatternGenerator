@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "files": [
+    {
+      "id": "directx-shader-compiler",
+      "file": "dxc-LICENSE.TXT",
+      "url": "https://raw.githubusercontent.com/microsoft/DirectXShaderCompiler/v1.9.2602/LICENSE.TXT",
+      "sha256": "27a49e35d1da96eba18fba54bc882667ff0ff8c0254f16f2b6e165d605ba7df8"
+    },
+    {
+      "id": "directx-shader-compiler",
+      "file": "dxc-ThirdPartyNotices.txt",
+      "url": "https://raw.githubusercontent.com/microsoft/DirectXShaderCompiler/v1.9.2602/ThirdPartyNotices.txt",
+      "sha256": "19512a5d0a015ef16d167272c164da49a604614a786206212a80ad486ed0be6d"
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+digraph Architecture {
+    graph [rankdir=TB, bgcolor="white", pad=0.3, nodesep=0.45, ranksep=0.65,
+           fontname="Arial", fontsize=18, labelloc=t,
+           label="Vibmory 2.0 | production target dependencies"];
+    node [shape=box, style="rounded,filled", fontname="Arial", fontsize=12,
+          color="#66758b", fillcolor="#edf3ff", margin="0.18,0.13"];
+    edge [color="#66758b", arrowsize=0.7];
+
+    App [label="Vibmory executable\nsrc/app\nComposition root and lifetime", fillcolor="#dce7ff"];
+    UI [label="vibmory_ui\nsrc/ui\nWidgets, timeline, profiles, recovery, preferences"];
+    Platform [label="vibmory_platform\nsrc/platform\nQt files, devices and export workers"];
+    Application [label="vibmory_application\nsrc/application\nCommands, document workflow, playback contracts", fillcolor="#e5f4e9"];
+    Audio [label="vibmory_audio\nsrc/audio\nBounded PCM rendering and WAV", fillcolor="#e5f4e9"];
+    Persistence [label="vibmory_persistence\nsrc/persistence\nCanonical v2/v1 and strict legacy codecs", fillcolor="#e5f4e9"];
+    Domain [label="vibmory_domain\nsrc/domain\nValidated values, frame identities, routing and profiles", fillcolor="#d4eadb"];
+
+    App -> UI;
+    App -> Platform;
+    UI -> Application;
+    UI -> Platform;
+    Platform -> Application;
+    Platform -> Audio;
+    Platform -> Persistence;
+    Application -> Domain;
+    Audio -> Domain;
+    Persistence -> Domain;
+
+    { rank=same; Application; Audio; Persistence; }
+    Legend [shape=plaintext, fillcolor="white", fontsize=11,
+            label="Arrow: consumer -> direct project dependency\nGreen: standard C++20, no Qt | Blue: desktop / Qt integration\nFramework, compiler-options and test targets are omitted."];
+    Domain -> Legend [style=invis];
+}

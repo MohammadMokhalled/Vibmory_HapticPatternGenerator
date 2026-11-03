@@ -1,0 +1,355 @@
+name: Build, test and package
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Optional existing version tag to assemble as a draft (must match this source commit)'
+        type: string
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  core:
+    name: Core / Linux / sanitizers
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Install pinned formatter
+        run: python3 -m pip install clang-format==21.1.0 clang-tidy==21.1.0
+      - name: Formatting and module boundaries
+        run: |
+          python3 tools/check_quality.py
+          python3 tools/check_translations.py
+      - name: Install documentation tool
+        run: sudo apt-get update -qq && sudo apt-get install -y doxygen graphviz
+      - name: Render maintained architecture diagrams
+        run: python3 tools/render_diagrams.py --output-dir out/diagrams
+      - name: Configure without Qt
+        run: cmake --preset sanitized
+      - name: Build
+        run: cmake --build --preset sanitized --parallel 2
+      - name: Analyze core C++ contracts
+        run: python3 tools/run_static_analysis.py out/sanitized
+      - name: Test
+        run: ctest --preset sanitized --output-junit test-results.xml
+        env:
+          ASAN_OPTIONS: detect_leaks=1:strict_string_checks=1
+          UBSAN_OPTIONS: print_stacktrace=1:halt_on_error=1
+      - name: Generate API and architecture documentation
+        run: cmake --build out/sanitized --target docs
+      - name: Upload core test results
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: linux-test-results
+          path: |
+            out/sanitized/test-results.xml
+            out/sanitized/Testing/Temporary/
+          retention-days: 14
+          if-no-files-found: ignore
+
+  macos:
+    name: macOS desktop / Apple Silicon
+    runs-on: macos-15
+    timeout-minutes: 35
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Verify native toolchain and Python test support
+        run: |
+          test "$(uname -m)" = arm64
+          python3 -c 'import sys; assert sys.version_info >= (3, 12), "Python 3.12+ is required for all tests"'
+      - name: Configure core without Qt
+        run: cmake --preset core -DPython3_EXECUTABLE="$(command -v python3)"
+      - name: Build core
+        run: cmake --build --preset core --parallel 2
+      - name: Test core
+        run: ctest --preset core --no-tests=error --output-junit test-results.xml
+      - name: Install Qt 6.8.3
+        uses: jurplel/install-qt-action@a9c63c7c123f3069cff414e7e482d95dfa9d8125 # v4.4.1
+        with:
+          version: '6.8.3'
+          host: mac
+          target: desktop
+          arch: clang_64
+          modules: qtmultimedia
+          cache: true
+      - name: Configure macOS desktop
+        run: cmake --preset macos -DPython3_EXECUTABLE="$(command -v python3)"
+      - name: Build macOS desktop
+        run: cmake --build --preset macos --parallel 2
+      - name: Verify all desktop tests are registered
+        run: |
+          ctest --preset macos --show-only=json-v1 > out/macos/registered-tests.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          required = {"domain", "codec", "audio", "session", "playback", "codec_properties",
+                      "distribution_tools", "release_tools", "independent_wave_decode",
+                      "ui", "recovery", "preferences"}
+          registered = {test["name"] for test in json.loads(Path("out/macos/registered-tests.json").read_text())["tests"]}
+          missing = required - registered
+          if missing:
+              raise SystemExit(f"Missing desktop tests: {sorted(missing)}")
+          PY
+      - name: Core and offscreen UI tests
+        run: ctest --preset macos --no-tests=error --output-junit test-results.xml
+      - name: Verify desktop build without test targets
+        run: |
+          cmake --preset macos -B out/macos-no-tests -DBUILD_TESTING=OFF
+          cmake --build out/macos-no-tests --target Vibmory --parallel 2
+      - name: Install app bundle, runtime and plugins
+        run: cmake --install out/macos --prefix "$PWD/stage/Vibmory"
+      - name: Verify installed Apple Silicon app and native startup
+        run: |
+          python3 - <<'PY'
+          import configparser
+          import json
+          import os
+          from pathlib import Path
+          import plistlib
+          import subprocess
+          import tempfile
+
+          stage = Path("stage/Vibmory").resolve()
+          contents = stage / "Vibmory.app/Contents"
+          executable = contents / "MacOS/Vibmory"
+          required = [executable, contents / "Info.plist", contents / "Resources/qt.conf",
+                      contents / "Resources/translations/qt_de.qm",
+                      contents / "PlugIns/platforms/libqcocoa.dylib"]
+          required += [contents / f"Frameworks/{name}.framework/{name}"
+                       for name in ("QtCore", "QtGui", "QtWidgets", "QtMultimedia")]
+          for path in required:
+              if not path.is_file():
+                  raise SystemExit(f"Missing installed bundle file: {path}")
+          if not any((contents / "PlugIns/multimedia").glob("*.dylib")):
+              raise SystemExit("Qt Multimedia plugins are missing from the bundle")
+          configuration = configparser.ConfigParser()
+          configuration.read(contents / "Resources/qt.conf")
+          if (configuration.get("Paths", "Plugins") != "PlugIns"
+                  or configuration.get("Paths", "Translations") != "Resources/translations"):
+              raise SystemExit("Qt bundle plugin/translation paths are incorrect")
+          with (contents / "Info.plist").open("rb") as source:
+              info = plistlib.load(source)
+          version = json.loads((stage / "application.json").read_text())["version"]
+          if (info.get("CFBundleIdentifier") != "org.vibmory.Vibmory"
+                  or info.get("CFBundleVersion") != version
+                  or info.get("CFBundleShortVersionString") != version):
+              raise SystemExit("Installed bundle metadata does not match the application")
+          subprocess.run(["/usr/bin/lipo", str(executable), "-verify_arch", "arm64"], check=True)
+          subprocess.run(["/usr/bin/codesign", "--verify", "--deep", "--strict", str(contents.parent)], check=True)
+
+          environment = {name: value for name, value in os.environ.items()
+                         if not name.startswith(("QT_", "DYLD_"))}
+          environment.update(PATH="/usr/bin:/bin:/usr/sbin:/sbin", QT_QPA_PLATFORM="cocoa",
+                             QT_LOGGING_TO_CONSOLE="1")
+          artifacts = Path("artifacts").resolve()
+          artifacts.mkdir(exist_ok=True)
+          with tempfile.TemporaryDirectory(prefix="vibmory-macos-smoke-") as working:
+              for language in ("en", "de"):
+                  print(f"Smoke-testing installed app in {language}", flush=True)
+                  with (artifacts / f"macos-smoke-{language}.stdout.log").open("wb") as stdout, \
+                       (artifacts / f"macos-smoke-{language}.stderr.log").open("wb") as stderr:
+                      subprocess.run([str(executable), "--smoke-test", "--language", language],
+                                     cwd=working, env=environment, stdout=stdout, stderr=stderr,
+                                     check=True, timeout=30)
+          PY
+      - name: Upload macOS test results and diagnostics
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: macos-test-diagnostics
+          path: |
+            out/core-preset/test-results.xml
+            out/core-preset/Testing/Temporary/
+            out/macos/registered-tests.json
+            out/macos/test-results.xml
+            out/macos/Testing/Temporary/
+            out/macos/tests/*-results.xml
+            artifacts/macos-smoke-*.log
+          retention-days: 14
+          if-no-files-found: ignore
+
+  draft-release:
+    name: Assemble verified draft release
+    needs: [core, windows]
+    if: startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && inputs.release_tag != '')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Create draft from matching build, installer and dependency sources
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.release_tag || github.ref_name }}
+        run: python3 tools/create_draft_release.py --repository "$GITHUB_REPOSITORY" --run-id "$GITHUB_RUN_ID" --tag "$RELEASE_TAG"
+  windows:
+    name: Windows desktop and portable executable
+    runs-on: windows-2025
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1
+        with:
+          arch: x64
+      - name: Install Qt 6.8.3
+        uses: jurplel/install-qt-action@a9c63c7c123f3069cff414e7e482d95dfa9d8125 # v4.4.1
+        with:
+          version: '6.8.3'
+          arch: win64_msvc2022_64
+          modules: qtmultimedia
+          cache: true
+      - name: Verify translation extraction
+        run: python tools/check_translations.py --lupdate lupdate
+      - name: Configure
+        run: cmake --preset desktop
+      - name: Build
+        run: cmake --build --preset desktop --parallel 2
+      - name: Core and offscreen UI tests
+        run: ctest --preset desktop --output-junit test-results.xml
+      - name: Verify desktop build without test targets
+        run: |
+          cmake -S . -B out/desktop-no-tests -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF -DVIBMORY_WARNINGS_AS_ERRORS=ON
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cmake --build out/desktop-no-tests --target Vibmory --parallel 2
+      - name: Install runtime and plugins
+        run: cmake --install out/desktop --prefix "$pwd/stage/Vibmory"
+      - name: Verify installed architecture documentation
+        shell: pwsh
+        run: |
+          foreach ($name in @('Architecture', 'ClassDiagram', 'EditorLifecycle')) {
+            foreach ($extension in @('dot', 'png', 'svg')) {
+              $relative = "docs/diagrams/$name.$extension"
+              if ((Get-FileHash -LiteralPath "stage/Vibmory/$relative" -Algorithm SHA256).Hash -ne (Get-FileHash -LiteralPath $relative -Algorithm SHA256).Hash) {
+                throw "Installed diagram differs from the maintained documentation: $relative"
+              }
+            }
+          }
+      - name: Deploy app-local C++ runtime
+        shell: pwsh
+        run: |
+          $runtimeFiles = Get-ChildItem "$env:VCToolsRedistDir/x64/Microsoft.VC*.CRT/*.dll"
+          if (-not $runtimeFiles) { throw 'MSVC redistributable DLLs were not found.' }
+          $runtimeFiles | Copy-Item -Destination stage/Vibmory -Force
+          foreach ($runtime in @('msvcp140.dll', 'vcruntime140.dll', 'vcruntime140_1.dll')) {
+            if (-not (Test-Path "stage/Vibmory/$runtime")) { throw "Missing app-local runtime: $runtime" }
+          }
+      - name: Sign application when configured
+        if: github.event_name != 'pull_request'
+        env:
+          VIBMORY_SIGNING_CERTIFICATE_BASE64: ${{ secrets.VIBMORY_SIGNING_CERTIFICATE_BASE64 }}
+          VIBMORY_SIGNING_CERTIFICATE_PASSWORD: ${{ secrets.VIBMORY_SIGNING_CERTIFICATE_PASSWORD }}
+          VIBMORY_TIMESTAMP_URL: ${{ vars.VIBMORY_TIMESTAMP_URL }}
+        run: ./tools/sign_windows.ps1 -Paths "$pwd/stage/Vibmory/Vibmory.exe" -Report "$pwd/artifacts/application-signing.json"
+      - name: Assemble dependency notices, sources and runtime inventory
+        run: python tools/prepare_distribution.py --app-dir stage/Vibmory --sources-dir artifacts/dependency-sources --qt-root "$env:QT_ROOT_DIR"
+      - name: Build per-user Windows installer
+        run: python tools/build_windows_installer.py --app-dir stage/Vibmory --output artifacts/Vibmory-windows-x64-setup.exe
+      - name: Sign installer when configured
+        if: github.event_name != 'pull_request'
+        env:
+          VIBMORY_SIGNING_CERTIFICATE_BASE64: ${{ secrets.VIBMORY_SIGNING_CERTIFICATE_BASE64 }}
+          VIBMORY_SIGNING_CERTIFICATE_PASSWORD: ${{ secrets.VIBMORY_SIGNING_CERTIFICATE_PASSWORD }}
+          VIBMORY_TIMESTAMP_URL: ${{ vars.VIBMORY_TIMESTAMP_URL }}
+        run: ./tools/sign_windows.ps1 -Paths "$pwd/artifacts/Vibmory-windows-x64-setup.exe" -Report "$pwd/artifacts/installer-signing.json"
+      - name: Verify install, upgrade and uninstall without losing user data
+        run: ./tools/verify_windows_installer.ps1 -Installer artifacts/Vibmory-windows-x64-setup.exe -Stage stage/Vibmory -Report artifacts/installer-qa.json
+      - name: Verify portable package
+        shell: pwsh
+        run: |
+          $env:QT_QPA_PLATFORM = 'windows'
+          $env:QT_LOGGING_TO_CONSOLE = '1'
+          $env:QT_PLUGIN_PATH = ''
+          $env:QT_QPA_PLATFORM_PLUGIN_PATH = ''
+          $env:PATH = "$env:WINDIR\System32;$env:WINDIR"
+          New-Item -ItemType Directory artifacts -Force | Out-Null
+          $process = Start-Process -FilePath "$pwd/stage/Vibmory/Vibmory.exe" -ArgumentList '--smoke-test' -PassThru -WindowStyle Hidden -RedirectStandardOutput "$pwd/artifacts/smoke.stdout.log" -RedirectStandardError "$pwd/artifacts/smoke.stderr.log"
+          if (-not $process.WaitForExit(30000)) { $process.Kill(); throw 'Packaged application did not exit.' }
+          if ($process.ExitCode -ne 0) { throw "Packaged application failed: $($process.ExitCode)" }
+          if (-not (Get-ChildItem stage/Vibmory -Filter qwindows.dll -Recurse)) { throw 'Qt Windows platform plugin is missing.' }
+          if (-not (Get-ChildItem stage/Vibmory -Directory -Recurse | Where-Object Name -eq 'multimedia')) { throw 'Qt Multimedia plugins are missing.' }
+          $preview = Start-Process -FilePath "$pwd/stage/Vibmory/Vibmory.exe" -ArgumentList '--screenshot', "$pwd/artifacts/editor.png" -PassThru -WindowStyle Hidden -RedirectStandardOutput "$pwd/artifacts/preview.stdout.log" -RedirectStandardError "$pwd/artifacts/preview.stderr.log"
+          if (-not $preview.WaitForExit(30000)) { $preview.Kill(); throw 'Editor preview did not exit.' }
+          if ($preview.ExitCode -ne 0 -or -not (Test-Path artifacts/editor.png)) { throw 'Editor preview failed.' }
+          foreach ($variant in @(@{ Name = 'editor-light-en'; Theme = 'light'; Language = 'en' }, @{ Name = 'editor-dark-de'; Theme = 'dark'; Language = 'de' })) {
+            $previewPath = "$pwd/artifacts/$($variant.Name).png"
+            $variantProcess = Start-Process -FilePath "$pwd/stage/Vibmory/Vibmory.exe" -ArgumentList '--screenshot', $previewPath, '--theme', $variant.Theme, '--language', $variant.Language -PassThru -WindowStyle Hidden -RedirectStandardOutput "$pwd/artifacts/$($variant.Name).stdout.log" -RedirectStandardError "$pwd/artifacts/$($variant.Name).stderr.log"
+            if (-not $variantProcess.WaitForExit(30000)) { $variantProcess.Kill(); throw "Preview timed out: $($variant.Name)" }
+            if ($variantProcess.ExitCode -ne 0 -or -not (Test-Path $previewPath)) { throw "Preview failed: $($variant.Name)" }
+          }
+      - name: Save, reopen and export with deployed runtime only
+        shell: pwsh
+        run: |
+          $probeDirectory = Join-Path $env:RUNNER_TEMP 'vibmory-deployed-ui'
+          New-Item -ItemType Directory -Path $probeDirectory -ErrorAction Stop | Out-Null
+          Copy-Item out/desktop/vibmory_ui_tests.exe $probeDirectory
+          Copy-Item "$env:QT_ROOT_DIR/bin/Qt6Test.dll" $probeDirectory
+          $env:QT_PLUGIN_PATH = "$pwd/stage/Vibmory/plugins"
+          $env:QT_QPA_PLATFORM_PLUGIN_PATH = "$pwd/stage/Vibmory/plugins/platforms"
+          $env:PATH = "$pwd/stage/Vibmory;$env:WINDIR\System32;$env:WINDIR"
+          $report = "$pwd/artifacts/deployed-ui-results.xml,junitxml"
+          $probe = Start-Process -FilePath "$probeDirectory/vibmory_ui_tests.exe" -WorkingDirectory $probeDirectory -ArgumentList 'deployedEditorCanSaveReopenAndExport', '-platform', 'windows', '-o', $report, '-o', '-,txt' -PassThru -WindowStyle Hidden -RedirectStandardOutput "$pwd/artifacts/deployed-ui.stdout.log" -RedirectStandardError "$pwd/artifacts/deployed-ui.stderr.log"
+          if (-not $probe.WaitForExit(60000)) { $probe.Kill(); throw 'Deployed editor workflow timed out.' }
+          if ($probe.ExitCode -ne 0) { Get-Content artifacts/deployed-ui.*.log; throw "Deployed editor workflow failed: $($probe.ExitCode)" }
+      - name: Create ZIP and checksum
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory artifacts -Force | Out-Null
+          Compress-Archive -Path stage/Vibmory -DestinationPath artifacts/Vibmory-windows-x64.zip
+          foreach ($file in @('Vibmory-windows-x64.zip', 'Vibmory-windows-x64-setup.exe')) {
+            (Get-FileHash "artifacts/$file" -Algorithm SHA256).Hash | Set-Content "artifacts/$file.sha256"
+          }
+      - name: Upload downloadable Windows application
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: Vibmory-windows-x64
+          compression-level: 0
+          path: |
+            artifacts/*.zip
+            artifacts/*.exe
+            artifacts/*.json
+            artifacts/*.sha256
+            artifacts/*.png
+            artifacts/*.log
+            artifacts/*-results.xml
+          if-no-files-found: error
+          retention-days: 30
+      - name: Upload matching dependency sources
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: Vibmory-dependency-sources
+          compression-level: 0
+          path: artifacts/dependency-sources/*
+          if-no-files-found: error
+          retention-days: 30
+      - name: Upload Windows test results and diagnostics
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: windows-test-diagnostics
+          path: |
+            out/desktop/Testing/Temporary/
+            out/desktop/test-results.xml
+            out/desktop/tests/*-results.xml
+            artifacts/*-results.xml
+            artifacts/*.log
+            artifacts/*.json
+          if-no-files-found: ignore
+          retention-days: 14

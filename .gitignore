@@ -23,15 +23,14 @@ tags
 .DS_Store
 .directory
 *.debug
+*.log
 Makefile*
 *.prl
 *.app
 moc_*.cpp
-ui_*.h
 qrc_*.cpp
 Thumbs.db
 *.res
-*.rc
 /.qmake.cache
 /.qmake.stash
 
@@ -81,5 +80,15 @@ CMakeLists.txt.user
 
 .vscode/
 out/
-CMakePresets.json
 CMakeUserPresets.json
+
+/build/
+/stage/
+/artifacts/
+/CMakeCache.txt
+/CMakeFiles/
+/Testing/
+/docs/html/
+/docs/latex/
+/compile_commands.json
+__pycache__/

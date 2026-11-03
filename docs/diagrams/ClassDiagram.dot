@@ -1,0 +1,55 @@
+digraph ClassDiagram {
+    graph [rankdir=TB, bgcolor="white", pad=0.3, nodesep=0.4, ranksep=0.7,
+           fontname="Arial", fontsize=18, labelloc=t,
+           label="Vibmory 2.0 | document, workflow and playback classes"];
+    node [shape=box, style="rounded,filled", fontname="Arial", fontsize=11,
+          color="#66758b", fillcolor="#e5f4e9", margin="0.16,0.12"];
+    edge [fontname="Arial", fontsize=10, color="#66758b", arrowsize=0.7];
+
+    EditorWindow [fillcolor="#edf3ff", label="EditorWindow : QMainWindow\nloadProject() / refresh()\nOwns editor services and views"];
+    EditorSession [label="EditorSession\nDocument + selection + revision + save identity\nTransactional commands / grouped undo and redo\nsnapshot() / replace() / restore()"];
+    DocumentWorkflow [label="DocumentWorkflow\nread() / open() / save() / replace()\nPublishes only successful reads and saves"];
+    PlaybackService [label="PlaybackService\nstart() / tick() / stop() / fail()\nState + visual cursor + optional snapshot"];
+    PatternDocument [fillcolor="#d4eadb", label="PatternDocument\nGridShape / Frame(id, vector<CellStimulus>)\nPlaybackSettings / ChannelRouting\nValidated edits, limits and durable frame IDs"];
+    DocumentSnapshot [label="DocumentSnapshot\nPatternDocument document\nuint64 revision\nIndependent value copy"];
+    DocumentStore [fillcolor="#fff4d9", label="DocumentStore <<interface>>\nload(path) -> Result<PatternDocument>\nsave(path, document) -> Result<void>"];
+    PlaybackBackend [fillcolor="#fff4d9", label="PlaybackBackend <<interface>>\nstart(snapshot) / stop()\nprocessedSampleFrames()\nDevice enumeration and explicit selection"];
+    MonotonicClock [fillcolor="#fff4d9", label="MonotonicClock <<interface>>\nmicroseconds()"];
+    QtProjectStore [fillcolor="#edf3ff", label="QtProjectStore\nDocumentStore implementation\nBounded input / atomic QSaveFile commit"];
+    QtAudioBackend [fillcolor="#edf3ff", label="QtAudioBackend : QObject\nPlaybackBackend implementation\nOwns QAudioSink + PcmStream\nExact device format / generation-guarded events"];
+    QtClock [fillcolor="#edf3ff", label="QtClock\nMonotonicClock implementation\nQElapsedTimer"];
+    PcmRenderer [label="PcmRenderer\nOwn document copy + per-channel phase\ncreate() / render(sample block)\nBounded deterministic interleaved PCM"];
+    Codecs [shape=note, fillcolor="#e5f4e9", label="project_codec.h | free functions\nencodeProject() / decodeProject()\ndecodeLegacyCsv(orientation)\nCanonical v2, v1 migration, strict CSV"];
+
+    edge [dir=both, arrowtail=diamond, arrowhead=vee];
+    EditorWindow -> EditorSession [label="owns value"];
+    EditorWindow -> DocumentWorkflow [label="owns value"];
+    EditorWindow -> PlaybackService [label="owns value"];
+    EditorSession -> PatternDocument [label="editable value"];
+    PlaybackService -> DocumentSnapshot [label="owns while active"];
+    DocumentSnapshot -> PatternDocument [label="owns copy"];
+
+    edge [dir=forward, arrowtail=none, arrowhead=vee, style=dashed];
+    DocumentWorkflow -> EditorSession [label="borrows", constraint=false];
+    DocumentWorkflow -> DocumentStore [label="borrows"];
+    PlaybackService -> PlaybackBackend [label="borrows"];
+    PlaybackService -> MonotonicClock [label="borrows"];
+    QtProjectStore -> Codecs [label="encode / decode"];
+    QtAudioBackend -> PcmRenderer [label="creates through PcmStream"];
+
+    edge [dir=back, arrowtail=empty, arrowhead=none, color="#315b9f"];
+    DocumentStore:s -> QtProjectStore:n [label="implements"];
+    PlaybackBackend:s -> QtAudioBackend:n [label="implements"];
+    MonotonicClock:s -> QtClock:n [label="implements"];
+
+    DocumentStore [group="store"];
+    QtProjectStore [group="store"];
+    MonotonicClock [group="clock"];
+    QtClock [group="clock"];
+    PlaybackBackend [group="backend"];
+    QtAudioBackend [group="backend"];
+
+    { rank=same; EditorSession; DocumentWorkflow; PlaybackService; }
+    { rank=same; DocumentStore; PlaybackBackend; MonotonicClock; }
+    { rank=same; QtProjectStore; QtAudioBackend; QtClock; }
+}

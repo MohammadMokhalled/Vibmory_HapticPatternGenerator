@@ -1,83 +1,139 @@
-# Minimum required version of CMake
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.24)
+project(Vibmory VERSION 2.0.0 DESCRIPTION "Haptic pattern editor"
+    HOMEPAGE_URL "https://github.com/MohammadMokhalled/Vibmory_HapticPatternGenerator" LANGUAGES CXX)
 
-# Define the project and its properties
-project(Vibmory VERSION 1.1.0 LANGUAGES CXX)
+include(CTest)
+if(WIN32)
+    set(CMAKE_INSTALL_BINDIR "." CACHE PATH "Portable executable and runtime directory")
+endif()
+include(GNUInstallDirs)
+option(VIBMORY_BUILD_GUI "Build the Qt 6 desktop editor" ON)
+option(VIBMORY_WARNINGS_AS_ERRORS "Treat project warnings as errors" OFF)
+option(VIBMORY_SANITIZERS "Enable address/undefined sanitizers (Clang/GCC)" OFF)
+option(VIBMORY_BUILD_BENCHMARKS "Build informational renderer benchmarks" OFF)
 
-# Enable automoc, autouic, and autorcc for Qt
-set(CMAKE_AUTOUIC ON)
-set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTORCC ON)
-
-# Set C++ standard and require it
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-# Find required packages and components
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Gui Widgets Multimedia)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Gui Widgets Multimedia)
-
-# MSVC & BUILD_SHARED_LIBS specific flags
-if(MSVC AND BUILD_SHARED_LIBS)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHa /MT")
+add_library(vibmory_options INTERFACE)
+target_compile_features(vibmory_options INTERFACE cxx_std_20)
+if(MSVC)
+    target_compile_options(vibmory_options INTERFACE /W4 /w15038 /permissive- /utf-8 /Zc:__cplusplus)
+    if(VIBMORY_WARNINGS_AS_ERRORS)
+        target_compile_options(vibmory_options INTERFACE /WX)
+    endif()
+else()
+    target_compile_options(vibmory_options INTERFACE -Wall -Wextra -Wpedantic -Wconversion -Wsign-conversion)
+    if(VIBMORY_WARNINGS_AS_ERRORS)
+        target_compile_options(vibmory_options INTERFACE -Werror)
+    endif()
+    if(VIBMORY_SANITIZERS)
+        target_compile_options(vibmory_options INTERFACE -fsanitize=address,undefined -fno-omit-frame-pointer)
+        target_link_options(vibmory_options INTERFACE -fsanitize=address,undefined)
+    endif()
 endif()
 
-# Define source files, header files, and form files
-set(SOURCES
-    src/animation.cpp
-    src/audioactuator.cpp
-    src/createprojectwindow.cpp
-    src/frame.cpp
-    src/helper.cpp
-    src/mainwindow.cpp
-    src/paintingwidget.cpp
-    src/projectsettingwindow.cpp
-    src/animationcontroller.cpp
-)
+function(vibmory_library name)
+    add_library(${name} STATIC ${ARGN})
+    target_include_directories(${name} PUBLIC "${PROJECT_SOURCE_DIR}/src")
+    target_compile_features(${name} PUBLIC cxx_std_20)
+    target_link_libraries(${name} PRIVATE vibmory_options)
+    set_target_properties(${name} PROPERTIES CXX_EXTENSIONS OFF AUTOMOC OFF AUTOUIC OFF AUTORCC OFF)
+endfunction()
 
-set(HEADERS
-    include/animation.h
-    include/audioactuator.h
-    include/createprojectwindow.h
-    include/frame.h
-    include/helper.h
-    include/mainwindow.h
-    include/paintingwidget.h
-    include/projectsettingwindow.h
-    include/animationcontroller.h
-    include/iactuatorcontroller.h
-)
+vibmory_library(vibmory_domain src/domain/pattern.cpp src/domain/device_profile.cpp)
+vibmory_library(vibmory_application src/application/editor_session.cpp src/application/playback_service.cpp src/application/document_workflow.cpp src/application/device_profiles.cpp)
+target_link_libraries(vibmory_application PUBLIC vibmory_domain)
+vibmory_library(vibmory_audio src/audio/pcm_renderer.cpp)
+target_link_libraries(vibmory_audio PUBLIC vibmory_domain)
+vibmory_library(vibmory_persistence src/persistence/project_codec.cpp)
+target_link_libraries(vibmory_persistence PUBLIC vibmory_domain)
 
-set(FORMS
-    ui/createprojectwindow.ui
-    ui/mainwindow.ui
-    ui/projectsettingwindow.ui
-)
+if(VIBMORY_BUILD_BENCHMARKS)
+    add_executable(vibmory_render_benchmark tools/render_benchmark.cpp)
+    target_link_libraries(vibmory_render_benchmark PRIVATE vibmory_audio vibmory_options)
+endif()
 
-# Define object library with target properties and link libraries
-add_library(${PROJECT_NAME}Objs OBJECT ${SOURCES} ${HEADERS} ${FORMS})
-target_include_directories(${PROJECT_NAME}Objs PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
-target_link_libraries(${PROJECT_NAME}Objs PRIVATE Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Gui Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Multimedia)
-set_target_properties(${PROJECT_NAME}Objs PROPERTIES AUTOUIC_SEARCH_PATHS ${CMAKE_CURRENT_SOURCE_DIR}/ui)
+if(VIBMORY_BUILD_GUI)
+    find_package(Qt6 6.8 REQUIRED COMPONENTS Core Widgets Multimedia Concurrent LinguistTools)
+    qt_standard_project_setup()
+    vibmory_library(vibmory_platform src/platform/project_store.cpp src/platform/text_file.cpp src/platform/device_profile_store.cpp src/platform/recovery_store.cpp src/platform/qt_audio_backend.cpp src/platform/wave_export_job.cpp)
+    set_target_properties(vibmory_platform PROPERTIES AUTOMOC ON)
+    target_link_libraries(vibmory_platform PUBLIC vibmory_application vibmory_audio vibmory_persistence Qt6::Core Qt6::Multimedia PRIVATE Qt6::Concurrent)
+    vibmory_library(vibmory_ui src/ui/grid_widget.cpp src/ui/cell_inspector.cpp src/ui/file_dialogs.cpp src/ui/frame_list_model.cpp src/ui/device_profile_actions.cpp src/ui/recovery_controller.cpp src/ui/ui_preferences.cpp src/ui/editor_window.cpp)
+    set_target_properties(vibmory_ui PROPERTIES AUTOMOC ON)
+    # Reject obsolete APIs (including the old QMenu::addAction overloads) on every
+    # compiler, even when warnings-as-errors is disabled. Qt 6.8 is our baseline.
+    target_compile_definitions(vibmory_ui PRIVATE QT_DISABLE_DEPRECATED_UP_TO=0x060800)
+    target_link_libraries(vibmory_ui PUBLIC vibmory_application Qt6::Widgets PRIVATE vibmory_platform Qt6::Concurrent)
+    qt_add_lrelease(TS_FILES translations/vibmory_de.ts QM_FILES_OUTPUT_VARIABLE vibmory_qm_files OPTIONS -nounfinished)
+    qt_add_resources(vibmory_ui vibmory_translations PREFIX "/i18n" BASE "${PROJECT_BINARY_DIR}" FILES ${vibmory_qm_files})
+    add_custom_target(update_translations
+        COMMAND Qt6::lupdate "${PROJECT_SOURCE_DIR}/src/ui" -I "${PROJECT_SOURCE_DIR}/src" -no-obsolete -locations none -ts "${PROJECT_SOURCE_DIR}/translations/vibmory_de.ts"
+        COMMENT "Update application translation sources (review the TS changes)")
+    qt_add_executable(Vibmory WIN32 src/app/main.cpp)
+    set_target_properties(Vibmory PROPERTIES AUTOMOC OFF AUTOUIC OFF CXX_EXTENSIONS OFF)
+    if(APPLE)
+        set_target_properties(Vibmory PROPERTIES
+            MACOSX_BUNDLE TRUE
+            MACOSX_BUNDLE_GUI_IDENTIFIER "org.vibmory.Vibmory"
+            MACOSX_BUNDLE_BUNDLE_NAME "Vibmory"
+            MACOSX_BUNDLE_BUNDLE_VERSION "${PROJECT_VERSION}"
+            MACOSX_BUNDLE_SHORT_VERSION_STRING "${PROJECT_VERSION}")
+    endif()
+    if(WIN32)
+        enable_language(RC)
+        configure_file(src/app/windows.rc.in "${PROJECT_BINARY_DIR}/windows.rc" @ONLY)
+        target_sources(Vibmory PRIVATE "${PROJECT_BINARY_DIR}/windows.rc")
+    endif()
+    target_link_libraries(Vibmory PRIVATE vibmory_ui vibmory_platform vibmory_options)
+    target_compile_definitions(Vibmory PRIVATE VIBMORY_VERSION="${PROJECT_VERSION}")
+    install(TARGETS Vibmory RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}" BUNDLE DESTINATION .)
+    set(VIBMORY_SOURCE_REVISION "unknown")
+    find_package(Git QUIET)
+    if(Git_FOUND)
+        execute_process(COMMAND "${GIT_EXECUTABLE}" rev-parse HEAD
+            WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" OUTPUT_VARIABLE source_revision
+            OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET RESULT_VARIABLE revision_result)
+        if(revision_result EQUAL 0)
+            set(VIBMORY_SOURCE_REVISION "${source_revision}")
+        endif()
+    endif()
+    configure_file(packaging/application.json.in "${PROJECT_BINARY_DIR}/application.json" @ONLY)
+    install(FILES README.md CONTRIBUTING.md LICENSE THIRD_PARTY_NOTICES.md "${PROJECT_BINARY_DIR}/application.json" DESTINATION .)
+    install(DIRECTORY docs/ DESTINATION docs FILES_MATCHING
+        PATTERN "*.md" PATTERN "*.dot" PATTERN "*.png" PATTERN "*.svg")
+    install(DIRECTORY TodoPlanning/ DESTINATION TodoPlanning FILES_MATCHING PATTERN "*.md")
+    if(APPLE)
+        # macdeployqt does not deploy Qt translations. Merge the linked modules'
+        # German catalogs into the bundle before deploying/signing its runtime.
+        # The versionless Qt macro re-expands install-time variables. Call the
+        # Qt 6 function directly so QT_DEPLOY_PREFIX survives script generation.
+        qt6_generate_deploy_script(TARGET Vibmory NAME macos_bundle
+            OUTPUT_SCRIPT deploy_script
+            CONTENT [[
+set(QT_DEPLOY_TRANSLATIONS_DIR "$<TARGET_BUNDLE_DIR_NAME:Vibmory>/Contents/Resources/translations")
+qt_deploy_translations(LOCALES de)
+qt_deploy_runtime_dependencies(EXECUTABLE "$<TARGET_BUNDLE_DIR_NAME:Vibmory>"
+    DEPLOY_TOOL_OPTIONS -codesign=-)
+# Runtime deployment overwrites qt.conf. Finalize it afterwards, then re-sign
+# the outer bundle; macdeployqt has already signed its nested frameworks/plugins.
+qt_deploy_qt_conf("${QT_DEPLOY_PREFIX}/$<TARGET_BUNDLE_DIR_NAME:Vibmory>/Contents/Resources/qt.conf"
+    PLUGINS_DIR PlugIns QML_DIR Resources/qml TRANSLATIONS_DIR Resources/translations)
+execute_process(COMMAND /usr/bin/codesign --force --sign -
+    "${QT_DEPLOY_PREFIX}/$<TARGET_BUNDLE_DIR_NAME:Vibmory>"
+    COMMAND_ERROR_IS_FATAL ANY)
+]])
+    else()
+        qt_generate_deploy_app_script(TARGET Vibmory OUTPUT_SCRIPT deploy_script NO_UNSUPPORTED_PLATFORM_ERROR)
+    endif()
+    install(SCRIPT ${deploy_script})
+endif()
 
-# Define the main executable
-add_executable(${PROJECT_NAME} src/main.cpp $<TARGET_OBJECTS:${PROJECT_NAME}Objs>)
-target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
-target_link_libraries(${PROJECT_NAME} PRIVATE Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Gui Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Multimedia)
+find_package(Doxygen QUIET)
+if(DOXYGEN_FOUND)
+    configure_file(Doxyfile "${PROJECT_BINARY_DIR}/Doxyfile" @ONLY)
+    add_custom_target(docs COMMAND Doxygen::doxygen "${PROJECT_BINARY_DIR}/Doxyfile"
+        WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" COMMENT "Generate architecture and API documentation")
+endif()
 
-# Configure Google Test
-enable_testing()
-add_subdirectory(tests)
-
-# Define installation directories
-include(GNUInstallDirs)
-install(TARGETS ${PROJECT_NAME}
-    BUNDLE DESTINATION .
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-)
-
-# Special handling for Qt6 projects
-if(QT_VERSION_MAJOR EQUAL 6)
-    qt_finalize_executable(${PROJECT_NAME})
+if(BUILD_TESTING)
+    add_subdirectory(tests)
 endif()
