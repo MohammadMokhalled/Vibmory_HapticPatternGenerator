@@ -150,7 +150,7 @@ jobs:
                   or info.get("CFBundleVersion") != version
                   or info.get("CFBundleShortVersionString") != version):
               raise SystemExit("Installed bundle metadata does not match the application")
-          subprocess.run(["/usr/bin/lipo", "-verify_arch", "arm64", str(executable)], check=True)
+          subprocess.run(["/usr/bin/lipo", str(executable), "-verify_arch", "arm64"], check=True)
           subprocess.run(["/usr/bin/codesign", "--verify", "--deep", "--strict", str(contents.parent)], check=True)
 
           environment = {name: value for name, value in os.environ.items()
